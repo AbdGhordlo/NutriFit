@@ -1,0 +1,8 @@
+.notification-button:hover {
+    border-color: #d1d5db; /* Tailwind's 'border-gray-300' */
+  }
+  
+  .account-button:hover {
+    border-color: #d1d5db; /* Tailwind's 'border-gray-300' */
+  }
+  
