@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
-import { styles } from "./styles/MealPlannerStyles";
+import { styles } from "../components/styles/MealPlannerStyles";
+import { commonStyles } from "./styles/commonStyles";
 
 interface DayPlan {
   id: number;
@@ -150,7 +151,7 @@ export default function MealPlanner() {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={commonStyles.container}>
       <div style={styles.mainContainer}>
         <h1 style={styles.title}>Weekly Plan</h1>
 

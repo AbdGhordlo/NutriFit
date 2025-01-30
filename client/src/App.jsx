@@ -1,24 +1,39 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
-import MealPlanner from './components/MealPlanner';
+import MealPlanner from './pages/MealPlanner';
+import Home from './pages/Home';
+import ExercisePlanner from './pages/ExercisePlanner';
+import Ingredients from './pages/Ingredients';
+import Progress from './pages/Progress';
+import Settings from './pages/Settings';
 import AppStyles from './AppStyles';
 
 function App() {
   return (
-    <div style={AppStyles.appContainer}>
-      <Header />
-      <Sidebar />
-      
-      <main style={AppStyles.mainContent}>
-        <div style={AppStyles.contentWrapper}>
-          <MealPlanner />
-        </div>
-      </main>
+    <Router>
+      <div style={AppStyles.appContainer}>
+        <Header />
+        <Sidebar />
+        
+        <main style={AppStyles.mainContent}>
+          <div style={AppStyles.contentWrapper}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/meal-planner" element={<MealPlanner />} />
+              <Route path="/exercise-planner" element={<ExercisePlanner />} />
+              <Route path="/ingredients" element={<Ingredients />} />
+              <Route path="/progress" element={<Progress />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </div>
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
