@@ -44,14 +44,18 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  /* border-color: #646cff; */
+  transition: border-color 0.25s;
 }
-button:focus,
+button:focus {
+  outline: none; /* Remove default focus outline */
+}
+
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid #7ec987; /* Apply green outline for keyboard focus */
+  border-radius: 8px; /* Optional: Smooth the focus effect */
 }
 
 @media (prefers-color-scheme: light) {
@@ -66,3 +70,4 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
