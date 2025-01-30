@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock, UtensilsCrossed } from 'lucide-react';
+import { styles } from './styles/DailyMealsStyles';
 
 interface Meal {
   id: number;
@@ -20,34 +21,24 @@ const meals: Meal[] = [
 
 export default function DailyMeals() {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Today's Meal Plan</h2>
+    <div style={styles.container}>
+      <h2 style={styles.title}>Today's Meal Plan</h2>
       
-      <div className="space-y-4">
+      <div style={styles.mealsList}>
         {meals.map(meal => (
-          <div 
-            key={meal.id}
-            className={`flex items-center justify-between p-4 rounded-lg border
-              ${meal.completed 
-                ? 'border-[#7ec987] bg-[#7ec987]/5' 
-                : 'border-gray-100 hover:border-gray-200'}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className={`p-2 rounded-full 
-                ${meal.completed 
-                  ? 'bg-[#7ec987]/10 text-[#4d7051]' 
-                  : 'bg-gray-100 text-gray-500'}`}
-              >
-                <UtensilsCrossed className="w-5 h-5" />
+          <div key={meal.id} style={styles.mealItem(meal.completed)}>
+            <div style={styles.mealInfo}>
+              <div style={styles.iconContainer(meal.completed)}>
+                <UtensilsCrossed size={20} />
               </div>
               
-              <div>
-                <h3 className="font-medium text-gray-800">{meal.name}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-500">{meal.time}</span>
-                  <span className="text-sm text-gray-400">•</span>
-                  <span className="text-sm text-gray-500">{meal.calories} kcal</span>
+              <div style={styles.mealDetails}>
+                <h3 style={styles.mealName}>{meal.name}</h3>
+                <div style={styles.mealTime}>
+                  <Clock size={16} />
+                  <span>{meal.time}</span>
+                  <span>•</span>
+                  <span>{meal.calories} kcal</span>
                 </div>
               </div>
             </div>
@@ -56,8 +47,7 @@ export default function DailyMeals() {
               type="checkbox" 
               checked={meal.completed}
               onChange={() => {}}
-              className="w-5 h-5 rounded border-gray-300 text-[#7ec987] 
-                focus:ring-[#7ec987] focus:ring-offset-0"
+              style={styles.checkbox}
             />
           </div>
         ))}

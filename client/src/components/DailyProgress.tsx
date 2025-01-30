@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { styles } from './styles/DailyProgressStyles';
 
 interface Milestone {
   id: number;
@@ -23,39 +24,25 @@ export default function DailyProgress() {
   const progress = (completedCount / milestones.length) * 100;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-semibold text-gray-800">Today's Progress</h2>
-        <span className="text-sm text-gray-500">{completedCount}/{milestones.length} completed</span>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>Today's Progress</h2>
+        <span style={styles.progressText}>{completedCount}/{milestones.length} completed</span>
       </div>
       
-      <div className="relative">
-        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-[#7ec987] transition-all duration-500 ease-out rounded-full"
-            style={{ width: `${progress}%` }}
-          />
+      <div>
+        <div style={styles.progressBarContainer}>
+          <div style={styles.progressBar(progress)} />
         </div>
         
-        <div className="flex justify-between mt-4">
-          {milestones.map((milestone, index) => (
-            <div 
-              key={milestone.id}
-              className="flex flex-col items-center relative"
-              style={{ width: `${100 / milestones.length}%` }}
-            >
-              <div 
-                className={`w-8 h-8 rounded-full flex items-center justify-center mb-1
-                  ${milestone.completed 
-                    ? 'bg-[#7ec987] text-white' 
-                    : 'bg-gray-100 text-gray-400'}`}
-              >
-                {milestone.completed && <Check className="w-4 h-4" />}
+        <div style={styles.milestonesContainer}>
+          {milestones.map((milestone) => (
+            <div key={milestone.id} style={styles.milestone}>
+              <div style={styles.milestoneIcon(milestone.completed)}>
+                {milestone.completed && <Check size={16} />}
               </div>
-              <span className="text-xs font-medium text-gray-600 whitespace-nowrap">
-                {milestone.time}
-              </span>
-              <span className="text-xs text-gray-500 whitespace-nowrap">
+              <span style={styles.milestoneTime}>{milestone.time}</span>
+              <span style={styles.milestoneLabel}>
                 {milestone.type === 'meal' ? '🍽️' : '💪'} {milestone.name}
               </span>
             </div>
