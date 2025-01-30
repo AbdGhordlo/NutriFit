@@ -26,7 +26,7 @@ export const styles = {
     gap: '8px'
   },
   logo: {
-    width: '20px',
+    // width: '20px',
     height: '20px'
   },
   brandName: {
@@ -50,11 +50,8 @@ export const styles = {
   },
   link: {
     fontSize: '14px',
-    color: '#4b5563',
     textDecoration: 'none',
-    ':hover': {
-      color: '#4d7051'
-    }
+    transition: "color 0.2s ease-in-out",
   },
   socialLinks: {
     display: 'flex',
