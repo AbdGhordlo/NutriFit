@@ -1,10 +1,10 @@
 import React from 'react';
 import { commonStyles } from "./styles/commonStyles";
 
-export default function ExercisePlanner() {
+export default function Registration() {
   return (
       <div style={commonStyles.container}>
-        <h1>Planner Page</h1>
+        <h1>Registration Page</h1>
       </div>
     );
 }

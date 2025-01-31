@@ -15,7 +15,7 @@ export const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px'
-  },
+  } as React.CSSProperties,
   exerciseItem: (completed) => ({
     display: 'flex',
     alignItems: 'center',
@@ -31,6 +31,7 @@ export const styles = {
     gap: '16px'
   },
   iconContainer: (completed) => ({
+    height: '30px',
     padding: '8px',
     borderRadius: '50%',
     backgroundColor: completed ? 'rgba(126, 201, 135, 0.1)' : '#f3f4f6',
@@ -39,7 +40,7 @@ export const styles = {
   exerciseDetails: {
     display: 'flex',
     flexDirection: 'column'
-  },
+  } as React.CSSProperties,
   exerciseName: {
     fontWeight: '500',
     color: '#1f2937'
@@ -52,11 +53,46 @@ export const styles = {
     color: '#6b7280',
     fontSize: '14px'
   },
-  checkbox: {
+  //-----------
+  checkboxContainer: {
+    display: 'inline-block',
+    position: 'relative',
+    width: '20px',
+    height: '20px',
+  } as React.CSSProperties,
+  checkboxInput: {
+    position: 'absolute',
+    opacity: 0, // Hide the default checkbox
+    cursor: 'pointer',
+    width: '100%',
+    height: '100%',
+    zIndex: 1,
+  } as React.CSSProperties,
+  customCheckbox: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
     width: '20px',
     height: '20px',
     borderRadius: '4px',
     border: '2px solid #7ec987',
-    accentColor: '#7ec987'
-  }
+    backgroundColor: 'white',
+    transition: 'background-color 0.2s',
+  } as React.CSSProperties,
+  customCheckboxChecked: {
+    backgroundColor: '#7ec987',
+  },
+  checkmark: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    // width: '12px',
+    height: '30px',
+    opacity: 0,
+    transition: 'opacity 0.2s',
+  } as React.CSSProperties,
+  checkmarkChecked: {
+    opacity: 1,
+  },
 };

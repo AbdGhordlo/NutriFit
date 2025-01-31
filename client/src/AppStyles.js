@@ -13,7 +13,8 @@ const AppStyles = {
     contentWrapper: {
       maxWidth: "1920px", // Tailwind's `max-w-[1920px]`
       margin: "auto auto", // Tailwind's `mx-auto`
-      width: 'calc(100vw - 256px)',
+      // width: 'calc(100vw - 256px)',
+      width: '100%',
       display: 'flex',
       alignItems: 'center',
       // flex: '2',

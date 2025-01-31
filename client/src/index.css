@@ -1,3 +1,14 @@
+/* html {
+  overflow-y: scroll; //Always show the vertical scrollbar
+}
+
+body {
+   overflow-x: hidden; //Prevent horizontal scrolling 
+     //I added this because whenever a vertical scroll bar appears, 
+  //it makes a horizontal scroll bar appear as well to make
+  //up for the horizontal space lost by the vertical scroll bar.
+}   */
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

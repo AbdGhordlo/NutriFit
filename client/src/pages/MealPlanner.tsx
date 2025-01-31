@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
-import { styles } from "../components/styles/MealPlannerStyles";
+import { styles } from "./styles/MealPlannerStyles";
 import { commonStyles } from "./styles/commonStyles";
 
 interface DayPlan {

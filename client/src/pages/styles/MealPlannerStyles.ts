@@ -1,10 +1,10 @@
 export const styles = {
-  container: {
-    padding: '20px',
-    maxWidth: '1000px', // I think this much is enough
-    width: '80%',
-    margin: '0 auto',
-  },
+  // container: {
+  //   padding: '20px',
+  //   maxWidth: '1000px', // I think this much is enough
+  //   width: '80%',
+  //   margin: '0 auto',
+  // },
   mainContainer: {
     backgroundColor: 'white',
     borderRadius: '8px',
