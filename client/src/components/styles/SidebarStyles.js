@@ -4,7 +4,7 @@ export const styles = {
     left: 0,
     top: '64px',
     height: 'calc(100vh - 64px)',
-    width: '256px', // Default width
+    width: '255.2px', // Default width
     backgroundColor: 'white',
     borderRight: '1px solid #e5e7eb',
     padding: '24px 0',
@@ -22,7 +22,10 @@ export const styles = {
     gap: '12px',
     padding: '12px 16px',
     borderRadius: '8px',
-    width: '100%',
+    // width: '100%', /* For some reason, when I use <Link> instead of <button> in Sidebar.jsx, 
+    // this goes out of bounds, which is why I specified the width in pixels below. You'll probably need
+    // to change this if you later want the sidebar to shrink.*/
+    width: '198px',
     transition: 'all 0.2s',
     backgroundColor: active
       ? hovered

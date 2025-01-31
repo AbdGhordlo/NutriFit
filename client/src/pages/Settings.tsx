@@ -1,5 +1,10 @@
 import React from 'react';
+import { commonStyles } from "./styles/commonStyles";
 
 export default function Settings() {
-  return <h1>Welcome to the Settings Page</h1>;
+  return (
+      <div style={commonStyles.container}>
+        <h1>Settings Page</h1>
+      </div>
+    );
 }

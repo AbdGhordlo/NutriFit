@@ -1,5 +1,10 @@
 import React from 'react';
+import { commonStyles } from "./styles/commonStyles";
 
 export default function Ingredients() {
-  return <h1>Welcome to the Ingredients Page</h1>;
+  return (
+      <div style={commonStyles.container}>
+        <h1>Ingredients Page</h1>
+      </div>
+    );
 }
