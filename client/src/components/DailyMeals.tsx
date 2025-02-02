@@ -11,7 +11,7 @@ interface Meal {
 }
 
 export default function DailyMeals() {
-  const [meals, setMeals] = useState([
+  const [meals, setMeals] = useState<Meal[]>([
     {
       id: 1,
       name: "Oatmeal with Berries",
@@ -83,7 +83,10 @@ export default function DailyMeals() {
               <input
                 type="checkbox"
                 checked={meal.completed}
-                onChange={() => {}}
+                //This toggles the checkmark (task completed or not)
+                onChange={() => {setMeals(prev => prev.map(prevMeal => {
+                  return prevMeal.id === meal.id ? {...prevMeal, completed: !prevMeal.completed} : prevMeal
+                }))}}
                 style={styles.checkboxInput}
               />
               <div

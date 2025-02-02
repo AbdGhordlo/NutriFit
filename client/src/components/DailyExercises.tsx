@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Clock, Dumbbell } from "lucide-react";
 import { styles } from "./styles/DailyExercisesStyles";
 
@@ -11,26 +11,26 @@ interface Exercise {
   completed: boolean;
 }
 
-const exercises: Exercise[] = [
-  {
-    id: 1,
-    name: "Morning Cardio",
-    time: "09:30",
-    duration: "30 min",
-    calories: 300,
-    completed: true,
-  },
-  {
-    id: 2,
-    name: "Upper Body Strength",
-    time: "17:00",
-    duration: "45 min",
-    calories: 250,
-    completed: false,
-  },
-];
-
 export default function DailyExercises() {
+  const [exercises, setExercises] = useState<Exercise[]>([
+    {
+      id: 1,
+      name: "Morning Cardio",
+      time: "09:30",
+      duration: "30 min",
+      calories: 300,
+      completed: true,
+    },
+    {
+      id: 2,
+      name: "Upper Body Strength",
+      time: "17:00",
+      duration: "45 min",
+      calories: 250,
+      completed: false,
+    },
+  ]);
+
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Today's Exercise Plan</h2>
@@ -63,7 +63,10 @@ export default function DailyExercises() {
               <input
                 type="checkbox"
                 checked={exercise.completed}
-                onChange={() => {}}
+                //This toggles the checkmark (task completed or not)
+                onChange={() => {setExercises(prev => prev.map(prevExercise => {
+                  return prevExercise.id === exercise.id ? {...prevExercise, completed: !prevExercise.completed} : prevExercise
+                }))}}
                 style={styles.checkboxInput}
               />
               <div
