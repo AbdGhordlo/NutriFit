@@ -131,7 +131,7 @@ export default function MealPlanner() {
   const [navHover, setNavHover] = useState<string | null>(null);
   const [genHover, setGenHover] = useState(false);
   const [editHover, setEditHover] = useState(false);
-  const [mealHover, setMealHover] = useState<number | null>(null);
+  const [itemHover, setItemHover] = useState<number | null>(null);
 
   const handlePrevDay = () => {
     if (currentDay > 0) {
@@ -152,30 +152,30 @@ export default function MealPlanner() {
 
   return (
     <div style={commonStyles.container}>
-      <div style={styles.mainContainer}>
-        <h1 style={styles.title}>Weekly Plan</h1>
+      <div style={commonStyles.mainContainer}>
+        <h1 style={commonStyles.title}>Weekly Plan</h1>
 
-        <div style={styles.dayContainer(isToday(currentDay))}>
-          <div style={styles.dayHeader}>
-            <h2 style={styles.dayName}>{weeklyPlan[currentDay].name}</h2>
-            <span style={styles.dayDate}>{weeklyPlan[currentDay].date}</span>
+        <div style={commonStyles.dayContainer(isToday(currentDay))}>
+          <div style={commonStyles.dayHeader}>
+            <h2 style={commonStyles.dayName}>{weeklyPlan[currentDay].name}</h2>
+            <span style={commonStyles.dayDate}>{weeklyPlan[currentDay].date}</span>
           </div>
 
-          <div style={styles.mealsList}>
+          <div style={commonStyles.itemsList}>
             {weeklyPlan[currentDay].meals.map((meal) => (
               <div key={meal.id} style={{
-                ...styles.mealItem,
-                border: mealHover === meal.id ? "1px solid rgba(126, 201, 135)" : "1px solid #f3f4f6",
+                ...commonStyles.listItem,
+                border: itemHover === meal.id ? "1px solid rgba(126, 201, 135)" : "1px solid #f3f4f6",
               }}
-              onMouseEnter={() => setMealHover(meal.id)}
-              onMouseLeave={() => setMealHover(null)}
+              onMouseEnter={() => setItemHover(meal.id)}
+              onMouseLeave={() => setItemHover(null)}
             >
-                <div style={styles.mealInfo}>
-                  <h3 style={styles.mealName}>{meal.name}</h3>
-                  <div style={styles.mealTimeInfo}>
-                    <span style={styles.mealTime}>{meal.time}</span>
-                    <span style={styles.dot}>•</span>
-                    <span style={styles.mealTime}>{meal.calories} kcal</span>
+                <div style={commonStyles.itemInfo}>
+                  <h3 style={commonStyles.itemName}>{meal.name}</h3>
+                  <div style={commonStyles.itemTimeInfo}>
+                    <span style={commonStyles.itemTime}>{meal.time}</span>
+                    <span style={commonStyles.dot}>•</span>
+                    <span style={commonStyles.itemTime}>{meal.calories} kcal</span>
                   </div>
                 </div>
 
@@ -198,12 +198,12 @@ export default function MealPlanner() {
           </div>
         </div>
 
-        <div style={styles.navigationContainer}>
+        <div style={commonStyles.navigationContainer}>
           <button
             onClick={handlePrevDay}
             disabled={currentDay === 0}
             style={{
-              ...styles.navButton(currentDay === 0),
+              ...commonStyles.navButton(currentDay === 0),
               backgroundColor:
                 navHover === "prev"
                   ? "rgba(126, 201, 135, 0.1)"
@@ -225,7 +225,7 @@ export default function MealPlanner() {
             onClick={handleNextDay}
             disabled={currentDay === 6}
             style={{
-              ...styles.navButton(currentDay === 6),
+              ...commonStyles.navButton(currentDay === 6),
               backgroundColor:
                 navHover === "next"
                   ? "rgba(126, 201, 135, 0.1)"
@@ -245,10 +245,10 @@ export default function MealPlanner() {
         </div>
       </div>
 
-      <div style={styles.buttonsContainer}>
+      <div style={commonStyles.buttonsContainer}>
         <button
           style={{
-            ...styles.generateButton,
+            ...commonStyles.generateButton,
             backgroundColor: genHover ? "#6db776" : "#7ec987",
           }}
           onMouseEnter={() => setGenHover(true)}
@@ -260,7 +260,7 @@ export default function MealPlanner() {
 
         <button
           style={{
-            ...styles.editButton,
+            ...commonStyles.editButton,
             backgroundColor: editHover
               ? "rgba(126, 201, 135, 0.1)"
               : "transparent",

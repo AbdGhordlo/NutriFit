@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Home, Calendar, Dumbbell, Apple, LineChart, Settings } from 'lucide-react';
 import { styles } from './styles/SidebarStyles';
 
@@ -14,6 +14,7 @@ const navItems = [
 
 export default function Sidebar() {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const location = useLocation();
 
   const handleMouseEnter = (label) => {
     setHoveredItem(label);
@@ -30,18 +31,22 @@ export default function Sidebar() {
   return (
     <nav style={styles.nav}>
       <div style={styles.menuContainer}>
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            to={item.path}
-            style={styles.menuItem(item.active, hoveredItem === item.label)}
-            onMouseEnter={() => handleMouseEnter(item.label)}
-            onMouseLeave={handleMouseLeave}
-          >
-            <item.icon style={styles.menuIcon} />
-            <span style={styles.menuText}>{item.label}</span>
-          </Link>
-        ))}
+      {navItems.map((item) => {
+          // Check if the current path matches the item's path
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.label}
+              to={item.path}
+              style={styles.menuItem(isActive, hoveredItem === item.label)}
+              onMouseEnter={() => handleMouseEnter(item.label)}
+              onMouseLeave={handleMouseLeave}
+            >
+              <item.icon style={styles.menuIcon} />
+              <span style={styles.menuText}>{item.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
