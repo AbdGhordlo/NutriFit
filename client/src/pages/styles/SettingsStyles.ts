@@ -39,7 +39,7 @@ export const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '20px'
-  },
+  } as React.CSSProperties,
   settingItem: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -62,7 +62,7 @@ export const styles = {
   },
   toggle: (active) => ({
     width: '44px',
-    height: '24px',
+    height: '20px',
     backgroundColor: active ? '#7ec987' : '#d1d5db',
     borderRadius: '12px',
     padding: '2px',
@@ -74,13 +74,14 @@ export const styles = {
     height: '20px',
     backgroundColor: 'white',
     borderRadius: '50%',
-    transform: active ? 'translateX(20px)' : 'translateX(0)',
+    transform: active ? 'translateX(23px)' : 'translateX(0)',
     transition: 'transform 0.2s'
   }),
   input: {
     padding: '8px 12px',
     borderRadius: '6px',
     border: '1px solid #d1d5db',
+    backgroundColor: 'white',
     fontSize: '14px',
     color: '#1f2937',
     width: '120px'
