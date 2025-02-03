@@ -14,7 +14,7 @@ import {
 // import spicesIcon from '../assets/svgs/spices.svg'; //FIX: I think this isn't working because of TS.
 import { styles } from "./styles/IngredientsStyles";
 import { commonStyles } from "./styles/commonStyles";
-import './Ingredients.css'
+import "./Ingredients.css";
 
 interface Ingredient {
   id: number;
@@ -54,16 +54,16 @@ const categories: {
     icon: React.ComponentType<any> | string; // Allow both Lucide icons and image paths
   };
 } = {
-  Vegetables: { icon: Carrot},
-  Fruits: { icon: Apple},
-  "Meat & Poultry": { icon: Beef},
-  "Dairy & Eggs": { icon: Milk},
-  "Grains & Cereals": { icon: Wheat},
-  "Legumes, Nuts & Seeds": { icon: Bean},
-  Seafood: { icon: Fish},
-  "Fats & Oils": { icon: Oil},
-  "Spices, Herbs & Condiments": { icon: SpicesIcon},
-  "Other": { icon: UtensilsCrossed},
+  Vegetables: { icon: Carrot },
+  Fruits: { icon: Apple },
+  "Meat & Poultry": { icon: Beef },
+  "Dairy & Eggs": { icon: Milk },
+  "Grains & Cereals": { icon: Wheat },
+  "Legumes, Nuts & Seeds": { icon: Bean },
+  Seafood: { icon: Fish },
+  "Fats & Oils": { icon: Oil },
+  "Spices, Herbs & Condiments": { icon: SpicesIcon },
+  Other: { icon: UtensilsCrossed },
 };
 
 //Temporary. These will of course be stored in the DB
@@ -170,12 +170,13 @@ const ingredients: Ingredient[] = [
 ];
 
 export default function Ingredients() {
-  const [ingredientsList, setIngredientsList] = useState<Ingredient[]>(ingredients);
+  const [ingredientsList, setIngredientsList] =
+    useState<Ingredient[]>(ingredients);
   const [isHoveredAdd, setIsHoveredAdd] = useState(false);
   const [hoveredStock, setHoveredStock] = useState<number>();
 
   const toggleStock = (id: number) => {
-    setIngredientsList(prev => 
+    setIngredientsList((prev) =>
       prev.map((ingredient) =>
         ingredient.id === id
           ? { ...ingredient, inStock: !ingredient.inStock }
@@ -189,9 +190,13 @@ export default function Ingredients() {
       <div style={styles.container}>
         <div style={styles.header}>
           <h1 style={styles.title}>My Ingredients</h1>
-          <button style={{...styles.addButton, backgroundColor: isHoveredAdd ? "#6db776" : "#7ec987"}}
-          onMouseEnter={() => setIsHoveredAdd(true)}
-          onMouseLeave={() => setIsHoveredAdd(false)}
+          <button
+            style={{
+              ...styles.addButton,
+              backgroundColor: isHoveredAdd ? "#6db776" : "#7ec987",
+            }}
+            onMouseEnter={() => setIsHoveredAdd(true)}
+            onMouseLeave={() => setIsHoveredAdd(false)}
           >
             <Plus style={{ width: 20, height: 20 }} />
             <span>Add Ingredient</span>
@@ -200,10 +205,11 @@ export default function Ingredients() {
 
         <div style={styles.categoriesGrid}>
           {/* notice that with this, if there's a category that doesn't have an ingredient, it's not printed. Clean!*/}
-          {Object.entries(categories).map(
-            ([category, { icon: Icon }]) => 
-              ingredientsList.some((ingredient) => ingredient.category === category) ? 
-                (<div key={category} style={styles.categoryContainer}>
+          {Object.entries(categories).map(([category, { icon: Icon }]) =>
+            ingredientsList.some(
+              (ingredient) => ingredient.category === category
+            ) ? (
+              <div key={category} style={styles.categoryContainer}>
                 <div style={styles.categoryHeader}>
                   <Icon style={styles.categoryIcon} />
                   <h2 style={styles.categoryTitle}>{category}</h2>
@@ -223,42 +229,54 @@ export default function Ingredients() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ingredientsList.map((ingredient) => (
+                      {ingredientsList.map((ingredient) =>
                         ingredient.category === category ? (
-                        <tr key={ingredient.id} style={styles.tableRow}>
-                          <td style={styles.tableCell}>{ingredient.name}</td>
-                          <td style={styles.tableCell}>
-                            {ingredient.servingSize}
-                          </td>
-                          <td style={styles.tableCell}>
-                            {ingredient.calories}
-                          </td>
-                          <td style={styles.tableCell}>
-                            {ingredient.protein}g
-                          </td>
-                          <td style={styles.tableCell}>{ingredient.carbs}g</td>
-                          <td style={styles.tableCell}>{ingredient.fats}g</td>
-                          <td style={styles.tableCell}>
-                            <button
-                              onClick={() => toggleStock(ingredient.id)}
-                              style={{...styles.stockButton(ingredient.inStock),
-                              backgroundColor: ingredient.inStock ? 
-                              (hoveredStock === ingredient.id ? 'rgba(126, 201, 135, 0.2)' : 'rgba(126, 201, 135, 0.1)')
-                              : (hoveredStock === ingredient.id ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)')}}
-                              onMouseEnter={() => setHoveredStock(ingredient.id)}
-                              onMouseLeave={() => setHoveredStock(-1)}
-                            >
-                              {ingredient.inStock ? "In Stock" : "Out of Stock"}
-                            </button>
-                          </td>
-                        </tr>
+                          <tr key={ingredient.id} style={styles.tableRow}>
+                            <td style={styles.tableCell}>{ingredient.name}</td>
+                            <td style={styles.tableCell}>
+                              {ingredient.servingSize}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {ingredient.calories}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {ingredient.protein}g
+                            </td>
+                            <td style={styles.tableCell}>
+                              {ingredient.carbs}g
+                            </td>
+                            <td style={styles.tableCell}>{ingredient.fats}g</td>
+                            <td style={styles.tableCell}>
+                              <button
+                                onClick={() => toggleStock(ingredient.id)}
+                                style={{
+                                  ...styles.stockButton(ingredient.inStock),
+                                  backgroundColor: ingredient.inStock
+                                    ? hoveredStock === ingredient.id
+                                      ? "rgba(126, 201, 135, 0.2)"
+                                      : "rgba(126, 201, 135, 0.1)"
+                                    : hoveredStock === ingredient.id
+                                    ? "rgba(239, 68, 68, 0.2)"
+                                    : "rgba(239, 68, 68, 0.1)",
+                                }}
+                                onMouseEnter={() =>
+                                  setHoveredStock(ingredient.id)
+                                }
+                                onMouseLeave={() => setHoveredStock(-1)}
+                              >
+                                {ingredient.inStock
+                                  ? "In Stock"
+                                  : "Out of Stock"}
+                              </button>
+                            </td>
+                          </tr>
                         ) : null
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
-              ) : null
+            ) : null
           )}
         </div>
       </div>
