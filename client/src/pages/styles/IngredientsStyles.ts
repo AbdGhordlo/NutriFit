@@ -51,7 +51,7 @@ export const styles = {
     color: '#4d7051'
   },
   stockButton: (inStock) => ({
-    padding: '6px 12px',
+    padding: '8px 12px',
     borderRadius: '16px',
     fontSize: '14px',
     fontWeight: '500',
@@ -60,7 +60,7 @@ export const styles = {
     border: 'none',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    width: '103px', //TODO: make the width of the button unchanging
+    minWidth: inStock ? '75px' : '103px',
   }),
   ingredientName: {
     fontSize: '18px',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Dumbbell, Apple, LineChart, Settings } from 'lucide-react';
+import { Home, Calendar, Dumbbell, Apple, LineChart, Settings, LogIn, UserPlus } from 'lucide-react';
 import { styles } from './styles/SidebarStyles';
 
 const navItems = [
@@ -10,6 +10,9 @@ const navItems = [
   { icon: Apple, label: 'Ingredients', path: '/ingredients' },
   { icon: LineChart, label: 'Progress', path: '/progress' },
   { icon: Settings, label: 'Settings', path: '/settings' },
+  //The following 2 are added temporarily
+  { icon: LogIn, label: 'Login', path: '/login' },
+  { icon: UserPlus, label: 'Register', path: '/register' },
 ];
 
 export default function Sidebar() {

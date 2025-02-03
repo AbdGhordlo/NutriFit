@@ -10,6 +10,8 @@ import Ingredients from './pages/Ingredients';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
 import AppStyles from './AppStyles';
+import Login from './pages/Login';
+import Registration from './pages/Registration';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
               <Route path="/ingredients" element={<Ingredients />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Registration />} />
             </Routes>
           </div>
         </main>
