@@ -1,0 +1,27 @@
+/* Apply styles to the table container */
+.table-container {
+  overflow-x: auto;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #7ec987 #f3f4f6; /* Thumb color and track color for Firefox */
+}
+
+/* WebKit (Chrome, Edge, Safari) scrollbar styling */
+.table-container::-webkit-scrollbar {
+  height: 8px; /* Adjust scrollbar height */
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f3f4f6; /* Track color */
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #7ec987; /* Thumb color */
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #6db776; /* Darker shade on hover */
+}
+
