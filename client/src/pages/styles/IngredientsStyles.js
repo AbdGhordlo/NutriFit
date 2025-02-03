@@ -24,11 +24,25 @@ export const styles = {
     border: 'none',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
+    ':hover': {
+      backgroundColor: '#6db776'
+    }
   },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
     gap: '24px'
+  },
+  ingredientCard: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '20px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    ':hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+    }
   },
   cardHeader: {
     display: 'flex',
@@ -60,7 +74,9 @@ export const styles = {
     border: 'none',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    width: '103px', //TODO: make the width of the button unchanging
+    ':hover': {
+      backgroundColor: inStock ? 'rgba(126, 201, 135, 0.2)' : 'rgba(239, 68, 68, 0.2)'
+    }
   }),
   ingredientName: {
     fontSize: '18px',
@@ -95,7 +111,7 @@ export const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '32px'
-  } as React.CSSProperties,
+  },
   categoryContainer: {
     backgroundColor: 'white',
     borderRadius: '12px',
@@ -115,11 +131,11 @@ export const styles = {
   },
   tableContainer: {
     overflowX: 'auto'
-  } as React.CSSProperties,
+  },
   table: {
     width: '100%',
     borderCollapse: 'collapse'
-  } as React.CSSProperties,
+  },
   tableHeader: {
     textAlign: 'left',
     padding: '12px 16px',
@@ -127,15 +143,13 @@ export const styles = {
     color: '#4b5563',
     fontSize: '14px',
     fontWeight: '500'
-  } as React.CSSProperties,
+  },
   tableRow: {
     borderBottom: '1px solid #f3f4f6'
   },
   tableCell: {
     padding: '12px 16px',
     fontSize: '14px',
-    color: '#1f2937',
-    textAlign: 'center',
-    verticalAlign: 'middle',
-  } as React.CSSProperties,
+    color: '#1f2937'
+  }
 };
