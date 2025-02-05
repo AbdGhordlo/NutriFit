@@ -1,0 +1,141 @@
+Table user {
+    id SERIAL [primary key]
+    username VARCHAR(50) [unique, not null]
+    email VARCHAR(100) [unique, not null]
+    password_hash VARCHAR(255) [not null]
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+Table meal_plan {
+    id SERIAL [primary key]
+    user_id INT [ref: > user.id]
+    name VARCHAR(100) [not null]
+    description TEXT
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+
+Table meal {
+    id SERIAL [primary key]
+    name VARCHAR(100) [not null]
+    description TEXT
+    calories INT
+    protein INT
+    carbs INT
+    fats INT
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+Table exercise_plan {
+    id SERIAL [primary key]
+    user_id INT [ref: > user.id]
+    name VARCHAR(100) [not null]
+    description TEXT
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+Table exercise {
+    id SERIAL [primary key]
+    name VARCHAR(100) [not null]
+    description TEXT
+    calories_burned INT
+    has_reps_sets BOOLEAN [default: false]  // Indicates if exercise uses reps/sets
+    has_duration BOOLEAN [default: false]   // Indicates if exercise uses duration
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+Table exercise_plan_exercise {
+    id SERIAL [primary key]
+    exercise_plan_id INT [ref: > exercise_plan.id]
+    exercise_id INT [ref: > exercise.id]
+    
+    reps INT [null]        // Null if the exercise doesn't use reps
+    sets INT [null]        // Null if the exercise doesn't use sets
+    duration INT [null]    // Null if the exercise doesn't use duration (e.g., weightlifting)
+    
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    indexes {
+        (exercise_plan_id, exercise_id) [unique]  // Prevent duplicate entries
+    }
+}
+
+
+Table ingredient {
+    id SERIAL [primary key]
+    name VARCHAR(100) [not null]
+    category VARCHAR(50)
+    calories INT
+    protein INT
+    carbs INT
+    fats INT
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+Table user_ingredient_ingredient {
+    id SERIAL [primary key]  // Added primary key
+    user_ingredients_id INT [ref: > user_ingredients.id]
+    ingredient_id INT [ref: > ingredient.id]
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    indexes {
+        (user_ingredients_id, ingredient_id) [unique]  // Prevent duplicate entries
+    }
+}
+
+Table user_ingredients {
+    id SERIAL [primary key]  // Added primary key
+    user_id INT [ref: > user.id]
+    in_stock BOOLEAN [default: false]
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+Table meal_plan_meal {
+    id SERIAL [primary key]  // Added primary key
+    meal_plan_id INT [ref: > meal_plan.id]
+    meal_id INT [ref: > meal.id]
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    indexes {
+        (meal_plan_id, meal_id) [unique]  // Prevent duplicate entries
+    }
+}
+
+Table settings {
+    id SERIAL [primary key]
+    user_id INT [ref: > user.id]
+    weight_goal INT
+    calorie_target INT
+    dark_mode BOOLEAN [default: false]
+    meal_reminders BOOLEAN [default: true]
+    exercise_reminders BOOLEAN [default: true]
+    progress_updates BOOLEAN [default: true]
+    water_intake_reminder BOOLEAN [default: true]
+    language VARCHAR(50) [default: 'English']
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+
+Table user_notification {
+    id SERIAL [primary key]
+    user_id INT [ref: > user.id]
+    notification_id INT [ref: > notification.id]
+    is_read BOOLEAN [default: false]  // Track if notification is read
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    updated_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+    indexes {
+        (user_id, notification_id) [unique]  // Prevent duplicate notifications
+    }
+}
+
+Table notification {
+    id SERIAL [primary key]
+    title VARCHAR(100) [not null]
+    text TEXT [not null]  // Allow longer text
+    created_at TIMESTAMP [default: "CURRENT_TIMESTAMP"]
+}
+

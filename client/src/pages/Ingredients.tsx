@@ -54,16 +54,16 @@ const categories: {
     icon: React.ComponentType<any> | string; // Allow both Lucide icons and image paths
   };
 } = {
-  Vegetables: { icon: Carrot },
-  Fruits: { icon: Apple },
+  "Vegetables": { icon: Carrot },
+  "Fruits": { icon: Apple },
   "Meat & Poultry": { icon: Beef },
   "Dairy & Eggs": { icon: Milk },
   "Grains & Cereals": { icon: Wheat },
   "Legumes, Nuts & Seeds": { icon: Bean },
-  Seafood: { icon: Fish },
+  "Seafood": { icon: Fish },
   "Fats & Oils": { icon: Oil },
   "Spices, Herbs & Condiments": { icon: SpicesIcon },
-  Other: { icon: UtensilsCrossed },
+  "Other": { icon: UtensilsCrossed },
 };
 
 //Temporary. These will of course be stored in the DB
@@ -159,6 +159,28 @@ const ingredients: Ingredient[] = [
   {
     id: 9,
     name: "Black Pepper",
+    category: "Spices, Herbs & Condiments",
+    servingSize: "1 tsp (2.3g)",
+    calories: 6,
+    protein: 0.2,
+    carbs: 1.5,
+    fats: 0.1,
+    inStock: true,
+  },
+  {
+    id: 10,
+    name: "red Pepper",
+    category: "Spices, Herbs & Condiments",
+    servingSize: "1 tsp (2.3g)",
+    calories: 6,
+    protein: 0.2,
+    carbs: 1.5,
+    fats: 0.1,
+    inStock: true,
+  },
+  {
+    id: 11,
+    name: "pink Pepper",
     category: "Spices, Herbs & Condiments",
     servingSize: "1 tsp (2.3g)",
     calories: 6,
