@@ -4,7 +4,7 @@ import { Home, Calendar, Dumbbell, Apple, LineChart, Settings, LogIn, UserPlus }
 import { styles } from './styles/SidebarStyles';
 
 const navItems = [
-  { icon: Home, label: 'Home', path: '/' },
+  { icon: Home, label: 'Home', path: '/home' },
   { icon: Calendar, label: 'Meal Planner', path: '/meal-planner' },
   { icon: Dumbbell, label: 'Exercise Planner', path: '/exercise-planner' },
   { icon: Apple, label: 'Ingredients', path: '/ingredients' },

@@ -1,0 +1,142 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    z-index: 50;
+    padding: 0 24px;
+  }
+  
+  .container {
+    max-width: 1920px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .logo {
+    height: 30px;
+  }
+  
+  .brand-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #4d7051;
+  }
+  
+  .actions-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .notification-button {
+    padding: 8px 8px 4px;
+    border-radius: 50%;
+    background-color: white;
+    position: relative;
+    border: 2px solid transparent;
+    transition: background-color 0.3s ease;
+  }
+  
+  .notification-icon {
+    height: 24px;
+    color: #4b5563;
+  }
+  
+  .notification-dot {
+    position: absolute;
+    top: 7px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+  }
+  
+  .account-button {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 9999px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: background-color 0.3s ease;
+  }
+  
+  .account-icon {
+    height: 24px;
+    color: #4b5563;
+  }
+  
+  .account-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+  }
+  
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 10;
+    width: 300px;
+    padding: 12px;
+  }
+  
+  .notification-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .notification-content {
+    flex: 1;
+  }
+  
+  .notification-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+  }
+  
+  .notification-message {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  .notification-time {
+    font-size: 10px;
+    color: #9ca3af;
+  }
+  
+  .account-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  
+  .account-dropdown-item:hover {
+    background-color: #f3f4f6;
+  }
+  

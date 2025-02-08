@@ -1,40 +1,37 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const { Pool } = require('pg');
+const dotenv = require('dotenv'); 
 
-dotenv.config();
-const app = express();
+//Import Middleware
+const verifyToken = require('./middleware/auth'); // Import middleware
+
+//Import Routes
+const authRoutes = require('./routes/authRoutes'); // Import auth routes
+const homeRoutes = require('./routes/homeRoutes'); // Import auth routes
+// const mealPlannerRoutes = require('./routes/mealPlannerRoutes');
+// const exercisePlannerRoutes = require('./routes/exercisePlannerRoutes');
+
+dotenv.config(); // Loads environment variables from a .env file into process.env
+const app = express(); 
 const port = process.env.PORT || 5000;
 
-// PostgreSQL connection pool
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-});
-
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Routes
+app.use('/auth', authRoutes); // This mounts the authRoutes router under the /auth path.
+app.use('/', homeRoutes); // This mounts the authRoutes router under the /auth path.
+// app.use('/meal-planner', verifyToken, mealPlannerRoutes);
+// app.use('/exercise-planner', verifyToken, exercisePlannerRoutes);
+/* For example: A route defined in authRoutes as POST /login becomes POST /auth/login */
+
 // Test route
 app.get('/', (req, res) => {
-    res.send('Server is running!');
+  res.send('Server is running!');
 });
 
-// Example route to interact with PostgreSQL
-app.get('/api/data', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM your_table_name');
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error querying the database');
-    }
-});
-
+// Start the server
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on http://localhost:${port}`);
 });

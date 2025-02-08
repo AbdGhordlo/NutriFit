@@ -1,3 +1,5 @@
+import { Colors } from "../../assets/Colors";
+
 export const commonStyles = {
   container: {
     padding: "20px",
@@ -117,5 +119,17 @@ export const commonStyles = {
     border: "2px solid #7ec987",
     cursor: "pointer",
     transition: "background-color 0.2s",
+  },
+
+  errorMessage: {
+    padding: '8px 18px',
+    backgroundColor: Colors.errorBackground,
+    borderRadius: 8,
+  },
+  errorFont: {
+    color: Colors.errorFont,
+    margin: '0px',
+    fontSize: '13px',
+    fontWeight: '400',
   },
 };

@@ -2,11 +2,39 @@ import React, { useState } from "react";
 import { User, Mail, Lock } from "lucide-react";
 import { styles } from "./styles/AuthStyles";
 import { commonStyles } from "./styles/commonStyles";
+import ErrorMessage from "../components/ErrorMessage";
 
-export default function Registration() {
+export default function Register() {
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
+  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState("")
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    setErrorMessage('');
+    e.preventDefault();  // Prevent page reload
+    try {
+      const response = await fetch('http://localhost:5000/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem("token", data.token); // Store JWT in localStorage
+        window.location.href = "/home"; // Redirect to home page
+      } else {
+        setErrorMessage(data.message || "Registration failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Something went wrong. Please try again.");
+    }
+  };
 
   return (
     <div style={commonStyles.container}>
@@ -30,20 +58,19 @@ export default function Registration() {
             <span style={styles.dividerText}>or register with email</span>
           </div>
 
-          <form style={styles.form}>
+          <form style={styles.form} onSubmit={handleSubmit}>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Full Name</label>
               <div style={styles.inputContainer}>
                 <User style={styles.inputIcon} />
                 <input
                   type="text"
+                  name="username"
                   placeholder="Enter your full name"
-                  style={{
-                    ...styles.input,
-                    ...(nameFocus ? styles.inputFocused : {}),
-                  }}
+                  className={`input ${nameFocus ? "input-focused" : ""}`}
                   onFocus={() => setNameFocus(true)}
                   onBlur={() => setNameFocus(false)}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value})}
                 />
               </div>
             </div>
@@ -54,13 +81,12 @@ export default function Registration() {
                 <Mail style={styles.inputIcon} />
                 <input
                   type="email"
+                  name="email"
                   placeholder="Enter your email"
-                  style={{
-                    ...styles.input,
-                    ...(emailFocus ? styles.inputFocused : {}),
-                  }}
+                  className={`input ${emailFocus ? "input-focused" : ""}`}
                   onFocus={() => setEmailFocus(true)}
                   onBlur={() => setEmailFocus(false)}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value})}
                 />
               </div>
             </div>
@@ -71,16 +97,17 @@ export default function Registration() {
                 <Lock style={styles.inputIcon} />
                 <input
                   type="password"
+                  name="password"
                   placeholder="Enter your password"
-                  style={{
-                    ...styles.input,
-                    ...(passwordFocus ? styles.inputFocused : {}),
-                  }}
+                  className={`input ${passwordFocus ? "input-focused" : ""}`}
                   onFocus={() => setPasswordFocus(true)}
                   onBlur={() => setPasswordFocus(false)}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value})}
                 />
               </div>
             </div>
+
+            {errorMessage && <ErrorMessage message={errorMessage}/>}
 
             <button style={styles.submitButton}>Create Account</button>
           </form>

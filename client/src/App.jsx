@@ -11,7 +11,8 @@ import Progress from './pages/Progress';
 import Settings from './pages/Settings';
 import AppStyles from './AppStyles';
 import Login from './pages/Login';
-import Registration from './pages/Registration';
+import Register from './pages/Register';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -23,14 +24,16 @@ function App() {
         <main style={AppStyles.mainContent}>
           <div style={AppStyles.contentWrapper}>
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/meal-planner" element={<MealPlanner />} />
-              <Route path="/exercise-planner" element={<ExercisePlanner />} />
-              <Route path="/ingredients" element={<Ingredients />} />
-              <Route path="/progress" element={<Progress />} />
-              <Route path="/settings" element={<Settings />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Registration />} />
+              <Route path="/register" element={<Register />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/home" element={<Home />} />
+                <Route path="/meal-planner" element={<MealPlanner />} />
+                <Route path="/exercise-planner" element={<ExercisePlanner />} />
+                <Route path="/ingredients" element={<Ingredients />} />
+                <Route path="/progress" element={<Progress />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
             </Routes>
           </div>
         </main>
