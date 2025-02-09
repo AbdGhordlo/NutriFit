@@ -11,7 +11,7 @@ import {
   UtensilsCrossed,
   Droplet as Oil,
 } from "lucide-react";
-// import spicesIcon from '../assets/svgs/spices.svg'; //FIX: I think this isn't working because of TS.
+// import spicesIcon from '../assets/svgs/spices.svg'; //TODO: I think this isn't working because of TS.
 import { styles } from "./styles/IngredientsStyles";
 import { commonStyles } from "./styles/commonStyles";
 import "./Ingredients.css";
