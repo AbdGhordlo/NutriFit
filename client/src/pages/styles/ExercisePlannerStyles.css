@@ -1,0 +1,9 @@
+.exercise-item {
+    border: 1px solid #f3f4f6;
+    transition: border 0.2s ease-in-out;
+  }
+  
+  .exercise-item:hover {
+    border: 1px solid rgba(126, 201, 135);
+  }
+  
