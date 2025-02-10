@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
 import { styles } from "./styles/MealPlannerStyles";
 import { commonStyles } from "./styles/commonStyles";
+import { ClipLoader } from "react-spinners";
+import "./styles/MealPlannerStyles.css";
 
 interface Meal {
   id: number;
@@ -25,7 +27,7 @@ export default function MealPlanner() {
   const [navHover, setNavHover] = useState<string | null>(null);
   const [genHover, setGenHover] = useState(false);
   const [editHover, setEditHover] = useState(false);
-  const [itemHover, setItemHover] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMealPlan = async () => {
@@ -83,6 +85,8 @@ export default function MealPlanner() {
         setWeeklyPlan(groupedData);
       } catch (error) {
         console.error("Error fetching meal plan:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetching
       }
     };
   
@@ -107,8 +111,16 @@ export default function MealPlanner() {
     return day === date.getDay() ? true : false;
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <ClipLoader color="#7ec987" size={50} /> {/* Display the spinner */}
+      </div>
+    );
+  }
+
   if (weeklyPlan.length === 0) {
-    return <div>Loading...</div>;
+    return <div>No meal plan data found.</div>;
   }
 
   return (
@@ -125,12 +137,8 @@ export default function MealPlanner() {
             {weeklyPlan[currentDay].meals.map((meal) => (
               <div
                 key={meal.id}
-                style={{
-                  ...commonStyles.listItem,
-                  border: itemHover === meal.id ? "1px solid rgba(126, 201, 135)" : "1px solid #f3f4f6",
-                }}
-                onMouseEnter={() => setItemHover(meal.id)}
-                onMouseLeave={() => setItemHover(null)}
+                className="meal-item"
+                style={commonStyles.listItem}
               >
                 <div style={commonStyles.itemInfo}>
                   <h3 style={commonStyles.itemName}>{meal.name}</h3>

@@ -1,122 +1,27 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { commonStyles } from "./styles/commonStyles";
 import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
 import { styles } from "./styles/ExercisePlannerStyles";
+import { ClipLoader } from "react-spinners";
+import "./styles/ExercisePlannerStyles.css";
 
 interface Exercise {
   id: number;
   name: string;
+  description: string;
+  calories_burned: number;
+  has_reps_sets: boolean;
+  has_duration: boolean;
+  reps?: number;
+  sets?: number;
+  duration?: number;
   time: string;
-  duration: string;
-  sets: number;
-  reps: number;
-  weight: number;
-  type: "strength" | "cardio";
 }
 
 interface DayPlan {
-  id: number;
-  name: string;
-  date: string;
+  day_number: number;
   exercises: Exercise[];
 }
-
-const weeklyPlan: DayPlan[] = [
-  {
-    id: 0,
-    name: "Sunday",
-    date: "Mar 24",
-    exercises: [
-      {
-        id: 1,
-        name: "Bench Press",
-        time: "09:00",
-        duration: "20 min",
-        sets: 4,
-        reps: 12,
-        weight: 135,
-        type: "strength",
-      },
-      {
-        id: 2,
-        name: "Treadmill Run",
-        time: "09:30",
-        duration: "30 min",
-        sets: 1,
-        reps: 1,
-        weight: 0,
-        type: "cardio",
-      },
-      {
-        id: 3,
-        name: "Squats",
-        time: "10:15",
-        duration: "25 min",
-        sets: 4,
-        reps: 10,
-        weight: 185,
-        type: "strength",
-      },
-      {
-        id: 4,
-        name: "Pull-ups",
-        time: "10:45",
-        duration: "15 min",
-        sets: 3,
-        reps: 8,
-        weight: 0,
-        type: "strength",
-      },
-    ],
-  },
-  {
-    id: 1,
-    name: "Monday",
-    date: "Mar 25",
-    exercises: [
-      {
-        id: 1,
-        name: "Deadlift",
-        time: "08:00",
-        duration: "25 min",
-        sets: 4,
-        reps: 8,
-        weight: 225,
-        type: "strength",
-      },
-      {
-        id: 2,
-        name: "Rowing",
-        time: "08:30",
-        duration: "20 min",
-        sets: 1,
-        reps: 1,
-        weight: 0,
-        type: "cardio",
-      },
-      {
-        id: 3,
-        name: "Shoulder Press",
-        time: "09:00",
-        duration: "20 min",
-        sets: 4,
-        reps: 12,
-        weight: 95,
-        type: "strength",
-      },
-      {
-        id: 4,
-        name: "Cycling",
-        time: "09:30",
-        duration: "30 min",
-        sets: 1,
-        reps: 1,
-        weight: 0,
-        type: "cardio",
-      },
-    ],
-  },
-];
 
 export default function ExercisePlanner() {
   const [currentDay, setCurrentDay] = useState(0);
@@ -124,6 +29,74 @@ export default function ExercisePlanner() {
   const [genHover, setGenHover] = useState(false);
   const [editHover, setEditHover] = useState(false);
   const [itemHover, setItemHover] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [weeklyPlan, setWeeklyPlan] = useState<DayPlan[]>([]);
+
+  useEffect(() => {
+    const fetchExercisePlan = async () => {
+      const userId = 1; // Replace with the logged-in user's ID
+      const token = localStorage.getItem("token"); // Retrieve JWT from local storage
+
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login"; // Redirect if no token is found
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/exercise-planner/${userId}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.status === 401) {
+          console.error("Unauthorized, removing token and redirecting...");
+          localStorage.removeItem("token"); // Remove expired/invalid token
+          window.location.href = "/login"; // Redirect to login page
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(data); // Log the API response
+
+        // Group exercises by day
+        const groupedData = data.reduce((acc: any, exercise: any) => {
+          const day = exercise.day_number - 1; // Convert to 0-based index
+          if (!acc[day]) {
+            acc[day] = { day_number: exercise.day_number, exercises: [] };
+          }
+          acc[day].exercises.push({
+            id: exercise.exercise_id,
+            name: exercise.exercise_name,
+            description: exercise.exercise_description,
+            calories_burned: exercise.calories_burned,
+            has_reps_sets: exercise.has_reps_sets,
+            has_duration: exercise.has_duration,
+            reps: exercise.reps,
+            sets: exercise.sets,
+            duration: exercise.duration,
+            time: exercise.time,
+          });
+          return acc;
+        }, []);
+
+        setWeeklyPlan(groupedData);
+      } catch (error) {
+        console.error("Error fetching exercise plan:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetching
+      }
+    };
+
+    fetchExercisePlan();
+  }, []);
 
   const handlePrevDay = () => {
     if (currentDay > 0) {
@@ -142,6 +115,18 @@ export default function ExercisePlanner() {
     return day === date.getDay() ? true : false;
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <ClipLoader color="#7ec987" size={50} /> {/* Display the spinner */}
+      </div>
+    );
+  }
+
+  if (weeklyPlan.length === 0) {
+    return <div>No exercise plan data found.</div>;
+  }
+
   return (
     <div style={commonStyles.container}>
       <div style={commonStyles.mainContainer}>
@@ -149,53 +134,43 @@ export default function ExercisePlanner() {
 
         <div style={commonStyles.dayContainer(isToday(currentDay))}>
           <div style={commonStyles.dayHeader}>
-            <h2 style={commonStyles.dayName}>{weeklyPlan[currentDay].name}</h2>
-            <span style={commonStyles.dayDate}>{weeklyPlan[currentDay].date}</span>
+            <h2 style={commonStyles.dayName}>Day {weeklyPlan[currentDay].day_number}</h2>
           </div>
 
           <div style={commonStyles.itemsList}>
             {weeklyPlan[currentDay].exercises.map((exercise) => (
               <div
                 key={exercise.id}
-                style={{
-                  ...commonStyles.listItem,
-                  border:
-                    itemHover === exercise.id
-                      ? "1px solid rgba(126, 201, 135)"
-                      : "1px solid #f3f4f6",
-                }}
-                onMouseEnter={() => setItemHover(exercise.id)}
-                onMouseLeave={() => setItemHover(null)}
+                className="exercise-item"
+                style={commonStyles.listItem}
               >
                 <div style={commonStyles.itemInfo}>
                   <h3 style={commonStyles.itemName}>{exercise.name}</h3>
                   <div style={commonStyles.itemTimeInfo}>
                     <span style={commonStyles.itemTime}>{exercise.time}</span>
                     <span style={commonStyles.dot}>•</span>
-                    <span style={commonStyles.itemTime}>{exercise.duration}</span>
+                    <span style={commonStyles.itemTime}>{exercise.calories_burned} kcal</span>
                   </div>
                 </div>
 
                 <div style={styles.detailsContainer}>
-                  {exercise.type === "strength" ? (
-                    <>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailValue}>{exercise.sets}</span>
-                        <span style={styles.detailLabel}>Sets</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailValue}>{exercise.reps}</span>
-                        <span style={styles.detailLabel}>Reps</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailValue}>
-                          {exercise.weight}
-                        </span>
-                        <span style={styles.detailLabel}>lbs</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div style={styles.cardioLabel}>Cardio</div>
+                  {exercise.has_reps_sets && (
+                    <div style={styles.detailItem}>
+                      <span style={styles.detailLabel}>Reps:</span>
+                      <span style={styles.detailValue}>{exercise.reps}</span>
+                    </div>
+                  )}
+                  {exercise.has_reps_sets && (
+                    <div style={styles.detailItem}>
+                      <span style={styles.detailLabel}>Sets:</span>
+                      <span style={styles.detailValue}>{exercise.sets}</span>
+                    </div>
+                  )}
+                  {exercise.has_duration && (
+                    <div style={styles.detailItem}>
+                      <span style={styles.detailLabel}>Duration:</span>
+                      <span style={styles.detailValue}>{exercise.duration}</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -209,10 +184,7 @@ export default function ExercisePlanner() {
             disabled={currentDay === 0}
             style={{
               ...commonStyles.navButton(currentDay === 0),
-              backgroundColor:
-                navHover === "prev"
-                  ? "rgba(126, 201, 135, 0.1)"
-                  : "transparent",
+              backgroundColor: navHover === "prev" ? "rgba(126, 201, 135, 0.1)" : "transparent",
             }}
             onMouseEnter={() => setNavHover("prev")}
             onMouseLeave={() => setNavHover(null)}
@@ -231,10 +203,7 @@ export default function ExercisePlanner() {
             disabled={currentDay === 6}
             style={{
               ...commonStyles.navButton(currentDay === 6),
-              backgroundColor:
-                navHover === "next"
-                  ? "rgba(126, 201, 135, 0.1)"
-                  : "transparent",
+              backgroundColor: navHover === "next" ? "rgba(126, 201, 135, 0.1)" : "transparent",
             }}
             onMouseEnter={() => setNavHover("next")}
             onMouseLeave={() => setNavHover(null)}
@@ -266,9 +235,7 @@ export default function ExercisePlanner() {
         <button
           style={{
             ...commonStyles.editButton,
-            backgroundColor: editHover
-              ? "rgba(126, 201, 135, 0.1)"
-              : "transparent",
+            backgroundColor: editHover ? "rgba(126, 201, 135, 0.1)" : "transparent",
           }}
           onMouseEnter={() => setEditHover(true)}
           onMouseLeave={() => setEditHover(false)}
