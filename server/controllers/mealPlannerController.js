@@ -17,6 +17,7 @@ const getMealPlanByUser = async (req, res) => {
         m.protein,
         m.carbs,
         m.fats,
+        mpm.id AS meal_plan_meal_id,
         TO_CHAR(mpm.time, 'HH24:MI') AS time -- Format time to remove seconds
       FROM meal_plan mp
       JOIN meal_plan_meal mpm ON mp.id = mpm.meal_plan_id

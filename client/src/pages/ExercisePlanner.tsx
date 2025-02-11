@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { commonStyles } from "./styles/commonStyles";
 import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
-import { styles } from "./styles/ExercisePlannerStyles";
 import { ClipLoader } from "react-spinners";
+import "../assets/commonStyles.css";
 import "./styles/ExercisePlannerStyles.css";
 
 interface Exercise {
@@ -25,10 +24,6 @@ interface DayPlan {
 
 export default function ExercisePlanner() {
   const [currentDay, setCurrentDay] = useState(0);
-  const [navHover, setNavHover] = useState<string | null>(null);
-  const [genHover, setGenHover] = useState(false);
-  const [editHover, setEditHover] = useState(false);
-  const [itemHover, setItemHover] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [weeklyPlan, setWeeklyPlan] = useState<DayPlan[]>([]);
 
@@ -44,13 +39,16 @@ export default function ExercisePlanner() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/exercise-planner/${userId}`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `http://localhost:5000/exercise-planner/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (response.status === 401) {
           console.error("Unauthorized, removing token and redirecting...");
@@ -117,7 +115,7 @@ export default function ExercisePlanner() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div className="loading-container">
         <ClipLoader color="#7ec987" size={50} /> {/* Display the spinner */}
       </div>
     );
@@ -128,48 +126,46 @@ export default function ExercisePlanner() {
   }
 
   return (
-    <div style={commonStyles.container}>
-      <div style={commonStyles.mainContainer}>
-        <h1 style={commonStyles.title}>Weekly Exercise Plan</h1>
+    <div className="outer-container">
+      <div className="main-container">
+        <h1 className="title">Weekly Exercise Plan</h1>
 
-        <div style={commonStyles.dayContainer(isToday(currentDay))}>
-          <div style={commonStyles.dayHeader}>
-            <h2 style={commonStyles.dayName}>Day {weeklyPlan[currentDay].day_number}</h2>
+        <div className={`day-container ${isToday(currentDay) ? "today" : ""}`}>
+          <div className="day-header">
+            <h2 className="day-name">Day {weeklyPlan[currentDay].day_number}</h2>
           </div>
 
-          <div style={commonStyles.itemsList}>
+          <div className="items-list">
             {weeklyPlan[currentDay].exercises.map((exercise) => (
-              <div
-                key={exercise.id}
-                className="exercise-item"
-                style={commonStyles.listItem}
-              >
-                <div style={commonStyles.itemInfo}>
-                  <h3 style={commonStyles.itemName}>{exercise.name}</h3>
-                  <div style={commonStyles.itemTimeInfo}>
-                    <span style={commonStyles.itemTime}>{exercise.time}</span>
-                    <span style={commonStyles.dot}>•</span>
-                    <span style={commonStyles.itemTime}>{exercise.calories_burned} kcal</span>
+              <div key={exercise.id} className="list-item">
+                <div className="item-info">
+                  <h3 className="item-name">{exercise.name}</h3>
+                  <div className="item-time-info">
+                    <span className="item-time">{exercise.time}</span>
+                    <span className="dot">•</span>
+                    <span className="item-time">
+                      {exercise.calories_burned} kcal
+                    </span>
                   </div>
                 </div>
 
-                <div style={styles.detailsContainer}>
+                <div className="details-container">
                   {exercise.has_reps_sets && (
-                    <div style={styles.detailItem}>
-                      <span style={styles.detailLabel}>Reps:</span>
-                      <span style={styles.detailValue}>{exercise.reps}</span>
+                    <div className="detail-item">
+                      <span className="detail-label">Reps:</span>
+                      <span className="detail-value">{exercise.reps}</span>
                     </div>
                   )}
                   {exercise.has_reps_sets && (
-                    <div style={styles.detailItem}>
-                      <span style={styles.detailLabel}>Sets:</span>
-                      <span style={styles.detailValue}>{exercise.sets}</span>
+                    <div className="detail-item">
+                      <span className="detail-label">Sets:</span>
+                      <span className="detail-value">{exercise.sets}</span>
                     </div>
                   )}
                   {exercise.has_duration && (
-                    <div style={styles.detailItem}>
-                      <span style={styles.detailLabel}>Duration:</span>
-                      <span style={styles.detailValue}>{exercise.duration}</span>
+                    <div className="detail-item">
+                      <span className="detail-label">Duration:</span>
+                      <span className="detail-value">{exercise.duration}</span>
                     </div>
                   )}
                 </div>
@@ -178,69 +174,33 @@ export default function ExercisePlanner() {
           </div>
         </div>
 
-        <div style={commonStyles.navigationContainer}>
+        <div className="navigation-container">
           <button
             onClick={handlePrevDay}
             disabled={currentDay === 0}
-            style={{
-              ...commonStyles.navButton(currentDay === 0),
-              backgroundColor: navHover === "prev" ? "rgba(126, 201, 135, 0.1)" : "transparent",
-            }}
-            onMouseEnter={() => setNavHover("prev")}
-            onMouseLeave={() => setNavHover(null)}
+            className={`nav-button ${currentDay === 0 ? "disabled" : ""}`}
           >
-            <ChevronLeft
-              style={{
-                width: 24,
-                height: 24,
-                color: currentDay === 0 ? "#d1d5db" : "#7ec987",
-              }}
-            />
+            <ChevronLeft className="nav-icon" />
           </button>
 
           <button
             onClick={handleNextDay}
             disabled={currentDay === 6}
-            style={{
-              ...commonStyles.navButton(currentDay === 6),
-              backgroundColor: navHover === "next" ? "rgba(126, 201, 135, 0.1)" : "transparent",
-            }}
-            onMouseEnter={() => setNavHover("next")}
-            onMouseLeave={() => setNavHover(null)}
+            className={`nav-button ${currentDay === 6 ? "disabled" : ""}`}
           >
-            <ChevronRight
-              style={{
-                width: 24,
-                height: 24,
-                color: currentDay === 6 ? "#d1d5db" : "#7ec987",
-              }}
-            />
+            <ChevronRight className="nav-icon" />
           </button>
         </div>
       </div>
 
-      <div style={commonStyles.buttonsContainer}>
-        <button
-          style={{
-            ...commonStyles.generateButton,
-            backgroundColor: genHover ? "#6db776" : "#7ec987",
-          }}
-          onMouseEnter={() => setGenHover(true)}
-          onMouseLeave={() => setGenHover(false)}
-        >
-          <Wand2 style={{ width: 20, height: 20 }} />
+      <div className="buttons-container">
+        <button className="generate-button">
+          <Wand2 className="button-icon" />
           <span>Generate Plan</span>
         </button>
 
-        <button
-          style={{
-            ...commonStyles.editButton,
-            backgroundColor: editHover ? "rgba(126, 201, 135, 0.1)" : "transparent",
-          }}
-          onMouseEnter={() => setEditHover(true)}
-          onMouseLeave={() => setEditHover(false)}
-        >
-          <Edit3 style={{ width: 20, height: 20 }} />
+        <button className="edit-button">
+          <Edit3 className="button-icon" />
           <span>Edit Plan</span>
         </button>
       </div>

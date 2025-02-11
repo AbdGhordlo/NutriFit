@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 // import spicesIcon from '../assets/svgs/spices.svg'; //TODO: I think this isn't working because of TS.
 import { styles } from "./styles/IngredientsStyles";
-import { commonStyles } from "./styles/commonStyles";
+import "../assets/commonStyles.css";
 import "./Ingredients.css";
 
 interface Ingredient {
@@ -208,7 +208,7 @@ export default function Ingredients() {
   };
 
   return (
-    <div style={commonStyles.container}>
+    <div className="outer-container">
       <div style={styles.container}>
         <div style={styles.header}>
           <h1 style={styles.title}>My Ingredients</h1>

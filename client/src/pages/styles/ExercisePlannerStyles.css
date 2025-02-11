@@ -1,9 +1,31 @@
-.exercise-item {
-    border: 1px solid #f3f4f6;
-    transition: border 0.2s ease-in-out;
-  }
-  
-  .exercise-item:hover {
-    border: 1px solid rgba(126, 201, 135);
-  }
-  
+.details-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.detail-item {
+  text-align: center;
+  min-width: 60px;
+}
+
+.detail-value {
+  display: block;
+  font-weight: 600;
+  color: #4d7051;
+  font-size: 16px;
+}
+
+.detail-label {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.cardio-label {
+  padding: 4px 12px;
+  background-color: rgba(126, 201, 135, 0.1);
+  color: #4d7051;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}

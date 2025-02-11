@@ -1,9 +1,22 @@
-.meal-item {
-    border: 1px solid #f3f4f6;
-    transition: border 0.2s ease-in-out;
-  }
-  
-  .meal-item:hover {
-    border: 1px solid rgba(126, 201, 135);
-  }
-  
+.macros-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.macro-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.macro-value {
+  display: block;
+  font-weight: 500;
+  color: #4d7051;
+}
+
+.macro-label {
+  color: #6b7280;
+}
