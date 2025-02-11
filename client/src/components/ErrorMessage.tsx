@@ -1,10 +1,10 @@
 import React from 'react'
-import { commonStyles } from '../pages/styles/commonStyles'
+import "../assets/commonStyles.css";
 
 function ErrorMessage({message}) {
   return (
-    <div style={commonStyles.errorMessage}>
-      <p style={commonStyles.errorFont}>{message}</p>
+    <div className='error-message'>
+      <p className='error-font'>{message}</p>
     </div>
   )
 }

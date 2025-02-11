@@ -174,7 +174,7 @@ INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time)
 (1, 11, 1, 2, '10:30'), -- Snack: Protein Shake
 (1, 2, 1, 3, '13:00'), -- Lunch
 (1, 12, 1, 4, '16:00'), -- Snack: Fruit & Nuts
-(1, 3, 1, 5, '19:30'); -- Dinner
+(1, 3, 1, 5, '19:30'), -- Dinner
 (1, 12, 1, 6, '20:00'); -- Snack: Fruit & Nuts
 
 -- Day 2

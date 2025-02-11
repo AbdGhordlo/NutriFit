@@ -3,11 +3,11 @@ import DailyProgress from "../components/DailyProgress";
 import DailyMeals from "../components/DailyMeals";
 import DailyExercises from "../components/DailyExercises";
 import { styles } from "./styles/HomeStyles";
-import { commonStyles } from "./styles/commonStyles";
+import "../assets/commonStyles.css";
 
 function Home() {
   return (
-    <div style={commonStyles.container}>
+    <div className="outer-container">
       <DailyProgress />
       <div style={styles.gridContainer}>
         <DailyMeals />

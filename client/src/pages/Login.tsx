@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Mail, Lock, LogIn } from "lucide-react";
 import { styles } from "./styles/AuthStyles";
-import { commonStyles } from "./styles/commonStyles";
+import "../assets/commonStyles.css";
 import "./styles/AuthStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
 
@@ -37,7 +37,7 @@ export default function Login() {
   }
 
   return (
-    <div style={commonStyles.container}>
+    <div className="outer-container">
       <div style={styles.container}>
         <div style={styles.formContainer}>
           <h1 style={styles.title}>Welcome Back</h1>

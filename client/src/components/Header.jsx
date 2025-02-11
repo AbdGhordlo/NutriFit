@@ -1,14 +1,20 @@
 import React, { useState } from "react";
-import { Bell, User, Settings, LogOut, Droplet, UtensilsCrossed, Dumbbell } from "lucide-react";
+import {
+  Bell,
+  User,
+  Settings,
+  LogOut,
+  Droplet,
+  UtensilsCrossed,
+  Dumbbell,
+  Menu,
+} from "lucide-react";
 import logo from "../assets/imgs/logo-no-padding.png";
-import { styles } from "./styles/HeaderStyles";
-import './styles/headerStyles.css'
+import "./styles/headerStyles.css";
 
-export default function Header() {
-  const [isNotificationHovered, setNotificationHovered] = useState(false);
-  const [isAccountHovered, setAccountHovered] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false); // State for notifications dropdown
-  const [showAccount, setShowAccount] = useState(false); // State for account dropdown
+export default function Header({ toggleSidebar }) {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
 
   const notifications = [
     {
@@ -34,54 +40,59 @@ export default function Header() {
     },
   ];
 
-  const getHoverStyle = (isHovered, baseStyle, hoverStyle) => ({
-    ...baseStyle,
-    ...(isHovered ? hoverStyle : {}),
-  });
-
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove the token
-    window.location.href = "/login"; // Redirect to login
+    localStorage.removeItem("token");
+    window.location.href = "/login";
   };
 
   return (
-    <header style={styles.header}>
-      <div style={styles.container}>
-        <a href="/" style={{ textDecoration: "none" }}>
-          <div style={styles.logoContainer}>
-            <img src={logo} style={styles.logo} alt="Logo" />
-            <span style={styles.brandName}>NutriFit</span>
-          </div>
-        </a>
+    <header className="header">
+      <div className="container">
+        <div className="left-container">
+          {window.location.pathname !== "/login" &&
+            window.location.pathname !== "/register" && (
+              <button className="sidebar-toggle" onClick={toggleSidebar}>
+                <Menu className="menu-icon" />
+              </button>
+            )}
+          <a
+            href="/home"
+            style={{ textDecoration: "none" }}
+            className="logo-container-anchor"
+          >
+            <div className="logo-container">
+              <img src={logo} className="logo" alt="Logo" />
+              <span className="brand-name">NutriFit</span>
+            </div>
+          </a>
+        </div>
 
-        <div style={styles.actionsContainer}>
+        <div className="actions-container">
           {/* Notification Button */}
           <div style={{ position: "relative" }}>
             <button
-              style={getHoverStyle(
-                isNotificationHovered,
-                styles.notificationButton,
-                { backgroundColor: "#f3f4f6" } // Dim background on hover
-              )}
-              onMouseEnter={() => setNotificationHovered(true)}
-              onMouseLeave={() => setNotificationHovered(false)}
-              onClick={() => setShowNotifications(!showNotifications)} // Toggle notifications dropdown
+              className="notification-button"
+              onClick={() => setShowNotifications(!showNotifications)}
             >
-              <Bell style={styles.notificationIcon} />
-              {/* The dot should be added when there is a notification. Maybe passing Notifications info as a prop makes sense? */}
-            {/* <span style={styles.notificationDot}></span> */}
+              <Bell className="notification-icon" />
             </button>
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <div style={styles.dropdown}>
+              <div className="dropdown">
                 {notifications.map((notification) => (
-                  <div key={notification.id} style={styles.notificationItem}>
-                    <notification.icon style={styles.notificationIcon} />
-                    <div style={styles.notificationContent}>
-                      <h4 style={styles.notificationTitle}>{notification.title}</h4>
-                      <p style={styles.notificationMessage}>{notification.message}</p>
-                      <small style={styles.notificationTime}>{notification.time}</small>
+                  <div key={notification.id} className="notification-item">
+                    <notification.icon className="notification-icon" />
+                    <div className="notification-content">
+                      <h4 className="notification-title">
+                        {notification.title}
+                      </h4>
+                      <p className="notification-message">
+                        {notification.message}
+                      </p>
+                      <small className="notification-time">
+                        {notification.time}
+                      </small>
                     </div>
                   </div>
                 ))}
@@ -92,37 +103,30 @@ export default function Header() {
           {/* Account Button */}
           <div style={{ position: "relative" }}>
             <button
-              style={getHoverStyle(
-                isAccountHovered,
-                styles.accountButton,
-                { backgroundColor: "#f3f4f6" } // Dim background on hover
-              )}
-              onMouseEnter={() => setAccountHovered(true)}
-              onMouseLeave={() => setAccountHovered(false)}
-              onClick={() => setShowAccount(!showAccount)} // Toggle account dropdown
+              className="account-button"
+              onClick={() => setShowAccount(!showAccount)}
             >
-              <User style={styles.accountIcon} />
-              <span style={styles.accountText}>Account</span>
+              <User className="account-icon" />
+              <span className="account-text">Account</span>
             </button>
 
             {/* Account Dropdown */}
             {showAccount && (
-              <div style={styles.dropdown}>
-                <div style={styles.accountDropdownItem}>
-                  <span>Username</span> {/* Replace with dynamic username */}
+              <div className="dropdown">
+                <div className="account-dropdown-item">
+                  <span>Username</span>
                 </div>
-                <div style={styles.accountDropdownItem}>
-                  <Settings style={styles.menuIcon} />
+                <div className="account-dropdown-item">
+                  <Settings className="menu-icon" />
                   <span>Settings</span>
                 </div>
-                <div style={styles.accountDropdownItem} onClick={handleLogout}>
-                  <LogOut style={styles.menuIcon} />
+                <div className="account-dropdown-item" onClick={handleLogout}>
+                  <LogOut className="menu-icon" />
                   <span>Logout</span>
                 </div>
               </div>
             )}
           </div>
-          
         </div>
       </div>
     </header>

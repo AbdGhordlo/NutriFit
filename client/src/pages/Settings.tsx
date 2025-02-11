@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { User, Bell, Lock, Globe } from "lucide-react";
 import { styles } from "./styles/SettingsStyles";
-import { commonStyles } from "./styles/commonStyles";
+import "../assets/commonStyles.css";
 
 interface SettingSection {
   title: string;
@@ -159,7 +159,7 @@ const handleToggle = (passedSetting: any) => {
   };
 
   return (
-    <div style={commonStyles.container}>
+    <div className="outer-container">
       <div style={styles.container}>
         <h1 style={styles.title}>Settings</h1>
 

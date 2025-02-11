@@ -1,0 +1,37 @@
+/* AppStyles.css */
+.app-container {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #f9fafb; /* Tailwind's bg-gray-50 */
+}
+
+.main-content {
+  padding-top: 4rem; /* Tailwind's pt-16 */
+  padding-bottom: 4rem; /* Tailwind's pb-16 */
+  transition: margin-left 0.3s ease; /* Smooth transition for sidebar toggle */
+}
+
+.main-content.sidebar-hidden {
+  margin-left: 0; /* No margin when sidebar is hidden */
+}
+
+/* Adjust margin for large screens */
+@media (min-width: 1000px) {
+  .main-content {
+    margin-left: 255.2px; /* Push content to the right */
+  }
+}
+
+.content-wrapper {
+  max-width: 1920px; /* Tailwind's max-w-[1920px] */
+  margin: auto auto; /* Tailwind's mx-auto */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Styles for no sidebar routes */
+.app-container.no-sidebar .main-content {
+  margin-left: 0;
+}
