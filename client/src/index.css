@@ -50,12 +50,12 @@ h1 {
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  /* border: 1px solid transparent; */
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  /* background-color: #1a1a1a; */ /*? TO DISCUSS: this color is overriding the bg color I'm applying to the buttons and I see it defines a kind of black bg color to all buttons globally (this might not be a problem with stylesheets as it may override them but causes a problem in tailwnd) so how about removing it?) */
   cursor: pointer;
 }
 button:hover {
@@ -79,8 +79,50 @@ button:focus-visible {
   a:hover {
     color: #747bff;
   }
-  button {
+  /* button {
     background-color: #f9f9f9;
+  } */  /*? TO DISCUSS: this color is overriding the bg color I'm applying to the buttons and I see it defines a kind of a light bg color to buttons globally (this might not be a problem with stylesheets as it may override them but causes a problem in tailwnd) so how about removing it? */
+}
+
+/*~ TAILWIND UTILITIES ~*/
+
+/* Utility to hide a Scrollbar (used as "no-scrollbar" in tailwind) */
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
+  .no-scrollbar {
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+  }
+}
+
+/* Variable Theme Colors */
+
+@theme {
+  /* Error Colors */
+  --color-error-background: #f8d7da;
+  --color-error-font: #721c24;
+
+  /* Green Colors */
+  --color-light-green: #E9F5EB;
+  --color-primary-green: #7EC987;
+  --color-dark-green: #4D7051;
+
+  /* Text Colors */
+  --color-primary-text: #1F2937;
+  --color-secondary-text: #4B5563;
+  --color-tertiary-text: #6B7280;
+  --color-quaternary-text: #757280;
+
+  /* Background Colors */
+  --color-gray-background: #F3F4F6;
+  --color-page-background: #F9FAFB;
+
+  /* Button Hover */
+  --color-primary-hover: #7EB687; 
+  --color-secondary-hover: #4D7051;
+
 }
 
