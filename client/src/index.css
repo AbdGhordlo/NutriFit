@@ -9,6 +9,8 @@ body {
   //up for the horizontal space lost by the vertical scroll bar.
 }   */
 
+@import "tailwindcss";
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
