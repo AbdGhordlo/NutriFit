@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Dumbbell, Apple, LineChart, Settings, LogIn, UserPlus } from 'lucide-react';
+import { UserRoundPen, Home, Calendar, Dumbbell, Apple, LineChart, Settings, LogIn, UserPlus } from 'lucide-react';
 import { styles } from './styles/SidebarStyles';
 
 const navItems = [
@@ -10,9 +10,10 @@ const navItems = [
   { icon: Apple, label: 'Ingredients', path: '/ingredients' },
   { icon: LineChart, label: 'Progress', path: '/progress' },
   { icon: Settings, label: 'Settings', path: '/settings' },
-  //The following 2 are added temporarily
+  //The following 3 are added temporarily
   { icon: LogIn, label: 'Login', path: '/login' },
   { icon: UserPlus, label: 'Register', path: '/register' },
+  { icon: UserRoundPen, label: 'Personalization', path: '/personalization' },
 ];
 
 export default function Sidebar() {
@@ -32,7 +33,7 @@ export default function Sidebar() {
   query didn't work for me using CSS-in-JS*/
 
   return (
-    <nav style={styles.nav}>
+    <nav style={styles.nav} className='overflow-auto no-scrollbar'> {/* Added an invisible scrollbar since the nav items do not fit in my screen */}
       <div style={styles.menuContainer}>
       {navItems.map((item) => {
           // Check if the current path matches the item's path

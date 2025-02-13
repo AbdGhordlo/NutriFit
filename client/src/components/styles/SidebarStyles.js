@@ -7,7 +7,7 @@ export const styles = {
     width: '255.2px', // Default width
     backgroundColor: 'white',
     borderRight: '1px solid #e5e7eb',
-    padding: '24px 0',
+    padding: '24px 0px 86px 0px',  // added padding to the bottom since the last item is hidden under the footer
     transition: 'width 0.3s ease', // Smooth transition for width change
   },
   menuContainer: {
