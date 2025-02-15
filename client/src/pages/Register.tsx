@@ -1,24 +1,28 @@
 import React, { useState } from "react";
 import { User, Mail, Lock } from "lucide-react";
-import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
+import "./styles/AuthStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
 
 export default function Register() {
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
-  const [errorMessage, setErrorMessage] = useState("")
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    setErrorMessage('');
-    e.preventDefault();  // Prevent page reload
+    setErrorMessage("");
+    e.preventDefault(); // Prevent page reload
     try {
-      const response = await fetch('http://localhost:5000/auth/signup', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/auth/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -38,31 +42,31 @@ export default function Register() {
 
   return (
     <div className="outer-container">
-      <div style={styles.container}>
-        <div style={styles.formContainer}>
-          <h1 style={styles.title}>Create Account</h1>
-          <p style={styles.subtitle}>
+      <div className="inner-container">
+        <div className="form-container">
+          <h1 className="title">Create Account</h1>
+          <p className="subtitle">
             Join NutriFit to start your fitness journey
           </p>
 
-          <button style={styles.googleButton}>
+          <button className="google-button">
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"
-              style={styles.googleIcon}
+              className="google-icon"
             />
             Sign up with Google
           </button>
 
-          <div style={styles.divider}>
-            <span style={styles.dividerText}>or register with email</span>
+          <div className="divider">
+            <span className="divider-text">or register with email</span>
           </div>
 
-          <form style={styles.form} onSubmit={handleSubmit}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Full Name</label>
-              <div style={styles.inputContainer}>
-                <User style={styles.inputIcon} />
+          <form className="form" onSubmit={handleSubmit}>
+            <div className="input-group">
+              <label className="label">Full Name</label>
+              <div className="input-container">
+                <User className="input-icon" />
                 <input
                   type="text"
                   name="username"
@@ -70,15 +74,17 @@ export default function Register() {
                   className={`input ${nameFocus ? "input-focused" : ""}`}
                   onFocus={() => setNameFocus(true)}
                   onBlur={() => setNameFocus(false)}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
+                  }
                 />
               </div>
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Email</label>
-              <div style={styles.inputContainer}>
-                <Mail style={styles.inputIcon} />
+            <div className="input-group">
+              <label className="label">Email</label>
+              <div className="input-container">
+                <Mail className="input-icon" />
                 <input
                   type="email"
                   name="email"
@@ -86,15 +92,17 @@ export default function Register() {
                   className={`input ${emailFocus ? "input-focused" : ""}`}
                   onFocus={() => setEmailFocus(true)}
                   onBlur={() => setEmailFocus(false)}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Password</label>
-              <div style={styles.inputContainer}>
-                <Lock style={styles.inputIcon} />
+            <div className="input-group">
+              <label className="label">Password</label>
+              <div className="input-container">
+                <Lock className="input-icon" />
                 <input
                   type="password"
                   name="password"
@@ -102,19 +110,21 @@ export default function Register() {
                   className={`input ${passwordFocus ? "input-focused" : ""}`}
                   onFocus={() => setPasswordFocus(true)}
                   onBlur={() => setPasswordFocus(false)}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                 />
               </div>
             </div>
 
-            {errorMessage && <ErrorMessage message={errorMessage}/>}
+            {errorMessage && <ErrorMessage message={errorMessage} />}
 
-            <button style={styles.submitButton}>Create Account</button>
+            <button className="submit-button">Create Account</button>
           </form>
 
-          <p style={styles.footer}>
+          <p className="auth-footer">
             Already have an account?{" "}
-            <a href="/login" style={styles.link}>
+            <a href="/login" className="link">
               Sign in
             </a>
           </p>

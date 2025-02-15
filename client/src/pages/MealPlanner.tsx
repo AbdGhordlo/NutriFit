@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import "./styles/MealPlannerStyles.css";
 import "../assets/commonStyles.css";
-
+import { generateMealPlan } from "../api/MealPlannerAI";
 interface Meal {
   id: number;
   name: string;
@@ -20,10 +20,32 @@ interface DayPlan {
   meals: Meal[];
 }
 
+interface GeneratedMealPlan {
+  meal_plan: {
+    name: string;
+    description: string;
+  };
+  meals: {
+    name: string;
+    description: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    time: string;
+    day_number: number;
+  }[];
+}
+
 export default function MealPlanner() {
-  const [currentDay, setCurrentDay] = useState(0); // Start with Day 1
+  const [currentDay, setCurrentDay] = useState(0);
   const [weeklyPlan, setWeeklyPlan] = useState<DayPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPopup, setShowPopup] = useState(false); // Controls popup visibility
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedMealPlan | null>(
+    null
+  ); // Stores the generated plan
+  const [isGenerating, setIsGenerating] = useState(false); // Tracks loading state during API call
 
   useEffect(() => {
     const fetchMealPlan = async () => {
@@ -92,6 +114,25 @@ export default function MealPlanner() {
 
     fetchMealPlan();
   }, []);
+
+  const handleGeneratePlan = async () => {
+    setIsGenerating(true);
+    setShowPopup(true);
+
+    try {
+      const plan = await generateMealPlan(); // Call the AI function
+      setGeneratedPlan(plan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    setGeneratedPlan(null);
+  };
 
   const handlePrevDay = () => {
     if (currentDay > 0) {
@@ -192,7 +233,7 @@ export default function MealPlanner() {
       </div>
 
       <div className="buttons-container">
-        <button className="generate-button">
+        <button className="generate-button" onClick={handleGeneratePlan}>
           <Wand2 className="button-icon" />
           <span>Generate Plan</span>
         </button>
@@ -202,6 +243,44 @@ export default function MealPlanner() {
           <span>Edit Plan</span>
         </button>
       </div>
+
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container">
+            {isGenerating ? (
+              <div className="loading-container">
+                <ClipLoader color="#7ec987" size={50} />
+                <p>Generating your meal plan...</p>
+              </div>
+            ) : (
+              <>
+                <h2>Generated Meal Plan</h2>
+                {generatedPlan && (
+                  <div className="generated-plan">
+                    <h3>{generatedPlan.meal_plan.name}</h3>
+                    <p>{generatedPlan.meal_plan.description}</p>
+                    <div className="meals-list">
+                      {generatedPlan.meals.map((meal, index) => (
+                        <div key={index} className="meal-item">
+                          <h4>{meal.name}</h4>
+                          <p>{meal.description}</p>
+                          <p>
+                            {meal.calories} kcal • {meal.protein}g Protein •{" "}
+                            {meal.carbs}g Carbs • {meal.fats}g Fats • {meal.time}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <button className="close-button" onClick={handleClosePopup}>
+                  Close
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
