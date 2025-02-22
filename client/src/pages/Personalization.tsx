@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ProgressBar } from "../components/ProgressBar";
 import { NavigationButtons } from "../components/NavigationButtons";
 import { Modal } from "../components/Modal";
@@ -7,6 +7,7 @@ import { Step2 } from "../components/PersonalizationSteps/Step2";
 import { Step3 } from "../components/PersonalizationSteps/Step3";
 import { Step4 } from "../components/PersonalizationSteps/Step4";
 import { Step5 } from "../components/PersonalizationSteps/Step5";
+
 import {
   PersonalInfo,
   FitnessGoal,
@@ -22,6 +23,10 @@ import {
 function Personalization() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isSkipModalOpen, setIsSkipModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // State for personalization data
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     height: 60,
     weight: 20,
@@ -44,30 +49,148 @@ function Personalization() {
   const [budget, setBudget] = useState<Budget>("basic");
   const [hasKitchenInventory, setHasKitchenInventory] = useState(false);
 
-  const handleNext = () => {
+  const userId = 1; // Replace with the logged-in user's ID
+  const token = localStorage.getItem("token");
+
+  // Fetch personalization data on component mount
+  useEffect(() => {
+    const fetchPersonalizationData = async () => {
+      if (!token) {
+        setError("No token found. Please log in.");
+        return;
+      }
+    
+      setIsLoading(true);
+      try {
+        const response = await fetch(`http://localhost:5000/personalization/${userId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+    
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return;
+        }
+    
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+    
+        const data = await response.json();
+        if (data.steps_data) {
+          // Populate state with fetched data
+          const { steps_data } = data;
+          setPersonalInfo(steps_data.step_1?.personalInfo || personalInfo);
+          setFitnessGoal(steps_data.step_2?.fitnessGoal || fitnessGoal);
+          setWeightGoal(steps_data.step_2?.weightGoal || weightGoal);
+          setCuisinePreferences(steps_data.step_3?.cuisinePreferences || cuisinePreferences);
+          setDietPreference(steps_data.step_3?.dietPreference || dietPreference);
+          setHealthIssues(steps_data.step_3?.healthIssues || healthIssues);
+          setMealsPerDay(steps_data.step_3?.mealsPerDay || mealsPerDay);
+          setActivityLevel(steps_data.step_4?.activityLevel || activityLevel);
+          setBudget(steps_data.step_5?.budget || budget);
+          setHasKitchenInventory(steps_data.step_5?.hasKitchenInventory || hasKitchenInventory);
+        }
+      } catch (err) {
+        setError("Failed to fetch personalization data. Please try again.");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPersonalizationData();
+  }, [token, userId]);
+
+  // Save personalization data when a step is completed
+  const saveStepData = async (stepNumber: number, stepData: any) => {
+    if (!token) {
+      setError("No token found. Please log in.");
+      return;
+    }
+  
+    setIsLoading(true);
+    try {
+      console.log(`Saving Step ${stepNumber} Data:`, stepData); // Log step data
+  
+      const response = await fetch(`http://localhost:5000/personalization/${userId}/step/${stepNumber}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ steps_data: stepData }),
+      });
+  
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+        return;
+      }
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+  
+    } catch (err) {
+      setError("Failed to save step data. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle next step
+  const handleNext = async () => {
     if (currentStep < 5) {
+      // Save current step data before proceeding
+      const stepData = {
+        step_1: { personalInfo },
+        step_2: { fitnessGoal, weightGoal },
+        step_3: {
+          cuisinePreferences,
+          dietPreference,
+          healthIssues,
+          mealsPerDay,
+        },
+        step_4: { activityLevel },
+        step_5: { budget, hasKitchenInventory },
+      };
+      await saveStepData(currentStep, stepData[`step_${currentStep}`]);
       setCurrentStep((prev) => (prev + 1) as Step);
     }
   };
 
+  // Handle back step
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => (prev - 1) as Step);
     }
   };
 
+  // Handle skip
   const handleSkip = () => {
     setIsSkipModalOpen(true);
   };
 
-  const handleSkipConfirm = () => {
+  // Handle skip confirmation
+  const handleSkipConfirm = async () => {
     setIsSkipModalOpen(false);
+    // Save default data if skipped
+    await saveStepData(currentStep, {});
   };
 
   return (
     <div className="h-full bg-pageBackground w-full">
       <div className="mx-auto px-4 py-8">
         <ProgressBar currentStep={currentStep} totalSteps={5} />
+
+        {isLoading && <div className="text-center">Loading...</div>}
+        {error && <div className="text-red-500 text-center">{error}</div>}
 
         <div className="bg-white p-8 rounded-xl shadow-lg">
           {currentStep === 1 && (

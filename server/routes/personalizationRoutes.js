@@ -1,13 +1,13 @@
 const express = require('express');
 const {
-  getPersonalizationByUser,
+  getPersonalizationData,
   createPersonalizationData,
   updatePersonalizationStep
 } = require('../controllers/personalizationController');
 const router = express.Router();
 
 // Route to get the personalization data for a user
-router.get('/:userId', getPersonalizationByUser);
+router.get('/:userId', getPersonalizationData);
 
 // Route to create or update personalization data for a user
 router.post('/:userId', createPersonalizationData);
