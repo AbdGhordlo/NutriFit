@@ -145,6 +145,19 @@ CREATE TABLE settings (
 );
 
 
+-- Personalization Table
+CREATE TABLE personalization (
+    personalization_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    steps_data JSONB,
+    completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
 -- Data
 
 -- Insert Meal Plan
