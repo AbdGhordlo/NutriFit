@@ -12,11 +12,11 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
     <div className="w-full mb-8">
       <div className="relative pt-1">
         <div className="flex mb-2 items-center justify-between">
-          <div className="text-xs font-semibold text-DarkGreen">
+          <div className="text-xs font-semibold text-dark-green">
             Step {currentStep} of {totalSteps}
           </div>
           <div className="text-right">
-            <span className="text-xs font-semibold inline-block text-DarkGreen">
+            <span className="text-xs font-semibold inline-block text-dark-green">
               {Math.round((currentStep / totalSteps) * 100)}%
             </span>
           </div>
