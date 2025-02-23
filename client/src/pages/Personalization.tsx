@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { ProgressBar } from "../components/ProgressBar";
 import { NavigationButtons } from "../components/NavigationButtons";
-import { Modal } from "../components/Modal";
+import { ConfirmationModal } from "../components/ConfirmationModal";
 import { Step1 } from "../components/PersonalizationSteps/Step1";
 import { Step2 } from "../components/PersonalizationSteps/Step2";
 import { Step3 } from "../components/PersonalizationSteps/Step3";
 import { Step4 } from "../components/PersonalizationSteps/Step4";
 import { Step5 } from "../components/PersonalizationSteps/Step5";
-
 import {
   PersonalInfo,
   FitnessGoal,
@@ -19,6 +18,8 @@ import {
   Budget,
   Step,
 } from "../types/personalization";
+import ClipLoader from "react-spinners/ClipLoader";
+import ErrorModal from "../components/ErrorModal";
 
 function Personalization() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
@@ -48,6 +49,7 @@ function Personalization() {
     useState<ActivityLevel>("very_light");
   const [budget, setBudget] = useState<Budget>("basic");
   const [hasKitchenInventory, setHasKitchenInventory] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
   const userId = 1; // Replace with the logged-in user's ID
   const token = localStorage.getItem("token");
@@ -59,27 +61,30 @@ function Personalization() {
         setError("No token found. Please log in.");
         return;
       }
-    
+
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:5000/personalization/${userId}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-    
+        const response = await fetch(
+          `http://localhost:5000/personalization/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         if (response.status === 401) {
           localStorage.removeItem("token");
           window.location.href = "/login";
           return;
         }
-    
+
         if (!response.ok) {
           throw new Error(`Error: ${response.status} ${response.statusText}`);
         }
-    
+
         const data = await response.json();
         if (data.steps_data) {
           // Populate state with fetched data
@@ -87,16 +92,23 @@ function Personalization() {
           setPersonalInfo(steps_data.step_1?.personalInfo || personalInfo);
           setFitnessGoal(steps_data.step_2?.fitnessGoal || fitnessGoal);
           setWeightGoal(steps_data.step_2?.weightGoal || weightGoal);
-          setCuisinePreferences(steps_data.step_3?.cuisinePreferences || cuisinePreferences);
-          setDietPreference(steps_data.step_3?.dietPreference || dietPreference);
+          setCuisinePreferences(
+            steps_data.step_3?.cuisinePreferences || cuisinePreferences
+          );
+          setDietPreference(
+            steps_data.step_3?.dietPreference || dietPreference
+          );
           setHealthIssues(steps_data.step_3?.healthIssues || healthIssues);
           setMealsPerDay(steps_data.step_3?.mealsPerDay || mealsPerDay);
           setActivityLevel(steps_data.step_4?.activityLevel || activityLevel);
           setBudget(steps_data.step_5?.budget || budget);
-          setHasKitchenInventory(steps_data.step_5?.hasKitchenInventory || hasKitchenInventory);
+          setHasKitchenInventory(
+            steps_data.step_5?.hasKitchenInventory || hasKitchenInventory
+          );
         }
       } catch (err) {
         setError("Failed to fetch personalization data. Please try again.");
+        setIsErrorModalOpen(true);
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -112,32 +124,38 @@ function Personalization() {
       setError("No token found. Please log in.");
       return;
     }
-  
+
     setIsLoading(true);
     try {
       console.log(`Saving Step ${stepNumber} Data:`, stepData); // Log step data
-  
-      const response = await fetch(`http://localhost:5000/personalization/${userId}/step/${stepNumber}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ steps_data: stepData }),
-      });
-  
+
+      const response = await fetch(
+        `http://localhost:5000/personalization/${userId}/step/${stepNumber}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ steps_data: stepData }),
+        }
+      );
+
       if (response.status === 401) {
         localStorage.removeItem("token");
         window.location.href = "/login";
         return;
       }
-  
+
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
-  
+
+      const data = await response.json();
+      console.log("Backend Response:", data); // Log backend response
     } catch (err) {
       setError("Failed to save step data. Please try again.");
+      setIsErrorModalOpen(true);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -184,13 +202,36 @@ function Personalization() {
     await saveStepData(currentStep, {});
   };
 
+  // Conditional rendering for loader, error, or page content
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#7ec987" size={50} /> {/* Display the spinner */}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorModal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        message={error}
+      />
+    );
+  }
+
   return (
     <div className="h-full bg-pageBackground w-full">
       <div className="mx-auto px-4 py-8">
         <ProgressBar currentStep={currentStep} totalSteps={5} />
-
-        {isLoading && <div className="text-center">Loading...</div>}
-        {error && <div className="text-red-500 text-center">{error}</div>}
 
         <div className="bg-white p-8 rounded-xl shadow-lg">
           {currentStep === 1 && (
@@ -253,7 +294,7 @@ function Personalization() {
         </div>
       </div>
 
-      <Modal
+      <ConfirmationModal
         isOpen={isSkipModalOpen}
         onClose={() => setIsSkipModalOpen(false)}
         onConfirm={handleSkipConfirm}

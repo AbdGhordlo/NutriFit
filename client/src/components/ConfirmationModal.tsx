@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import React from 'react';
 
-interface ModalProps {
+interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -11,7 +11,7 @@ interface ModalProps {
   cancelText?: string;
 }
 
-export function Modal({
+export function ConfirmationModal({
   isOpen,
   onClose,
   onConfirm,
@@ -19,7 +19,7 @@ export function Modal({
   message,
   confirmText = "Continue",
   cancelText = "Back"
-}: ModalProps) {
+}: ConfirmationModalProps) {
   if (!isOpen) return null;
 
   return (
