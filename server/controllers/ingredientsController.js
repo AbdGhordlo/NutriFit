@@ -60,8 +60,12 @@ const toggleIngredientStock = async (req, res) => {
 const addIngredient = async (req, res) => {
   const { ingredientId, name, category, calories, protein, carbs, fats } = req.body;
 
+  const client = await pool.connect();
   try {
-    const ingredientResult = await pool.query(
+    await client.query('BEGIN'); // Start transaction
+
+    // Insert into ingredient table
+    const ingredientResult = await client.query(
       `INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
@@ -79,16 +83,21 @@ const addIngredient = async (req, res) => {
 
     const userIngredientId = userIngredientResult.rows[0].id;
 
+    // Link ingredient to user_ingredients
     await pool.query(
       `INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
        VALUES ($1, $2)`,
       [userIngredientId, ingredientId]
     );
 
+    await client.query('COMMIT'); // Commit transaction
     res.status(201).json(ingredientResult.rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK'); // Rollback transaction if any error occurs
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release(); // Release client back to pool
   }
 };
 

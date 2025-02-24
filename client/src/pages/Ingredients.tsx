@@ -27,12 +27,12 @@ export default function Ingredients() {
 
   useEffect(() => {
     const fetchIngredients = async () => {
-      const userId = 1; // Replace with the logged-in user's ID
-      const token = localStorage.getItem("token"); // Retrieve JWT from local storage
+      const userId = 1;
+      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
-        window.location.href = "/login"; // Redirect if no token is found
+        window.location.href = "/login";
         return;
       }
 
@@ -50,8 +50,8 @@ export default function Ingredients() {
 
         if (response.status === 401) {
           console.error("Unauthorized, removing token and redirecting...");
-          localStorage.removeItem("token"); // Remove expired/invalid token
-          window.location.href = "/login"; // Redirect to login page
+          localStorage.removeItem("token");
+          window.location.href = "/login";
           return;
         }
 
@@ -60,32 +60,42 @@ export default function Ingredients() {
         }
 
         const data = await response.json();
-        console.log("result:" , data); // Log the API response
+        console.log("Raw API response:", data[0]); // Debug log
+        
+        const groupedData: Record<string, Category> = data.reduce(
+          (acc, ingredient) => {
+            const category = ingredient.ingredient_category;
 
-        // Group ingredients by category
-        const groupedData = data.reduce((acc: any, ingredient: any) => {
-          const category = ingredient.category;
-          if (!acc[category]) {
-            acc[category] = { name: category, ingredients: [] };
-          }
-          acc[category].ingredients.push({
-            id: ingredient.id,
-            name: ingredient.name,
-            category: ingredient.category,
-            calories: ingredient.calories,
-            protein: ingredient.protein,
-            carbs: ingredient.carbs,
-            fats: ingredient.fats,
-            inStock: ingredient.inStock,
-          });
-          return acc;
-        }, []);
+            if (!acc[category]) {
+              acc[category] = {
+                name: category,
+                ingredients: [],
+              };
+            }
 
-        setIngredients(Object.values(groupedData));
+            acc[category].ingredients.push({
+              id: ingredient.ingredient_id,
+              name: ingredient.ingredient_name,
+              category: ingredient.ingredient_category,
+              calories: ingredient.ingredient_calories || 0,
+              protein: ingredient.ingredient_protein || 0,
+              carbs: ingredient.ingredient_carbs || 0,
+              fats: ingredient.ingredient_fats || 0,
+              inStock: ingredient.in_stock === true,
+            });
+
+            return acc;
+          },
+          {}
+        );
+
+        console.log("Grouped Data:", groupedData);
+        const categoriesArray = Object.values(groupedData);
+        setIngredients(categoriesArray);
       } catch (error) {
         console.error("Error fetching ingredients:", error);
       } finally {
-        setLoading(false); // Set loading to false after fetching
+        setLoading(false);
       }
     };
 
@@ -105,10 +115,14 @@ export default function Ingredients() {
   };
 
   const toggleStock = async (ingredientId: number) => {
-    const userId = 1; // Replace with the logged-in user's ID
+    const userId = 1;
     const token = localStorage.getItem("token");
 
     try {
+      const currentIngredient = ingredients[currentCategory].ingredients.find(
+        (ing) => ing.id === ingredientId
+      );
+
       const response = await fetch(
         `http://localhost:5000/ingredients/${userId}/${ingredientId}`,
         {
@@ -117,7 +131,7 @@ export default function Ingredients() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ inStock: !ingredients[currentCategory].ingredients.find(ing => ing.id === ingredientId)?.inStock }),
+          body: JSON.stringify({ inStock: !currentIngredient?.inStock }),
         }
       );
 
@@ -126,11 +140,14 @@ export default function Ingredients() {
       }
 
       const updatedIngredient = await response.json();
+
       setIngredients((prev) =>
         prev.map((category) => ({
           ...category,
           ingredients: category.ingredients.map((ing) =>
-            ing.id === ingredientId ? { ...ing, inStock: updatedIngredient.inStock } : ing
+            ing.id === ingredientId
+              ? { ...ing, inStock: updatedIngredient.in_stock }
+              : ing
           ),
         }))
       );
@@ -141,15 +158,8 @@ export default function Ingredients() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <ClipLoader color="#7ec987" size={50} /> {/* Display the spinner */}
+      <div className="flex justify-center items-center h-screen">
+        <ClipLoader color="#7ec987" size={50} />
       </div>
     );
   }
@@ -176,18 +186,37 @@ export default function Ingredients() {
                 <div className="item-info">
                   <h3 className="item-name">{ingredient.name}</h3>
                   <div className="item-macros">
-                    <span>{ingredient.calories} kcal</span>
+                    <span>
+                      {ingredient.calories >= 0
+                        ? `${ingredient.calories} kcal`
+                        : "No data"}
+                    </span>
                     <span>•</span>
-                    <span>{ingredient.protein}g protein</span>
+                    <span>
+                      {ingredient.protein >= 0
+                        ? `${ingredient.protein}g protein`
+                        : "No data"}
+                    </span>
                     <span>•</span>
-                    <span>{ingredient.carbs}g carbs</span>
+                    <span>
+                      {ingredient.carbs >= 0
+                        ? `${ingredient.carbs}g carbs`
+                        : "No data"}
+                    </span>
                     <span>•</span>
-                    <span>{ingredient.fats}g fats</span>
+                    <span>
+                      {ingredient.fats >= 0
+                        ? `${ingredient.fats}g fats`
+                        : "No data"}
+                    </span>
                   </div>
                 </div>
+
                 <button
                   onClick={() => toggleStock(ingredient.id)}
-                  className={`stock-button ${ingredient.inStock ? "in-stock" : "out-of-stock"}`}
+                  className={`stock-button ${
+                    ingredient.inStock ? "in-stock" : "out-of-stock"
+                  }`}
                 >
                   {ingredient.inStock ? "In Stock" : "Out of Stock"}
                 </button>
@@ -208,7 +237,9 @@ export default function Ingredients() {
           <button
             onClick={handleNextCategory}
             disabled={currentCategory === ingredients.length - 1}
-            className={`nav-button ${currentCategory === ingredients.length - 1 ? "disabled" : ""}`}
+            className={`nav-button ${
+              currentCategory === ingredients.length - 1 ? "disabled" : ""
+            }`}
           >
             <ChevronRight className="nav-icon" />
           </button>
