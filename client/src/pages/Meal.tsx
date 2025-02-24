@@ -1,9 +1,9 @@
 import React from 'react';
-import { commonStyles } from "./styles/commonStyles";
+import "../assets/commonStyles.css";
 
 export default function Meal() {
   return (
-      <div style={commonStyles.container}>
+    <div className="outer-container">
         <h1>Meal Page</h1>
       </div>
     );

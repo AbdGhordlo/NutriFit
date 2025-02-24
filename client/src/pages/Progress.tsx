@@ -8,7 +8,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { styles } from "./styles/ProgressStyles";
-import { commonStyles } from "./styles/commonStyles";
+import "../assets/commonStyles.css";
 
 interface WeeklyProgress {
   day: string;
@@ -96,7 +96,7 @@ const weeklyStats = {
 
 export default function Progress() {
   return (
-    <div style={commonStyles.container}>
+    <div className="outer-container">
       <div style={styles.container}>
         {/* General Progress Section */}
         <div style={styles.generalProgress}>
