@@ -40,7 +40,7 @@
     gap: 12px;
     padding: 12px 16px;
     border-radius: 8px;
-    width: 198px; /* Adjust width accordingly */
+    width: 100%; /* Adjust width accordingly */
     transition: all 0.2s;
     color: #4b5563;
     cursor: pointer;

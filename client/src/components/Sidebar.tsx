@@ -9,6 +9,7 @@ import {
   Settings,
   LogIn,
   UserPlus,
+  UserRoundPen,
 } from "lucide-react";
 import "./styles/Sidebar.css";
 
@@ -21,6 +22,7 @@ const navItems = [
   { icon: Settings, label: "Settings", path: "/settings" },
   { icon: LogIn, label: "Login", path: "/login" },
   { icon: UserPlus, label: "Register", path: "/register" },
+  { icon: UserRoundPen, label: 'Personalization', path: '/personalization' }
 ];
 
 export default function Sidebar({ isVisible, toggleSidebar, isLargeScreen }) {

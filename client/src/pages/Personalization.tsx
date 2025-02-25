@@ -229,78 +229,80 @@ function Personalization() {
   }
 
   return (
-    <div className="h-full bg-pageBackground w-full">
-      <div className="mx-auto px-4 py-8">
-        <ProgressBar currentStep={currentStep} totalSteps={5} />
+    <div className="outer-container">
+      <div className="h-full bg-pageBackground w-full">
+        <div className="mx-auto px-4 py-8">
+          <ProgressBar currentStep={currentStep} totalSteps={5} />
 
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          {currentStep === 1 && (
-            <Step1
-              personalInfo={personalInfo}
-              setPersonalInfo={setPersonalInfo}
-            />
-          )}
-          {currentStep === 2 && (
-            <Step2
-              fitnessGoal={fitnessGoal}
-              setFitnessGoal={setFitnessGoal}
-              weightGoal={weightGoal}
-              setWeightGoal={setWeightGoal}
-            />
-          )}
-          {currentStep === 3 && (
-            <Step3
-              cuisinePreferences={cuisinePreferences}
-              setCuisinePreferences={setCuisinePreferences}
-              dietPreference={dietPreference}
-              setDietPreference={setDietPreference}
-              healthIssues={healthIssues}
-              setHealthIssues={setHealthIssues}
-              mealsPerDay={mealsPerDay}
-              setMealsPerDay={setMealsPerDay}
-            />
-          )}
-          {currentStep === 4 && (
-            <Step4
-              activityLevel={activityLevel}
-              setActivityLevel={setActivityLevel}
-            />
-          )}
-          {currentStep === 5 && (
-            <Step5
-              budget={budget}
-              setBudget={setBudget}
-              hasKitchenInventory={hasKitchenInventory}
-              setHasKitchenInventory={setHasKitchenInventory}
-            />
-          )}
+          <div className="bg-white p-8 rounded-xl shadow-lg">
+            {currentStep === 1 && (
+              <Step1
+                personalInfo={personalInfo}
+                setPersonalInfo={setPersonalInfo}
+              />
+            )}
+            {currentStep === 2 && (
+              <Step2
+                fitnessGoal={fitnessGoal}
+                setFitnessGoal={setFitnessGoal}
+                weightGoal={weightGoal}
+                setWeightGoal={setWeightGoal}
+              />
+            )}
+            {currentStep === 3 && (
+              <Step3
+                cuisinePreferences={cuisinePreferences}
+                setCuisinePreferences={setCuisinePreferences}
+                dietPreference={dietPreference}
+                setDietPreference={setDietPreference}
+                healthIssues={healthIssues}
+                setHealthIssues={setHealthIssues}
+                mealsPerDay={mealsPerDay}
+                setMealsPerDay={setMealsPerDay}
+              />
+            )}
+            {currentStep === 4 && (
+              <Step4
+                activityLevel={activityLevel}
+                setActivityLevel={setActivityLevel}
+              />
+            )}
+            {currentStep === 5 && (
+              <Step5
+                budget={budget}
+                setBudget={setBudget}
+                hasKitchenInventory={hasKitchenInventory}
+                setHasKitchenInventory={setHasKitchenInventory}
+              />
+            )}
 
-          <div className="w-full mt-8">
-            <NavigationButtons
-              onNext={handleNext}
-              onBack={handleBack}
-              canGoBack={currentStep > 1}
-              isLastStep={currentStep === 5}
-            />
+            <div className="w-full mt-8">
+              <NavigationButtons
+                onNext={handleNext}
+                onBack={handleBack}
+                canGoBack={currentStep > 1}
+                isLastStep={currentStep === 5}
+              />
+            </div>
+
+            <button
+              onClick={handleSkip}
+              className="w-full flex items-center justify-center mt-4 text-gray-500 hover:text-dark-green transition-colors"
+              style={{ fontSize: "14px" }}
+            >
+              Skip personalization steps
+            </button>
           </div>
-
-          <button
-            onClick={handleSkip}
-            className="w-full flex items-center justify-center mt-4 text-gray-500 hover:text-dark-green transition-colors"
-            style={{ fontSize: "14px" }}
-          >
-            Skip personalization steps
-          </button>
         </div>
-      </div>
 
-      <ConfirmationModal
-        isOpen={isSkipModalOpen}
-        onClose={() => setIsSkipModalOpen(false)}
-        onConfirm={handleSkipConfirm}
-        title="Skip Personalization?"
-        message="If you skip the personalization steps, you'll receive a standard plan that isn't tailored to your needs and goals."
-      />
+        <ConfirmationModal
+          isOpen={isSkipModalOpen}
+          onClose={() => setIsSkipModalOpen(false)}
+          onConfirm={handleSkipConfirm}
+          title="Skip Personalization?"
+          message="If you skip the personalization steps, you'll receive a standard plan that isn't tailored to your needs and goals."
+        />
+      </div>
     </div>
   );
 }
