@@ -1,82 +1,60 @@
 export const styles = {
   container: {
-    padding: '24px'
+    padding: '24px',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '32px'
   },
   title: {
     fontSize: '24px',
     fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '32px'
+    color: '#1f2937'
   },
-  settingsGrid: {
+  categoriesGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-    gap: '24px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))',
+    gap: '32px'
   },
-  section: {
+  categoryContainer: {
     backgroundColor: 'white',
     borderRadius: '12px',
     padding: '24px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden'
   },
-  sectionHeader: {
+  categoryHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
     marginBottom: '24px'
   },
-  sectionIcon: {
+  categoryIcon: {
     width: '24px',
     height: '24px',
     color: '#4d7051'
   },
-  sectionTitle: {
-    fontSize: '18px',
+  categoryTitle: {
+    fontSize: '20px',
     fontWeight: '600',
-    color: '#1f2937'
-  },
-  settingsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px'
-  } as React.CSSProperties,
-  settingItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px 0'
-  },
-  settingInfo: {
-    flex: 1,
-    marginRight: '24px'
-  },
-  settingName: {
-    fontSize: '16px',
-    fontWeight: '500',
     color: '#1f2937',
-    marginBottom: '4px'
+    margin: 0
   },
-  settingDescription: {
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse'
+  },
+  tableRow: {
+    borderBottom: '1px solid #e5e7eb'
+  },
+  tableCell: {
+    padding: '16px 0',
     fontSize: '14px',
-    color: '#6b7280'
+    color: '#1f2937',
+    verticalAlign: 'middle'
   },
-  toggle: (active) => ({
-    width: '44px',
-    height: '20px',
-    backgroundColor: active ? '#7ec987' : '#d1d5db',
-    borderRadius: '12px',
-    padding: '2px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s'
-  }),
-  toggleHandle: (active) => ({
-    width: '20px',
-    height: '20px',
-    backgroundColor: 'white',
-    borderRadius: '50%',
-    transform: active ? 'translateX(23px)' : 'translateX(0)',
-    transition: 'transform 0.2s'
-  }),
   input: {
     padding: '8px 12px',
     borderRadius: '6px',
@@ -84,7 +62,8 @@ export const styles = {
     backgroundColor: 'white',
     fontSize: '14px',
     color: '#1f2937',
-    width: '120px'
+    width: '100%',
+    boxSizing: 'border-box' as const
   },
   select: {
     padding: '8px 12px',
@@ -93,6 +72,82 @@ export const styles = {
     fontSize: '14px',
     color: '#1f2937',
     backgroundColor: 'white',
-    cursor: 'pointer'
-  }
+    cursor: 'pointer',
+    width: '100%'
+  },
+  photoContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  photoPlaceholder: {
+    width: '60px',
+    height: '60px',
+    borderRadius: '50%',
+    backgroundColor: '#f3f4f6',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  photoIcon: {
+    color: '#9ca3af'
+  },
+  photoButton: {
+    padding: '8px 16px',
+    backgroundColor: '#7ec987',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s',
+    ':hover': {
+      backgroundColor: '#6db776'
+    }
+  },
+  toggleContainer: {
+    position: 'relative',
+    display: 'inline-block'
+  },
+  toggleInput: {
+    opacity: 0,
+    width: 0,
+    height: 0
+  },
+  toggleSwitch: (checked: boolean) => ({
+    position: 'absolute',
+    cursor: 'pointer',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: checked ? '#7ec987' : '#d1d5db',
+    borderRadius: '34px',
+    transition: 'background-color 0.2s',
+    ':before': {
+      position: 'absolute',
+      content: '""',
+      height: '20px',
+      width: '20px',
+      left: checked ? 'calc(100% - 22px)' : '2px',
+      bottom: '2px',
+      backgroundColor: 'white',
+      borderRadius: '50%',
+      transition: 'transform 0.2s'
+    }
+  }),
+  saveButton: {
+    padding: '10px 20px',
+    backgroundColor: '#7ec987',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    marginTop: '10px', // Add space above the button
+    alignSelf: 'flex-end', // Align the button to the right if the parent is a flex container
+    float: 'right', // Align the button to the right if the parent is not a flex container
+    transition: 'background-color 0.2s', // Add a smooth color transition
+    ':hover': {
+      backgroundColor: '#6db776' // Darken the color on hover
+    }
+  },
 };
