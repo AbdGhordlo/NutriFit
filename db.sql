@@ -39,7 +39,7 @@ CREATE TABLE meal_plan_meal (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     day_number INT NOT NULL DEFAULT 1,
     meal_order INT NOT NULL DEFAULT 1,
-    time TIME NOT NULL DEFAULT '08:00',
+    time TIME NOT NULL DEFAULT '08:00'
 );
 
 -- Exercise Plan Table
@@ -143,6 +143,19 @@ CREATE TABLE settings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+-- Personalization Table
+CREATE TABLE personalization (
+    personalization_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    steps_data JSONB,
+    completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 
 
 -- Data
