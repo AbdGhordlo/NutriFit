@@ -11,6 +11,7 @@ const homeRoutes = require('./routes/homeRoutes'); // Import auth routes
 const mealPlannerRoutes = require('./routes/mealPlannerRoutes');
 const exercisePlannerRoutes = require('./routes/exercisePlannerRoutes');
 const personalizationRoutes = require('./routes/personalizationRoutes');
+const settingsRoutes = require('./routes/settingsRoutes'); // Import settings routes
 
 dotenv.config(); // Loads environment variables from a .env file into process.env
 const app = express(); 
@@ -26,6 +27,7 @@ app.use('/', homeRoutes); // This mounts the authRoutes router under the /auth p
 app.use('/meal-planner', verifyToken, mealPlannerRoutes);
 app.use('/exercise-planner', verifyToken, exercisePlannerRoutes);
 app.use('/personalization', verifyToken, personalizationRoutes);
+app.use('/settings', verifyToken, settingsRoutes); // Register settings routes
 /* For example: A route defined in authRoutes as POST /login becomes POST /auth/login */
 
 // Test route

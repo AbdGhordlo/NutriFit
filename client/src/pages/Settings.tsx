@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { User, Bell, Lock, Globe } from "lucide-react";
 import { styles } from "./styles/SettingsStyles";
 import "../assets/commonStyles.css";
@@ -9,10 +10,10 @@ interface SettingSection {
   settings: {
     name: string;
     description: string;
-    type: "toggle" | "input" | "select";
+    type: "toggle" | "input" | "select" | "upload" | "password";
     value?: any;
     options?: string[];
-  }[];
+  }[];  
 }
 
 const settingsSections: SettingSection[] = [
@@ -21,16 +22,28 @@ const settingsSections: SettingSection[] = [
     icon: User,
     settings: [
       {
-        name: "Weight Goal",
-        description: "Set your target weight",
-        type: "input",
-        value: "70 kg",
+        name: "Profile Picture",
+        description: "Upload your profile picture",
+        type: "upload",
+        value: "",
       },
       {
-        name: "Daily Calorie Target",
-        description: "Set your daily calorie goal",
+        name: "Name",
+        description: "",
         type: "input",
-        value: "2200 kcal",
+        value: "John Doe",
+      },
+      {
+        name: "Email",
+        description: "",
+        type: "input",
+        value: "johndoe@example.com",
+      },
+      {
+        name: "Password",
+        description: "",
+        type: "password",
+        value: "",
       },
     ],
   },
@@ -56,47 +69,9 @@ const settingsSections: SettingSection[] = [
         type: "toggle",
         value: true,
       },
-    ],
-  },
-  {
-    title: "Privacy",
-    icon: Lock,
-    settings: [
       {
-        name: "Profile Visibility",
-        description: "Control who can see your profile",
-        type: "select",
-        value: "Private",
-        options: ["Private", "Friends", "Public"],
-      },
-      {
-        name: "Data Sharing",
-        description: "Manage how your data is shared",
-        type: "toggle",
-        value: false,
-      },
-    ],
-  },
-  {
-    title: "Preferences",
-    icon: Globe,
-    settings: [
-      {
-        name: "Language",
-        description: "Choose your preferred language",
-        type: "select",
-        value: "English",
-        options: ["English", "Spanish", "French", "German"],
-      },
-      {
-        name: "Dark Mode",
-        description: "Toggle dark mode theme",
-        type: "toggle",
-        value: false,
-      },
-      {
-        name: "Sound Effects",
-        description: "Enable sound effects",
+        name: "Water Intake Reminder",
+        description: "Stay hydrated with water intake reminders",
         type: "toggle",
         value: true,
       },
@@ -105,28 +80,49 @@ const settingsSections: SettingSection[] = [
 ];
 
 export default function Settings() {
-
   const [settingsList, setSettingsList] = useState(settingsSections);
+  const [personalizationCompleted, setPersonalizationCompleted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const navigate = useNavigate();
+  const userHasPersonalized = true; // Replace this with actual logic
 
-//TODO: this is not very pretty. maybe the whole structure of the page should be changed
-const handleToggle = (passedSetting: any) => {
-  setSettingsList((prevSettingsList) =>
-    prevSettingsList.map((section) => ({
-      ...section,
-      settings: section.settings.map((setting) =>
-        setting.name === passedSetting.name
-          ? { ...setting, value: !setting.value } // Toggle the value
-          : setting
-      ),
-    }))
-  );
-};
+  const handleToggle = (passedSetting: any) => {
+    setSettingsList((prevSettingsList) =>
+      prevSettingsList.map((section) => ({
+        ...section,
+        settings: section.settings.map((setting) =>
+          setting.name === passedSetting.name
+            ? { ...setting, value: !setting.value }
+            : setting
+        ),
+      }))
+    );
+  };
+
+  const handleSaveSettings = () => {
+    setIsSaving(true);
+    
+    // Simulate API call to save settings
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaveSuccess(true);
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+    }, 1000);
+  };
 
   const renderSettingInput = (setting: any) => {
     switch (setting.type) {
       case "toggle":
         return (
-          <div style={styles.toggle(setting.value)} onClick={() => handleToggle(setting)}>
+          <div
+            style={styles.toggle(setting.value)}
+            onClick={() => handleToggle(setting)}
+          >
             <div style={styles.toggleHandle(setting.value)} />
           </div>
         );
@@ -135,23 +131,47 @@ const handleToggle = (passedSetting: any) => {
           <input
             type="text"
             value={setting.value}
-            style={styles.input}
+            style={styles.wideInput}
+            onChange={(e) => {
+              const updatedValue = e.target.value;
+              setSettingsList((prevSettingsList) =>
+                prevSettingsList.map((section) => ({
+                  ...section,
+                  settings: section.settings.map((s) =>
+                    s.name === setting.name ? { ...s, value: updatedValue } : s
+                  ),
+                }))
+              );
+            }}
+          />
+        );
+      case "password":
+        return (
+          <input
+            type="password"
+            placeholder="******"
+            style={styles.wideInput}
             onChange={() => {}}
           />
         );
       case "select":
         return (
-          <select
-            value={setting.value}
-            style={styles.select}
-            onChange={() => {}}
-          >
+          <select value={setting.value} style={styles.select} onChange={() => {}}>
             {setting.options?.map((option: string) => (
               <option key={option} value={option}>
                 {option}
               </option>
             ))}
           </select>
+        );
+      case "upload":
+        return (
+          <div style={styles.profileUploadContainer}>
+            <div style={styles.profilePicture}>
+              <User size={40} color="#6b7280" />
+            </div>
+            <button style={styles.changePhotoButton}>Change Photo</button>
+          </div>
         );
       default:
         return null;
@@ -186,6 +206,55 @@ const handleToggle = (passedSetting: any) => {
               </div>
             </div>
           ))}
+
+          {/* Personalization Section */}
+          <div
+            style={{
+              backgroundColor: userHasPersonalized ? "#cce8cf" : "#ffcccc",
+              borderRadius: "12px",
+              padding: "16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              color: "black",
+            }}
+          >
+            <p>
+              {userHasPersonalized
+                ? "Change your personalization"
+                : "Set up your personalization for personalized plans"}
+            </p>
+            <button
+              style={{
+                backgroundColor: "black",
+                color: userHasPersonalized ? "#e5f4e7" : "white",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+              onClick={() => navigate("/personalization")}
+            >
+              Personalize
+            </button>
+          </div>
+          
+          {/* Save Button Section */}
+          <div style={styles.saveButtonContainer}>
+            {saveSuccess && (
+              <div style={styles.successMessage}>
+                Settings saved successfully!
+              </div>
+            )}
+            <button 
+              style={styles.saveButton}
+              onClick={handleSaveSettings}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Save Settings"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

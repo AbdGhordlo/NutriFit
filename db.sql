@@ -128,18 +128,18 @@ CREATE TABLE notification (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Settings Table
+-- Or if you want to recreate the settings table with all fields
+DROP TABLE IF EXISTS settings;
 CREATE TABLE settings (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
-    weight_goal INT,
-    calorie_target INT,
-    dark_mode BOOLEAN DEFAULT FALSE,
     meal_reminders BOOLEAN DEFAULT TRUE,
     exercise_reminders BOOLEAN DEFAULT TRUE,
     progress_updates BOOLEAN DEFAULT TRUE,
     water_intake_reminder BOOLEAN DEFAULT TRUE,
-    language VARCHAR(50) DEFAULT 'English',
+    profile_picture VARCHAR(255),
+    personalize_steps JSONB, -- Stores the personalization steps data
+    personalize_completed BOOLEAN DEFAULT FALSE, -- Tracks if personalization is completed
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
