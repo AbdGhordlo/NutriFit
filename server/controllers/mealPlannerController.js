@@ -1,4 +1,8 @@
 const pool = require('../db');
+const { HfInference } = require('@huggingface/inference'); // Import Hugging Face Inference
+const Groq = require("groq-sdk");
+const hf = new HfInference(process.env.HF_ACCESS_TOKEN); // Initialize with your Hugging Face token
+const groq = new Groq(process.env.GROQ_API_KEY);
 
 const getMealPlanByUser = async (req, res) => {
   const { userId } = req.params;
@@ -33,55 +37,49 @@ const getMealPlanByUser = async (req, res) => {
   }
 };
 
+// API: deepseek-r1-distill-llama-70b using Groq
 const getMealPlan = async (req, res) => {
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "x",
-        "X-Title": "x",
-        "Content-Type": "application/json",
+    // Define the system prompt to guide the AI
+    const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a 7-day meal plan in valid JSON format. The plan should include meals for breakfast, lunch, and dinner each day. Each meal should have a name, description, calories, protein, carbs, fats, and time. The JSON structure should match this format:
+    {
+      "meal_plan": {
+        "name": "7-Day Meal Plan",
+        "description": "A balanced meal plan for a week."
       },
-      body: JSON.stringify({
-        model: "deepseek/deepseek-chat:free",
-        messages: [
-          {
-            role: "user",
-            content: `Generate a 7-day meal plan in valid JSON format. The plan should include meals for breakfast, lunch, and dinner each day. Each meal should have a name, description, calories, protein, carbs, fats, and time. The JSON structure should match this format:
-            {
-              "meal_plan": {
-                "name": "7-Day Meal Plan",
-                "description": "A balanced meal plan for a week."
-              },
-              "meals": [
-                {
-                  "name": "Meal Name",
-                  "description": "Meal Description",
-                  "calories": 500,
-                  "protein": 30,
-                  "carbs": 50,
-                  "fats": 20,
-                  "time": "08:00",
-                  "day_number": 1
-                }
-              ]
-            }
-            Make sure the response is valid JSON and does not include any additional text or explanations.`,
-          },
-        ],
-      }),
+      "meals": [
+        {
+          "name": "Meal Name",
+          "description": "Meal Description",
+          "calories": 500,
+          "protein": 30,
+          "carbs": 50,
+          "fats": 20,
+          "time": "08:00",
+          "day_number": 1
+        }
+      ]
+    }
+    Make sure the response is valid JSON and does not include any additional text or explanations.`;
+
+    // Make the request to Groq
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT }, // System prompt to guide the AI
+        { role: "user", content: "Generate a 7-day meal plan in JSON format." }, // User prompt
+      ],
+      model: "deepseek-r1-distill-llama-70b", // Use the desired model
+      temperature: 0.6, // Adjust for creativity
+      max_tokens: 4096, // Adjust based on your needs
+      top_p: 0.95, // Adjust for diversity
+      stream: false, // Disable streaming for a single response
     });
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log("AI Response:", data.choices[0].message.content); // Log the response for debugging
+    // Log the response for debugging
+    console.log("AI Response:", chatCompletion.choices[0].message.content);
 
     // Extract JSON from the response using a regular expression
-    const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+    const jsonMatch = chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("No valid JSON found in AI response");
     }
@@ -95,11 +93,169 @@ const getMealPlan = async (req, res) => {
       throw new Error("AI response is not valid JSON");
     }
 
-    res.status(200).json(generatedPlan); // Send the generated plan back to the frontend
+    // Validate the structure of the generated plan
+    if (
+      !generatedPlan.meal_plan ||
+      !generatedPlan.meals ||
+      !Array.isArray(generatedPlan.meals)
+    ) {
+      throw new Error("AI response does not match the expected structure");
+    }
+
+    // Send the generated plan back to the frontend
+    res.status(200).json(generatedPlan);
   } catch (error) {
     console.error("Error generating meal plan:", error);
     res.status(500).json({ error: "Failed to generate meal plan" });
   }
 };
+
+
+
+// API: deepseek/deepseek-chat:free using Openrouter
+
+// const getMealPlan = async (req, res) => {
+//   try {
+//     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+//       method: "POST",
+//       headers: {
+//         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+//         "HTTP-Referer": "x",
+//         "X-Title": "x",
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({
+//         model: "deepseek/deepseek-chat:free",
+//         messages: [
+//           {
+//             role: "user",
+//             content: `Generate a 7-day meal plan in valid JSON format. The plan should include meals for breakfast, lunch, and dinner each day. Each meal should have a name, description, calories, protein, carbs, fats, and time. The JSON structure should match this format:
+//             {
+//               "meal_plan": {
+//                 "name": "7-Day Meal Plan",
+//                 "description": "A balanced meal plan for a week."
+//               },
+//               "meals": [
+//                 {
+//                   "name": "Meal Name",
+//                   "description": "Meal Description",
+//                   "calories": 500,
+//                   "protein": 30,
+//                   "carbs": 50,
+//                   "fats": 20,
+//                   "time": "08:00",
+//                   "day_number": 1
+//                 }
+//               ]
+//             }
+//             Make sure the response is valid JSON and does not include any additional text or explanations.`,
+//           },
+//         ],
+//       }),
+//     });
+
+//     if (!response.ok) {
+//       throw new Error(`Error: ${response.status} ${response.statusText}`);
+//     }
+
+//     const data = await response.json();
+//     console.log("AI Response:", data.choices[0].message.content); // Log the response for debugging
+
+//     // Extract JSON from the response using a regular expression
+//     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+//     if (!jsonMatch) {
+//       throw new Error("No valid JSON found in AI response");
+//     }
+
+//     // Parse the extracted JSON
+//     let generatedPlan;
+//     try {
+//       generatedPlan = JSON.parse(jsonMatch[0]);
+//     } catch (parseError) {
+//       console.error("Failed to parse AI response as JSON:", parseError);
+//       throw new Error("AI response is not valid JSON");
+//     }
+
+//     res.status(200).json(generatedPlan); // Send the generated plan back to the frontend
+//   } catch (error) {
+//     console.error("Error generating meal plan:", error);
+//     res.status(500).json({ error: "Failed to generate meal plan" });
+//   }
+// };
+
+
+
+// API: mistralai/Mixtral-8x7B-Instruct-v0.1 using Huggingface
+
+// const getMealPlan = async (req, res) => {
+//   try {
+//     console.log(hf)
+//     // Define the system prompt to guide the AI
+//     const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a 7-day meal plan in valid JSON format. The plan should include meals for breakfast, lunch, and dinner each day. Each meal should have a name, description, calories, protein, carbs, fats, and time. The JSON structure should match this format:
+//     {
+//       "meal_plan": {
+//         "name": "7-Day Meal Plan",
+//         "description": "A balanced meal plan."
+//       },
+//       "meals": [
+//         {
+//           "name": "Meal Name",
+//           "description": "Meal Description",
+//           "calories": 500,
+//           "protein": 30,
+//           "carbs": 50,
+//           "fats": 20,
+//           "time": "08:00",
+//           "day_number": 1
+//         }
+//       ]
+//     }
+//     Make sure the response is valid JSON and does not include any additional text or explanations.`;
+
+//     // Make the request to Hugging Face
+//     const response = await hf.chatCompletion({
+//       model: "mistralai/Mixtral-8x7B-Instruct-v0.1", // Use the desired model
+//       messages: [
+//         { role: "system", content: SYSTEM_PROMPT }, // System prompt to guide the AI
+//         { role: "user", content: "Generate a 3-day meal plan in JSON format." }, // User prompt
+//       ],
+//       max_tokens: 4000, // Adjust based on your needs
+//     });
+
+//     // Log the response for debugging
+//     console.log("AI Response:", response.choices[0].message.content);
+
+//     // Extract JSON from the response using a regular expression
+//     const jsonMatch = response.choices[0].message.content.match(/\{[\s\S]*\}/);
+//     if (!jsonMatch) {
+//       throw new Error("No valid JSON found in AI response");
+//     }
+
+//     // Parse the extracted JSON
+//     let generatedPlan;
+//     try {
+//       generatedPlan = JSON.parse(jsonMatch[0]);
+//     } catch (parseError) {
+//       console.error("Failed to parse AI response as JSON:", parseError);
+//       throw new Error("AI response is not valid JSON");
+//     }
+
+//     // Validate the structure of the generated plan
+//     if (
+//       !generatedPlan.meal_plan ||
+//       !generatedPlan.meals ||
+//       !Array.isArray(generatedPlan.meals)
+//     ) {
+//       throw new Error("AI response does not match the expected structure");
+//     }
+
+//     // Send the generated plan back to the frontend
+//     res.status(200).json(generatedPlan);
+//   } catch (error) {
+//     console.error("Error generating meal plan:", error);
+//     res.status(500).json({ error: "Failed to generate meal plan" });
+//   }
+// };
+
 
 module.exports = { getMealPlanByUser, getMealPlan };

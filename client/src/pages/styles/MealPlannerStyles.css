@@ -41,8 +41,9 @@
   border-radius: 12px;
   padding: 24px;
   width: 90%;
-  height: 85%;
   max-width: 600px;
+  max-height: 80vh; /* Limit the height of the popup */
+  overflow-y: auto; /* Enable vertical scrolling */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
