@@ -1,4 +1,5 @@
 import React from "react";
+import Button from "./Button";
 
 interface NavigationButtonsProps {
   onNext: () => void;
@@ -15,23 +16,19 @@ export function NavigationButtons({
 }: NavigationButtonsProps) {
   return (
     <div className="flex justify-between gap-4 mt-8">
-      <button
+      <Button
         onClick={onBack}
         disabled={!canGoBack}
-        className={`min-w-24 px-6 py-2 rounded-lg border border-gray-300 text-quaternary-text hover:bg-gray-50 ${
-          canGoBack
-            ? ""
-            : "opacity-50 cursor-not-allowed pointer-events-none"
-        }`}
+        variant="secondary"
       >
         Back
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={onNext}
-        className="min-w-24 px-6 py-2 rounded-lg bg-primary-green text-white hover:bg-primary-hover"
+        variant="primary"
       >
         {isLastStep ? "Finish" : "Next"}
-      </button>
+      </Button>
     </div>
   );
 }
