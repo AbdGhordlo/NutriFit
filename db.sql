@@ -4,6 +4,7 @@ CREATE TABLE "user" (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    google_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -307,3 +308,39 @@ VALUES
 (1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
 (1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
 (1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
+
+
+
+--Insert Ingredients
+INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
+VALUES 
+  ('Spinach', 'Vegetables', 23, 2.9, 3.6, 0.4),
+  ('Chicken Breast', 'Meat & Poultry', 165, 31, 0, 3.6),
+  ('Brown Rice', 'Grains & Cereals', 111, 2.6, 23, 0.9);
+SELECT 
+        i.id AS ingredient_id,
+        i.name AS ingredient_name,
+        i.category AS ingredient_category,
+        i.calories AS ingredient_calories,
+        i.protein AS ingredient_protein,
+        i.carbs AS ingredient_carbs,
+        i.fats AS ingredient_fats,
+        ui.in_stock AS inStock
+      FROM user_ingredients ui
+      JOIN user_ingredient_ingredient uii ON ui.id = uii.user_ingredients_id
+      JOIN ingredient i ON uii.ingredient_id = i.id
+      WHERE ui.user_id = 1
+      ORDER BY i.category, i.name
+
+INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
+VALUES ('Salmon', 'Seafood', 208, 20, 0, 13)
+RETURNING id;
+
+-- Ardından kullanıcıya bu malzemeyi ekleyin
+INSERT INTO user_ingredients (user_id)
+VALUES (1)
+RETURNING id;
+
+-- Son olarak ilişkiyi ekleyin
+INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
+VALUES (1, 2);
