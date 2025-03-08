@@ -277,9 +277,7 @@ export default function MealPlanner() {
                       ([day, meals]) => (
                         <div
                           key={day}
-                          className={`day-container ${
-                            isToday(parseInt(day)) ? "today" : ""
-                          }`}
+                          className={`day-container`}
                         >
                           <div className="day-header">
                             <h2 className="day-name">Day {day}</h2>
