@@ -169,7 +169,7 @@ export const styles = {
     maxWidth: "300px",
     textAlign: "center",
   },
-  // New styles for the enhanced profile and account management sections
+  // New styles for profile container
   profileContainer: {
     display: "flex",
     flexDirection: "column",
@@ -206,6 +206,10 @@ export const styles = {
     borderRadius: "8px",
     backgroundColor: "#f3f4f6",
     cursor: "pointer",
+    transition: "background-color 0.2s",
+    "&:hover": {
+      backgroundColor: "#e5e7eb",
+    },
   },
   dangerOption: {
     display: "flex",
@@ -215,6 +219,10 @@ export const styles = {
     borderRadius: "8px",
     backgroundColor: "#fee2e2",
     cursor: "pointer",
+    transition: "background-color 0.2s",
+    "&:hover": {
+      backgroundColor: "#fecaca",
+    },
   },
   optionIconContainer: {
     display: "flex",
@@ -223,18 +231,23 @@ export const styles = {
   },
   optionText: {
     fontWeight: 500,
+    color: "#1f2937",
+    margin: 0,
   },
   optionDescription: {
     fontSize: "14px",
     color: "#6b7280",
+    margin: "4px 0 0 0",
   },
   dangerText: {
     fontWeight: 500,
     color: "#ef4444",
+    margin: 0,
   },
   dangerDescription: {
     fontSize: "14px",
     color: "#ef4444",
+    margin: "4px 0 0 0",
   },
   // Modal styles
   modalOverlay: {
@@ -266,11 +279,21 @@ export const styles = {
   modalTitle: {
     fontSize: "20px",
     fontWeight: 600,
+    color: "#1f2937",
+    margin: 0,
   },
   closeButton: {
     background: "none",
     border: "none",
     cursor: "pointer",
+    padding: "4px",
+    borderRadius: "4px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    "&:hover": {
+      backgroundColor: "#f3f4f6",
+    },
   },
   modalForm: {
     display: "flex",
@@ -280,6 +303,7 @@ export const styles = {
   errorMessage: {
     color: "#ef4444",
     fontSize: "14px",
+    margin: "4px 0 0 0",
   },
   modalFooter: {
     display: "flex",
@@ -292,8 +316,13 @@ export const styles = {
     borderRadius: "6px",
     border: "1px solid #d1d5db",
     backgroundColor: "white",
+    color: "#1f2937",
     fontSize: "14px",
     cursor: "pointer",
+    transition: "background-color 0.2s",
+    "&:hover": {
+      backgroundColor: "#f3f4f6",
+    },
   },
   submitButton: {
     padding: "8px 16px",
@@ -304,11 +333,52 @@ export const styles = {
     fontSize: "14px",
     fontWeight: 500,
     cursor: "pointer",
+    transition: "background-color 0.2s",
+    "&:hover": {
+      backgroundColor: "#6bbd76",
+    },
   },
   loadingContainer: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
-  }
+  },
+  // Additional styles for delete account modal
+  deleteModalTitle: {
+    fontSize: "20px",
+    fontWeight: 600,
+    color: "#ef4444",
+    margin: 0,
+  },
+  deleteModalText: {
+    fontSize: "16px",
+    marginBottom: "12px",
+    color: "#1f2937",
+  },
+  deleteModalSubtext: {
+    fontSize: "14px",
+    color: "#6b7280",
+    margin: "8px 0",
+  },
+  deleteModalList: {
+    fontSize: "14px",
+    color: "#6b7280",
+    marginLeft: "20px",
+    marginTop: "8px",
+  },
+  deleteButton: {
+    padding: "8px 16px",
+    borderRadius: "6px",
+    border: "none",
+    backgroundColor: "#ef4444",
+    color: "white",
+    fontSize: "14px",
+    fontWeight: 500,
+    cursor: "pointer",
+    transition: "background-color 0.2s",
+    "&:hover": {
+      backgroundColor: "#dc2626",
+    },
+  },
 };
