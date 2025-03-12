@@ -1,10 +1,22 @@
 const express = require('express');
-const { getUserSettings, updateUserSettings } = require('../controllers/settingsController');
-const verifyToken = require('../middleware/auth');
-
+const { 
+  getUserSettings, 
+  updateUserSettings, 
+  updateUserProfile,
+  updateUserPassword 
+} = require('../controllers/settingsController');
 const router = express.Router();
 
-router.get('/:userId', verifyToken, getUserSettings);
-router.post('/:userId', verifyToken, updateUserSettings);
+// Get user settings
+router.get('/:userId', getUserSettings);
+
+// Update user settings
+router.put('/:userId', updateUserSettings);
+
+// Update user profile
+router.put('/:userId/profile', updateUserProfile);
+
+// Update user password
+router.put('/:userId/password', updateUserPassword);
 
 module.exports = router;

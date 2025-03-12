@@ -4,6 +4,7 @@ CREATE TABLE "user" (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    profile_picture VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -31,17 +32,6 @@ CREATE TABLE meal (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Meal Plan Meal Table
-CREATE TABLE meal_plan_meal (
-    id SERIAL PRIMARY KEY,
-    meal_plan_id INT REFERENCES meal_plan(id) ON DELETE CASCADE,
-    meal_id INT REFERENCES meal(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    day_number INT NOT NULL DEFAULT 1,
-    meal_order INT NOT NULL DEFAULT 1,
-    time TIME NOT NULL DEFAULT '08:00'
-);
-
 -- Exercise Plan Table
 CREATE TABLE exercise_plan (
     id SERIAL PRIMARY KEY,
@@ -64,6 +54,38 @@ CREATE TABLE exercise (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Ingredient Table
+CREATE TABLE ingredient (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category VARCHAR(50),
+    calories INT,
+    protein INT,
+    carbs INT,
+    fats INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Notification Table
+CREATE TABLE notification (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Meal Plan Meal Table
+CREATE TABLE meal_plan_meal (
+    id SERIAL PRIMARY KEY,
+    meal_plan_id INT REFERENCES meal_plan(id) ON DELETE CASCADE,
+    meal_id INT REFERENCES meal(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    day_number INT NOT NULL DEFAULT 1,
+    meal_order INT NOT NULL DEFAULT 1,
+    time TIME NOT NULL DEFAULT '08:00'
+);
+
 -- Exercise Plan Exercise Table
 CREATE TABLE exercise_plan_exercise (
     id SERIAL PRIMARY KEY,
@@ -72,7 +94,7 @@ CREATE TABLE exercise_plan_exercise (
     reps INT,
     sets INT,
     time TIME NOT NULL DEFAULT '08:00',
-    duration VARCHAR(50), -- Changed to store text-based duration
+    duration VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     day_number INT NOT NULL DEFAULT 1,
     exercise_order INT NOT NULL DEFAULT 1
@@ -87,26 +109,13 @@ CREATE TABLE user_ingredients (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ingredient Table
-CREATE TABLE ingredient (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    category VARCHAR(50),
-    calories INT,
-    protein INT,
-    carbs INT,
-    fats INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- User Ingredient Ingredient Table
 CREATE TABLE user_ingredient_ingredient (
     id SERIAL PRIMARY KEY,
     user_ingredients_id INT REFERENCES user_ingredients(id) ON DELETE CASCADE,
     ingredient_id INT REFERENCES ingredient(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_ingredients_id, ingredient_id) -- Prevent duplicate entries
+    UNIQUE (user_ingredients_id, ingredient_id)
 );
 
 -- User Notification Table
@@ -117,15 +126,7 @@ CREATE TABLE user_notification (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, notification_id) -- Prevent duplicate notifications
-);
-
--- Notification Table
-CREATE TABLE notification (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    UNIQUE (user_id, notification_id)
 );
 
 -- Settings Table
@@ -137,12 +138,12 @@ CREATE TABLE settings (
     progress_updates BOOLEAN DEFAULT TRUE,
     water_intake_reminder BOOLEAN DEFAULT TRUE,
     profile_picture VARCHAR(255),
-    personalize_steps JSONB, -- Stores the personalization steps data
-    personalize_completed BOOLEAN DEFAULT FALSE, -- Tracks if personalization is completed
+    personalize_steps JSONB,
+    personalize_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id)
 );
-
 
 -- Personalization Table
 CREATE TABLE personalization (
@@ -151,10 +152,9 @@ CREATE TABLE personalization (
     steps_data JSONB,
     completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id)
 );
-
-
 
 
 -- Data
@@ -232,12 +232,12 @@ INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time)
 (1, 12, 7, 4, '17:00'), -- Snack: Fruit & Nuts
 (1, 13, 7, 5, '20:00'); -- Dinner: Cottage Cheese with Pineapple
 
-
-
+-- Insert Exercise Plan
 INSERT INTO exercise_plan (user_id, name, description)
 VALUES 
 (1, '7-Day Fitness Plan', 'A balanced 7-day exercise plan focusing on strength and cardio.');
 
+-- Insert Exercises
 INSERT INTO exercise (name, description, calories_burned, has_reps_sets, has_duration)
 VALUES 
 ('Push-ups', 'Bodyweight exercise targeting chest, shoulders, and triceps.', 100, TRUE, FALSE),
@@ -306,3 +306,25 @@ VALUES
 (1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
 (1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
 (1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
+
+-- Insert default settings for test user
+INSERT INTO settings (
+  user_id, 
+  meal_reminders, 
+  exercise_reminders, 
+  progress_updates, 
+  water_intake_reminder,
+  profile_picture, 
+  personalize_completed
+)
+VALUES (
+  1, -- Replace with a valid user ID when testing
+  TRUE, 
+  TRUE, 
+  TRUE, 
+  TRUE, 
+  NULL,
+  FALSE
+)
+ON CONFLICT (user_id) 
+DO NOTHING; -- Skip if the user already has settings
