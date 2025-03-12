@@ -169,4 +169,146 @@ export const styles = {
     maxWidth: "300px",
     textAlign: "center",
   },
+  // New styles for the enhanced profile and account management sections
+  profileContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+  },
+  profilePhotoSection: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    marginBottom: "16px",
+  },
+  profileInputsGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: "16px",
+    width: "100%",
+  },
+  inputLabel: {
+    display: "block",
+    marginBottom: "8px",
+    fontSize: "14px",
+    fontWeight: 500,
+  },
+  accountManagementList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  accountOption: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px 16px",
+    borderRadius: "8px",
+    backgroundColor: "#f3f4f6",
+    cursor: "pointer",
+  },
+  dangerOption: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px 16px",
+    borderRadius: "8px",
+    backgroundColor: "#fee2e2",
+    cursor: "pointer",
+  },
+  optionIconContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  optionText: {
+    fontWeight: 500,
+  },
+  optionDescription: {
+    fontSize: "14px",
+    color: "#6b7280",
+  },
+  dangerText: {
+    fontWeight: 500,
+    color: "#ef4444",
+  },
+  dangerDescription: {
+    fontSize: "14px",
+    color: "#ef4444",
+  },
+  // Modal styles
+  modalOverlay: {
+    display: "flex",
+    position: "fixed",
+    inset: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 50,
+  },
+  modalHidden: {
+    display: "none",
+  },
+  modalContainer: {
+    backgroundColor: "white",
+    borderRadius: "8px",
+    padding: "24px",
+    width: "100%",
+    maxWidth: "500px",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+  modalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "16px",
+  },
+  modalTitle: {
+    fontSize: "20px",
+    fontWeight: 600,
+  },
+  closeButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+  },
+  modalForm: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  },
+  errorMessage: {
+    color: "#ef4444",
+    fontSize: "14px",
+  },
+  modalFooter: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "12px",
+    marginTop: "16px",
+  },
+  cancelButton: {
+    padding: "8px 16px",
+    borderRadius: "6px",
+    border: "1px solid #d1d5db",
+    backgroundColor: "white",
+    fontSize: "14px",
+    cursor: "pointer",
+  },
+  submitButton: {
+    padding: "8px 16px",
+    borderRadius: "6px",
+    border: "none",
+    backgroundColor: "#7ec987",
+    color: "white",
+    fontSize: "14px",
+    fontWeight: 500,
+    cursor: "pointer",
+  },
+  loadingContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+  }
 };
