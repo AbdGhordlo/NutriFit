@@ -128,8 +128,7 @@ CREATE TABLE notification (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Or if you want to recreate the settings table with all fields
-DROP TABLE IF EXISTS settings;
+-- Settings Table
 CREATE TABLE settings (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
