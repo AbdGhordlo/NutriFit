@@ -9,7 +9,7 @@ export type ButtonProps = React.HTMLAttributes<HTMLDivElement> & {
 
 const Button: React.FC<ButtonProps> = React.memo(
   ({ variant = "primary", disabled = false, children, className, ...args }) => {
-    let classNames = "min-w-24 px-6 py-2 rounded-lg ";
+    let classNames = "min-w-24 px-6 py-2 rounded-lg flex items-center justify-center ";
 
     if (variant === "primary") {
       classNames += "bg-primary-green text-white hover:bg-primary-hover";
