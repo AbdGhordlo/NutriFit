@@ -10,7 +10,7 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     setErrorMessage("");
     e.preventDefault(); // Prevent page reload
     try {
@@ -35,6 +35,12 @@ export default function Login() {
     }
   };
 
+  // Function to handle Google login
+  const handleGoogleLogin = () => {
+    // Redirect to the backend's Google OAuth endpoint
+    window.location.href = "http://localhost:5000/auth/google";
+  };
+
   return (
     <div className="outer-container">
       <div className="inner-container">
@@ -42,7 +48,8 @@ export default function Login() {
           <h1 className="title">Welcome Back</h1>
           <p className="subtitle">Sign in to continue to NutriFit</p>
 
-          <button className="google-button">
+          {/* Google Login Button */}
+          <button style={styles.googleButton} onClick={handleGoogleLogin}>
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"
@@ -63,7 +70,7 @@ export default function Login() {
                 <input
                   type="email"
                   name="email"
-                  autoComplete="email"
+                  autoComplete="email" // Suggests the email field for autofill
                   placeholder="Enter your email"
                   className={`input ${emailFocus ? "input-focused" : ""}`}
                   onFocus={() => setEmailFocus(true)}
@@ -82,7 +89,7 @@ export default function Login() {
                 <input
                   type="password"
                   name="password"
-                  autoComplete="current-password"
+                  autoComplete="current-password" // Suggests password autofill
                   placeholder="Enter your password"
                   className={`input ${passwordFocus ? "input-focused" : ""}`}
                   onFocus={() => setPasswordFocus(true)}

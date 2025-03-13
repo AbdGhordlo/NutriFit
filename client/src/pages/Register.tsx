@@ -8,14 +8,10 @@ export default function Register() {
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     setErrorMessage("");
     e.preventDefault(); // Prevent page reload
     try {
@@ -40,6 +36,12 @@ export default function Register() {
     }
   };
 
+  // Function to handle Google login
+  const handleGoogleSignup = () => {
+    // Redirect to the backend's Google OAuth endpoint
+    window.location.href = "http://localhost:5000/auth/google";
+  };
+
   return (
     <div className="outer-container">
       <div className="inner-container">
@@ -49,7 +51,8 @@ export default function Register() {
             Join NutriFit to start your fitness journey
           </p>
 
-          <button className="google-button">
+          {/* Google Signup Button */}
+          <button style={styles.googleButton} onClick={handleGoogleSignup}>
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"
