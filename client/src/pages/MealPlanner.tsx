@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import "./styles/MealPlannerStyles.css";
 import "../assets/commonStyles.css";
-
+import { generateMealPlan } from "../api/MealPlannerAI";
 interface Meal {
   id: number;
   name: string;
@@ -20,10 +20,32 @@ interface DayPlan {
   meals: Meal[];
 }
 
+interface GeneratedMealPlan {
+  meal_plan: {
+    name: string;
+    description: string;
+  };
+  meals: {
+    name: string;
+    description: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    time: string;
+    day_number: number;
+  }[];
+}
+
 export default function MealPlanner() {
-  const [currentDay, setCurrentDay] = useState(0); // Start with Day 1
+  const [currentDay, setCurrentDay] = useState(0);
   const [weeklyPlan, setWeeklyPlan] = useState<DayPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPopup, setShowPopup] = useState(false); // Controls popup visibility
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedMealPlan | null>(
+    null
+  ); // Stores the generated plan
+  const [isGenerating, setIsGenerating] = useState(false); // Tracks loading state during API call
 
   useEffect(() => {
     const fetchMealPlan = async () => {
@@ -60,7 +82,7 @@ export default function MealPlanner() {
         }
 
         const data = await response.json();
-        console.log(data); // Log the API response
+        // console.log(data); // Log the API response
 
         // Group meals by day
         const groupedData = data.reduce((acc: any, meal: any) => {
@@ -92,6 +114,25 @@ export default function MealPlanner() {
 
     fetchMealPlan();
   }, []);
+
+  const handleGeneratePlan = async () => {
+    setIsGenerating(true);
+    setShowPopup(true);
+
+    try {
+      const plan = await generateMealPlan(); // Call the AI function
+      setGeneratedPlan(plan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    setGeneratedPlan(null);
+  };
 
   const handlePrevDay = () => {
     if (currentDay > 0) {
@@ -128,6 +169,20 @@ export default function MealPlanner() {
   if (weeklyPlan.length === 0) {
     return <div>No meal plan data found.</div>;
   }
+
+  // Group meals by day
+  const groupMealsByDay = (meals: GeneratedMealPlan["meals"]) => {
+    const groupedMeals: { [key: number]: GeneratedMealPlan["meals"] } = {};
+
+    meals.forEach((meal) => {
+      if (!groupedMeals[meal.day_number]) {
+        groupedMeals[meal.day_number] = [];
+      }
+      groupedMeals[meal.day_number].push(meal);
+    });
+
+    return groupedMeals;
+  };
 
   return (
     <div className="outer-container">
@@ -192,7 +247,7 @@ export default function MealPlanner() {
       </div>
 
       <div className="buttons-container">
-        <button className="generate-button">
+        <button className="generate-button" onClick={handleGeneratePlan}>
           <Wand2 className="button-icon" />
           <span>Generate Plan</span>
         </button>
@@ -202,6 +257,82 @@ export default function MealPlanner() {
           <span>Edit Plan</span>
         </button>
       </div>
+
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container">
+            {isGenerating ? (
+              <div className="loading-container">
+                <ClipLoader color="#7ec987" size={50} />
+                <p>Generating your meal plan...</p>
+              </div>
+            ) : (
+              <>
+                <h2>Generated Meal Plan</h2>
+                {generatedPlan && (
+                  <div className="generated-plan">
+                    <h3>{generatedPlan.meal_plan.name}</h3>
+                    <p>{generatedPlan.meal_plan.description}</p>
+                    {Object.entries(groupMealsByDay(generatedPlan.meals)).map(
+                      ([day, meals]) => (
+                        <div
+                          key={day}
+                          className={`day-container`}
+                        >
+                          <div className="day-header">
+                            <h2 className="day-name">Day {day}</h2>
+                          </div>
+                          <div className="items-list">
+                            {meals.map((meal, index) => (
+                              <div key={index} className="list-item">
+                                <div className="item-info">
+                                  <h3 className="item-name">{meal.name}</h3>
+                                  <div className="item-time-info">
+                                    <span className="item-time">
+                                      {meal.time}
+                                    </span>
+                                    <span className="dot">•</span>
+                                    <span className="item-time">
+                                      {meal.calories} kcal
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="macros-container">
+                                  <div className="macro-item">
+                                    <span className="macro-value">
+                                      {meal.protein}g
+                                    </span>
+                                    <span className="macro-label">Protein</span>
+                                  </div>
+                                  <div className="macro-item">
+                                    <span className="macro-value">
+                                      {meal.carbs}g
+                                    </span>
+                                    <span className="macro-label">Carbs</span>
+                                  </div>
+                                  <div className="macro-item">
+                                    <span className="macro-value">
+                                      {meal.fats}g
+                                    </span>
+                                    <span className="macro-label">Fats</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+                <button className="close-button" onClick={handleClosePopup}>
+                  Close
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

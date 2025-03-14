@@ -1,4 +1,6 @@
 :root {
     --error-background: #f8d7da; /* Replace with actual Colors.errorBackground */
     --error-font: #721c24; /* Replace with actual Colors.errorFont */
+    --nutrifit-light-green: #7ec987;
+    --nutrifit-dark-green: #4d7051;
 }
