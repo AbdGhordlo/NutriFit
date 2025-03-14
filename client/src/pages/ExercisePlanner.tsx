@@ -85,7 +85,7 @@ export default function ExercisePlanner() {
         }
 
         const data = await response.json();
-        console.log(data); // Log the API response
+        // console.log(data); // Log the API response
 
         // Group exercises by day
         const groupedData = data.reduce((acc: any, exercise: any) => {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { User, Mail, Lock } from "lucide-react";
+import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
-import "./styles/AuthStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
 
 export default function Register() {
@@ -44,10 +44,10 @@ export default function Register() {
 
   return (
     <div className="outer-container">
-      <div className="inner-container">
-        <div className="form-container">
-          <h1 className="title">Create Account</h1>
-          <p className="subtitle">
+      <div style={styles.container}>
+        <div style={styles.formContainer}>
+          <h1 style={styles.title}>Create Account</h1>
+          <p style={styles.subtitle}>
             Join NutriFit to start your fitness journey
           </p>
 
@@ -56,20 +56,20 @@ export default function Register() {
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"
-              className="google-icon"
+              style={styles.googleIcon}
             />
             Sign up with Google
           </button>
 
-          <div className="divider">
-            <span className="divider-text">or register with email</span>
+          <div style={styles.divider}>
+            <span style={styles.dividerText}>or register with email</span>
           </div>
 
-          <form className="form" onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label className="label">Full Name</label>
-              <div className="input-container">
-                <User className="input-icon" />
+          <form style={styles.form} onSubmit={handleSubmit}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Full Name</label>
+              <div style={styles.inputContainer}>
+                <User style={styles.inputIcon} />
                 <input
                   type="text"
                   name="username"
@@ -84,10 +84,10 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="input-group">
-              <label className="label">Email</label>
-              <div className="input-container">
-                <Mail className="input-icon" />
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Email</label>
+              <div style={styles.inputContainer}>
+                <Mail style={styles.inputIcon} />
                 <input
                   type="email"
                   name="email"
@@ -102,10 +102,10 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="input-group">
-              <label className="label">Password</label>
-              <div className="input-container">
-                <Lock className="input-icon" />
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Password</label>
+              <div style={styles.inputContainer}>
+                <Lock style={styles.inputIcon} />
                 <input
                   type="password"
                   name="password"
@@ -122,12 +122,12 @@ export default function Register() {
 
             {errorMessage && <ErrorMessage message={errorMessage} />}
 
-            <button className="submit-button">Create Account</button>
+            <button style={styles.submitButton}>Create Account</button>
           </form>
 
-          <p className="auth-footer">
+          <p style={styles.footer}>
             Already have an account?{" "}
-            <a href="/login" className="link">
+            <a href="/login" style={styles.link}>
               Sign in
             </a>
           </p>

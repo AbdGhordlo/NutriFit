@@ -82,7 +82,7 @@ export default function MealPlanner() {
         }
 
         const data = await response.json();
-        console.log(data); // Log the API response
+        // console.log(data); // Log the API response
 
         // Group meals by day
         const groupedData = data.reduce((acc: any, meal: any) => {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Mail, Lock, LogIn } from "lucide-react";
+import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
 import "./styles/AuthStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
@@ -43,30 +44,30 @@ export default function Login() {
 
   return (
     <div className="outer-container">
-      <div className="inner-container">
-        <div className="form-container">
-          <h1 className="title">Welcome Back</h1>
-          <p className="subtitle">Sign in to continue to NutriFit</p>
+      <div style={styles.container}>
+        <div style={styles.formContainer}>
+          <h1 style={styles.title}>Welcome Back</h1>
+          <p style={styles.subtitle}>Sign in to continue to NutriFit</p>
 
           {/* Google Login Button */}
           <button style={styles.googleButton} onClick={handleGoogleLogin}>
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"
-              className="google-icon"
+              style={styles.googleIcon}
             />
             Sign in with Google
           </button>
 
-          <div className="divider">
-            <span className="divider-text">or continue with email</span>
+          <div style={styles.divider}>
+            <span style={styles.dividerText}>or continue with email</span>
           </div>
 
-          <form className="form" onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label className="label">Email</label>
-              <div className="input-container">
-                <Mail className="input-icon" />
+          <form style={styles.form} onSubmit={handleSubmit}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Email</label>
+              <div style={styles.inputContainer}>
+                <Mail style={styles.inputIcon} />
                 <input
                   type="email"
                   name="email"
@@ -82,10 +83,10 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="input-group">
-              <label className="label">Password</label>
-              <div className="input-container">
-                <Lock className="input-icon" />
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Password</label>
+              <div style={styles.inputContainer}>
+                <Lock style={styles.inputIcon} />
                 <input
                   type="password"
                   name="password"
@@ -101,23 +102,23 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="forgot-password">
-              <a href="#" className="link">
+            <div style={styles.forgotPassword}>
+              <a href="#" style={styles.link}>
                 Forgot password?
               </a>
             </div>
 
             {errorMessage && <ErrorMessage message={errorMessage} />}
 
-            <button className="submit-button">
-              <LogIn className="button-icon" />
+            <button style={styles.submitButton}>
+              <LogIn style={styles.buttonIcon} />
               Sign In
             </button>
           </form>
 
-          <p className="auth-footer">
+          <p style={styles.footer}>
             Don't have an account?{" "}
-            <a href="/register" className="link">
+            <a href="/register" style={styles.link}>
               Sign up
             </a>
           </p>
