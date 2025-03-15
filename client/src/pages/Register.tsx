@@ -9,16 +9,16 @@ export default function Register() {
   const [passwordFocus, setPasswordFocus] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
-  const [errorMessage, setErrorMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    setErrorMessage('');
-    e.preventDefault();  // Prevent page reload
+  const handleSubmit = async (e) => {
+    setErrorMessage("");
+    e.preventDefault(); // Prevent page reload
     try {
-      const response = await fetch('http://localhost:5000/auth/signup', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/auth/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -36,6 +36,12 @@ export default function Register() {
     }
   };
 
+  // Function to handle Google login
+  const handleGoogleSignup = () => {
+    // Redirect to the backend's Google OAuth endpoint
+    window.location.href = "http://localhost:5000/auth/google";
+  };
+
   return (
     <div className="outer-container">
       <div style={styles.container}>
@@ -45,7 +51,8 @@ export default function Register() {
             Join NutriFit to start your fitness journey
           </p>
 
-          <button style={styles.googleButton}>
+          {/* Google Signup Button */}
+          <button style={styles.googleButton} onClick={handleGoogleSignup}>
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"
@@ -70,7 +77,9 @@ export default function Register() {
                   className={`input ${nameFocus ? "input-focused" : ""}`}
                   onFocus={() => setNameFocus(true)}
                   onBlur={() => setNameFocus(false)}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -86,7 +95,9 @@ export default function Register() {
                   className={`input ${emailFocus ? "input-focused" : ""}`}
                   onFocus={() => setEmailFocus(true)}
                   onBlur={() => setEmailFocus(false)}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -102,12 +113,14 @@ export default function Register() {
                   className={`input ${passwordFocus ? "input-focused" : ""}`}
                   onFocus={() => setPasswordFocus(true)}
                   onBlur={() => setPasswordFocus(false)}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                 />
               </div>
             </div>
 
-            {errorMessage && <ErrorMessage message={errorMessage}/>}
+            {errorMessage && <ErrorMessage message={errorMessage} />}
 
             <button style={styles.submitButton}>Create Account</button>
           </form>

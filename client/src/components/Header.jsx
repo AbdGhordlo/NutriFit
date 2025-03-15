@@ -47,7 +47,7 @@ export default function Header({ toggleSidebar }) {
 
   return (
     <header className="header">
-      <div className="container">
+      <div className="header-container">
         <div className="left-container">
           {window.location.pathname !== "/login" &&
             window.location.pathname !== "/register" && (

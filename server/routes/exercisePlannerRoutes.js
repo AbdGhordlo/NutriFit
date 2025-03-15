@@ -1,7 +1,8 @@
 const express = require('express');
-const { getExercisePlanByUser } = require('../controllers/exercisePlannerController');
+const { getExercisePlanByUser, generateExercisePlan } = require('../controllers/exercisePlannerController');
 const router = express.Router();
 
 router.get('/:userId', getExercisePlanByUser);
+router.post("/generate-exercise-plan", generateExercisePlan);
 
 module.exports = router;
