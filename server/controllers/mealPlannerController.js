@@ -4,8 +4,9 @@ const Groq = require("groq-sdk");
 const hf = new HfInference(process.env.HF_ACCESS_TOKEN); // Initialize with your Hugging Face token
 const groq = new Groq(process.env.GROQ_API_KEY);
 
-const getMealPlanByUser = async (req, res) => {
+const getAdoptedMealPlanByUser = async (req, res) => {
   const { userId } = req.params;
+
   try {
     const result = await pool.query(
       `SELECT 
@@ -26,10 +27,42 @@ const getMealPlanByUser = async (req, res) => {
       FROM meal_plan mp
       JOIN meal_plan_meal mpm ON mp.id = mpm.meal_plan_id
       JOIN meal m ON mpm.meal_id = m.id
-      WHERE mp.user_id = $1
+      WHERE mp.user_id = $1 AND mp.is_adopted_plan = TRUE
       ORDER BY mpm.day_number, mpm.meal_order`,
       [userId]
     );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No adopted meal plan found for this user." });
+    }
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
+
+const getAllMealPlansByUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        id AS meal_plan_id,
+        name AS meal_plan_name,
+        description AS meal_plan_description,
+        is_adopted_plan
+      FROM meal_plan
+      WHERE user_id = $1
+      ORDER BY is_adopted_plan DESC, created_at DESC`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No meal plans found for this user." });
+    }
+
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -110,8 +143,108 @@ const getMealPlan = async (req, res) => {
   }
 };
 
+const saveMealPlan = async (req, res) => {
+  const { userId, plan } = req.body;
 
+  try {
+    // Save the meal plan to the database
+    const mealPlanResult = await pool.query(
+      `INSERT INTO meal_plan (user_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
+      [userId, plan.meal_plan.name, plan.meal_plan.description]
+    );
 
+    const mealPlanId = mealPlanResult.rows[0].id;
+
+    // Save each meal in the plan
+    for (const meal of plan.meals) {
+      const mealResult = await pool.query(
+        `INSERT INTO meal (name, description, calories, protein, carbs, fats) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [meal.name, meal.description, meal.calories, meal.protein, meal.carbs, meal.fats]
+      );
+
+      const mealId = mealResult.rows[0].id;
+
+      await pool.query(
+        `INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, time) VALUES ($1, $2, $3, $4)`,
+        [mealPlanId, mealId, meal.day_number, meal.time]
+      );
+    }
+
+    res.status(200).json({ message: "Meal plan saved successfully!", mealPlanId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
+
+const saveAndAdoptMealPlan = async (req, res) => {
+  const { userId, plan } = req.body;
+
+  try {
+    // Save the meal plan to the database
+    const mealPlanResult = await pool.query(
+      `INSERT INTO meal_plan (user_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
+      [userId, plan.meal_plan.name, plan.meal_plan.description]
+    );
+
+    const mealPlanId = mealPlanResult.rows[0].id;
+
+    // Save each meal in the plan
+    for (const meal of plan.meals) {
+      const mealResult = await pool.query(
+        `INSERT INTO meal (name, description, calories, protein, carbs, fats) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [meal.name, meal.description, meal.calories, meal.protein, meal.carbs, meal.fats]
+      );
+
+      const mealId = mealResult.rows[0].id;
+
+      await pool.query(
+        `INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, time) VALUES ($1, $2, $3, $4)`,
+        [mealPlanId, mealId, meal.day_number, meal.time]
+      );
+    }
+
+    // Set all existing plans for the user to is_adopted_plan = FALSE
+    await pool.query(
+      `UPDATE meal_plan SET is_adopted_plan = FALSE WHERE user_id = $1`,
+      [userId]
+    );
+
+    // Set the newly saved plan as adopted
+    await pool.query(
+      `UPDATE meal_plan SET is_adopted_plan = TRUE WHERE id = $1`,
+      [mealPlanId]
+    );
+
+    res.status(200).json({ message: "Meal plan saved and adopted successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
+
+const adoptMealPlan = async (req, res) => {
+  const { userId, mealPlanId } = req.body;
+
+  try {
+    // Set all existing plans for the user to is_adopted_plan = FALSE
+    await pool.query(
+      `UPDATE meal_plan SET is_adopted_plan = FALSE WHERE user_id = $1`,
+      [userId]
+    );
+
+    // Set the selected plan as adopted
+    await pool.query(
+      `UPDATE meal_plan SET is_adopted_plan = TRUE WHERE id = $1 AND user_id = $2`,
+      [mealPlanId, userId]
+    );
+
+    res.status(200).json({ message: "Meal plan adopted successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
 // API: deepseek/deepseek-chat:free using Openrouter
 
 // const getMealPlan = async (req, res) => {
@@ -257,5 +390,4 @@ const getMealPlan = async (req, res) => {
 //   }
 // };
 
-
-module.exports = { getMealPlanByUser, getMealPlan };
+module.exports = { saveAndAdoptMealPlan, getAdoptedMealPlanByUser, getAllMealPlansByUser, getMealPlan, saveMealPlan, adoptMealPlan };

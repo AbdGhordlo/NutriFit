@@ -23,7 +23,7 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-
+      console.log("userdata: ",data);
       if (response.ok) {
         localStorage.setItem("token", data.token); // Store JWT in localStorage
         window.location.href = "/home"; // Redirect to home page
