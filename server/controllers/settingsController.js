@@ -19,10 +19,10 @@ const getUserSettings = async (req, res) => {
     const userResult = await pool.query(
       `SELECT 
         id,
-        full_name,
+        username AS full_name,
         email,
-        photo_url
-      FROM users
+        profile_picture AS photo_url
+      FROM "user"
       WHERE id = $1`,
       [userId]
     );
@@ -38,7 +38,7 @@ const getUserSettings = async (req, res) => {
         exercise_reminders,
         progress_updates,
         water_intake_reminder
-      FROM user_notifications
+      FROM settings
       WHERE user_id = $1`,
       [userId]
     );
@@ -55,7 +55,7 @@ const getUserSettings = async (req, res) => {
 
       // Insert default notification settings
       await pool.query(
-        `INSERT INTO user_notifications
+        `INSERT INTO settings
           (user_id, meal_reminders, exercise_reminders, progress_updates, water_intake_reminder)
         VALUES ($1, $2, $3, $4, $5)`,
         [userId, defaultSettings.meal_reminders, defaultSettings.exercise_reminders, 
@@ -73,8 +73,19 @@ const getUserSettings = async (req, res) => {
       [userId]
     );
 
-    const hasCompletedPersonalization = 
-      personalizationResult.rows.length > 0 && personalizationResult.rows[0].completed;
+    // Also check in settings table (as a fallback)
+    const settingsPersonalizationResult = await pool.query(
+      `SELECT personalize_completed FROM settings WHERE user_id = $1`,
+      [userId]
+    );
+
+    // Check both tables for personalization status
+    let hasCompletedPersonalization = false;
+    if (personalizationResult.rows.length > 0 && personalizationResult.rows[0].completed) {
+      hasCompletedPersonalization = true;
+    } else if (settingsPersonalizationResult.rows.length > 0 && settingsPersonalizationResult.rows[0].personalize_completed) {
+      hasCompletedPersonalization = true;
+    }
 
     // Format and send response
     res.json({
@@ -114,14 +125,14 @@ const updateUserSettings = async (req, res) => {
   try {
     // Check if notification settings exist
     const checkResult = await pool.query(
-      `SELECT id FROM user_notifications WHERE user_id = $1`,
+      `SELECT id FROM settings WHERE user_id = $1`,
       [userId]
     );
 
     if (checkResult.rows.length === 0) {
       // Create new notification settings
       await pool.query(
-        `INSERT INTO user_notifications
+        `INSERT INTO settings
           (user_id, meal_reminders, exercise_reminders, progress_updates, water_intake_reminder)
         VALUES ($1, $2, $3, $4, $5)`,
         [
@@ -135,7 +146,7 @@ const updateUserSettings = async (req, res) => {
     } else {
       // Update existing notification settings
       await pool.query(
-        `UPDATE user_notifications
+        `UPDATE settings
         SET 
           meal_reminders = $1,
           exercise_reminders = $2,
@@ -178,7 +189,7 @@ const updateUserProfile = async (req, res) => {
     // Check if email is already taken by another user
     if (email) {
       const emailCheckResult = await pool.query(
-        `SELECT id FROM users WHERE email = $1 AND id != $2`,
+        `SELECT id FROM "user" WHERE email = $1 AND id != $2`,
         [email, userId]
       );
 
@@ -187,17 +198,29 @@ const updateUserProfile = async (req, res) => {
       }
     }
 
-    // Update user profile
+    // Update user profile in the user table
     await pool.query(
-      `UPDATE users
+      `UPDATE "user"
       SET 
-        full_name = COALESCE($1, full_name),
+        username = COALESCE($1, username),
         email = COALESCE($2, email),
-        photo_url = $3,
+        profile_picture = $3,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $4`,
       [fullName, email, photoUrl, userId]
     );
+
+    // Also update profile_picture in settings if it exists
+    if (photoUrl) {
+      await pool.query(
+        `UPDATE settings
+        SET 
+          profile_picture = $1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $2`,
+        [photoUrl, userId]
+      );
+    }
 
     res.json({ message: 'Profile updated successfully' });
   } catch (err) {
@@ -227,7 +250,7 @@ const updateUserPassword = async (req, res) => {
   try {
     // Get current password hash
     const userResult = await pool.query(
-      `SELECT password FROM users WHERE id = $1`,
+      `SELECT password_hash FROM "user" WHERE id = $1`,
       [userId]
     );
 
@@ -235,7 +258,7 @@ const updateUserPassword = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const passwordHash = userResult.rows[0].password;
+    const passwordHash = userResult.rows[0].password_hash;
 
     // Verify current password
     const isMatch = await bcrypt.compare(currentPassword, passwordHash);
@@ -249,9 +272,9 @@ const updateUserPassword = async (req, res) => {
 
     // Update password
     await pool.query(
-      `UPDATE users
+      `UPDATE "user"
       SET 
-        password = $1,
+        password_hash = $1,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $2`,
       [hashedPassword, userId]

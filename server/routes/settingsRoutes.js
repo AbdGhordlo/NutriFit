@@ -5,6 +5,7 @@ const {
   updateUserProfile,
   updateUserPassword 
 } = require('../controllers/settingsController');
+const auth = require('../middleware/auth');
 const router = express.Router();
 
 // Get user settings

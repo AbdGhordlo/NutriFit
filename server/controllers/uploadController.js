@@ -43,7 +43,7 @@ const upload = multer({
  * @param {Object} res - Express response object
  */
 const uploadProfilePicture = (req, res) => {
-  const userId = req.params.userId;
+  const { userId } = req.params;
 
   // Verify that the authenticated user is uploading their own picture
   if (req.user.id !== parseInt(userId)) {
