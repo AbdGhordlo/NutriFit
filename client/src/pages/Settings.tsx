@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  User, 
-  Bell, 
-  Lock, 
-  UserCog, 
-  Trash2, 
+import {
+  User,
+  Bell,
+  Lock,
+  UserCog,
+  Trash2,
   LogOut,
   Save,
-  Shield
+  Shield,
 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import { styles } from "./styles/SettingsStyles";
@@ -25,7 +25,7 @@ interface SettingSection {
     type: "toggle" | "input" | "select" | "upload" | "password";
     value?: any;
     options?: string[];
-  }[];  
+  }[];
 }
 
 // Define user profile interface
@@ -126,15 +126,15 @@ export default function Settings() {
   // Fetch settings data on component mount
   useEffect(() => {
     const fetchUserSettings = async () => {
-      const userId = 1; // Replace with the logged-in user's ID
+      const userId = 2; // Replace with the logged-in user's ID
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
         return;
       }
-      
+
       try {
         // Simulate API call - would be replaced with actual fetch in production
         setTimeout(() => {
@@ -142,55 +142,68 @@ export default function Settings() {
           setProfile({
             fullName: "John Doe",
             email: "johndoe@example.com",
-            photoUrl: ""
+            photoUrl: "",
           });
-          
+
           // Check if user has completed personalization
           setPersonalizationCompleted(true);
-          
+
           setLoading(false);
         }, 1000);
-        
       } catch (error) {
         console.error("Error fetching settings:", error);
         setLoading(false);
       }
     };
-    
+
     fetchUserSettings();
   }, []);
 
+  // Enhanced handleToggle with debug logs
   const handleToggle = (passedSetting: any) => {
-    setSettingsList((prevSettingsList) =>
-      prevSettingsList.map((section) => ({
+    console.log(`Toggle clicked for: ${passedSetting.name}`);
+    console.log(`Current value before toggle: ${passedSetting.value}`);
+
+    setSettingsList((prevSettingsList) => {
+      const newSettingsList = prevSettingsList.map((section) => ({
         ...section,
         settings: section.settings.map((setting) =>
           setting.name === passedSetting.name
             ? { ...setting, value: !setting.value }
             : setting
         ),
-      }))
-    );
+      }));
+
+      // Log the new value after toggle
+      const toggledSetting = newSettingsList
+        .flatMap((section) => section.settings)
+        .find((setting) => setting.name === passedSetting.name);
+
+      console.log(`New value after toggle: ${toggledSetting?.value}`);
+      console.log("Updated settings list:", newSettingsList);
+
+      return newSettingsList;
+    });
   };
 
   const handleProfileChange = (field: keyof UserProfile, value: string) => {
-    setProfile(prev => ({
+    setProfile((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handlePasswordChange = (field: keyof PasswordForm, value: string) => {
-    setPasswordForm(prev => ({
+    setPasswordForm((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    setPasswordError('');
+    setPasswordError("");
   };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordError("New passwords don't match");
       return;
@@ -202,29 +215,31 @@ export default function Settings() {
     }
 
     // TODO: Implement actual password change logic here
-    console.log('Changing password...');
+    console.log("Changing password...");
     setIsPasswordModalOpen(false);
     setPasswordForm({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     });
   };
 
   // Handle profile photo upload
-  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
 
     const file = e.target.files[0];
     const formData = new FormData();
-    formData.append('profilePicture', file);
+    formData.append("profilePicture", file);
 
     try {
       const userId = 1; // Replace with actual user ID from auth context or state
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -232,14 +247,17 @@ export default function Settings() {
       }
 
       setIsSaving(true);
-      
-      const response = await fetch(`http://localhost:5000/upload/${userId}/profile-picture`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+
+      const response = await fetch(
+        `http://localhost:5000/upload/${userId}/profile-picture`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       if (response.status === 401) {
         console.error("Unauthorized, removing token and redirecting...");
@@ -253,15 +271,15 @@ export default function Settings() {
       }
 
       const data = await response.json();
-      
+
       // Update profile photo URL in state
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
-        photoUrl: data.url
+        photoUrl: data.url,
       }));
 
       setSaveSuccess(true);
-      
+
       // Reset success message after 3 seconds
       setTimeout(() => {
         setSaveSuccess(false);
@@ -277,7 +295,7 @@ export default function Settings() {
   const handleSignOut = () => {
     // Remove token from localStorage
     localStorage.removeItem("token");
-    
+
     // Redirect to login page
     navigate("/login");
   };
@@ -287,7 +305,7 @@ export default function Settings() {
     try {
       const userId = 1; // Replace with actual user ID from auth context or state
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -295,13 +313,13 @@ export default function Settings() {
       }
 
       setIsSaving(true);
-      
+
       const response = await fetch(`http://localhost:5000/auth/${userId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {
@@ -310,7 +328,7 @@ export default function Settings() {
 
       // Remove token from localStorage
       localStorage.removeItem("token");
-      
+
       // Redirect to login or signup page
       navigate("/login");
     } catch (error) {
@@ -321,77 +339,111 @@ export default function Settings() {
     }
   };
 
-  // Update your handleSaveSettings function to show the success message even if the API calls fail
+  // Handle save settings with debug logs
   const handleSaveSettings = async () => {
+    console.log("Save Settings button clicked");
     setIsSaving(true);
-    
+
     try {
       const userId = 1; // Replace with actual user ID from auth context or state
       const token = localStorage.getItem("token");
-      
+
+      console.log("Current profile state:", profile);
+      console.log("Current notification settings:", {
+        mealReminders: settingsList[1].settings[0].value,
+        exerciseReminders: settingsList[1].settings[1].value,
+        progressUpdates: settingsList[1].settings[2].value,
+        waterIntakeReminder: settingsList[1].settings[3].value,
+      });
+
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
         return;
       }
 
-      // Try to update profile information
-      try {
-        const profileResponse = await fetch(`http://localhost:5000/settings/${userId}/profile`, {
-          method: 'PUT',
+      console.log(
+        "Making profile API request to:",
+        `http://localhost:5000/settings/${userId}/profile`
+      );
+
+      // First, update profile information
+      const profileResponse = await fetch(
+        `http://localhost:5000/settings/${userId}/profile`,
+        {
+          method: "PUT",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             fullName: profile.fullName,
             email: profile.email,
-            photoUrl: profile.photoUrl
-          })
-        });
-      } catch (profileError) {
-        console.error("Profile update error:", profileError);
-        // Continue even if profile update fails
+            photoUrl: profile.photoUrl,
+          }),
+        }
+      );
+
+      console.log("Profile API response status:", profileResponse.status);
+
+      if (!profileResponse.ok) {
+        throw new Error(`Error updating profile: ${profileResponse.status}`);
       }
 
-      // Try to update notification settings
-      try {
-        const notificationsResponse = await fetch(`http://localhost:5000/settings/${userId}`, {
-          method: 'PUT',
+      const profileData = await profileResponse.json();
+      console.log("Profile API response data:", profileData);
+
+      console.log(
+        "Making notifications API request to:",
+        `http://localhost:5000/settings/${userId}`
+      );
+
+      // Then, update notification settings
+      const notificationsResponse = await fetch(
+        `http://localhost:5000/settings/${userId}`,
+        {
+          method: "PUT",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             notifications: {
               mealReminders: settingsList[1].settings[0].value,
               exerciseReminders: settingsList[1].settings[1].value,
               progressUpdates: settingsList[1].settings[2].value,
-              waterIntakeReminder: settingsList[1].settings[3].value
-            }
-          })
-        });
-      } catch (notificationsError) {
-        console.error("Notifications update error:", notificationsError);
-        // Continue even if notifications update fails
+              waterIntakeReminder: settingsList[1].settings[3].value,
+            },
+          }),
+        }
+      );
+
+      console.log(
+        "Notifications API response status:",
+        notificationsResponse.status
+      );
+
+      if (!notificationsResponse.ok) {
+        throw new Error(
+          `Error updating notifications: ${notificationsResponse.status}`
+        );
       }
 
-      // Show success message regardless of API responses
+      const notificationsData = await notificationsResponse.json();
+      console.log("Notifications API response data:", notificationsData);
+
+      console.log("All settings saved successfully!");
       setSaveSuccess(true);
-      
+
       // Reset success message after 3 seconds
       setTimeout(() => {
         setSaveSuccess(false);
       }, 3000);
     } catch (error) {
       console.error("Error saving settings:", error);
-      // Show success message anyway during development
-      setSaveSuccess(true);
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
     } finally {
       setIsSaving(false);
+      console.log("Save settings process completed");
     }
   };
 
@@ -436,7 +488,11 @@ export default function Settings() {
         );
       case "select":
         return (
-          <select value={setting.value} style={styles.select} onChange={() => {}}>
+          <select
+            value={setting.value}
+            style={styles.select}
+            onChange={() => {}}
+          >
             {setting.options?.map((option: string) => (
               <option key={option} value={option}>
                 {option}
@@ -453,10 +509,10 @@ export default function Settings() {
                   src={profile.photoUrl}
                   alt="Profile"
                   style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    objectFit: 'cover'
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
                   }}
                 />
               ) : (
@@ -469,7 +525,7 @@ export default function Settings() {
                 type="file"
                 accept="image/*"
                 onChange={handleProfilePhotoUpload}
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
               />
             </label>
           </div>
@@ -510,10 +566,10 @@ export default function Settings() {
                       src={profile.photoUrl}
                       alt="Profile"
                       style={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '50%',
-                        objectFit: 'cover'
+                        width: "80px",
+                        height: "80px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
                       }}
                     />
                   ) : (
@@ -526,7 +582,7 @@ export default function Settings() {
                     type="file"
                     accept="image/*"
                     onChange={handleProfilePhotoUpload}
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                   />
                 </label>
               </div>
@@ -534,25 +590,25 @@ export default function Settings() {
               {/* Profile Inputs */}
               <div style={styles.profileInputsGrid}>
                 <div>
-                  <label style={styles.inputLabel}>
-                    Full Name
-                  </label>
+                  <label style={styles.inputLabel}>Full Name</label>
                   <input
                     type="text"
                     value={profile.fullName}
-                    onChange={(e) => handleProfileChange('fullName', e.target.value)}
+                    onChange={(e) =>
+                      handleProfileChange("fullName", e.target.value)
+                    }
                     style={styles.wideInput}
                     placeholder="John Doe"
                   />
                 </div>
                 <div>
-                  <label style={styles.inputLabel}>
-                    Email
-                  </label>
+                  <label style={styles.inputLabel}>Email</label>
                   <input
                     type="email"
                     value={profile.email}
-                    onChange={(e) => handleProfileChange('email', e.target.value)}
+                    onChange={(e) =>
+                      handleProfileChange("email", e.target.value)
+                    }
                     style={styles.wideInput}
                     placeholder="john@example.com"
                   />
@@ -592,7 +648,7 @@ export default function Settings() {
 
             <div style={styles.accountManagementList}>
               {/* Change Password Option */}
-              <div 
+              <div
                 onClick={() => setIsPasswordModalOpen(true)}
                 style={styles.accountOption}
               >
@@ -600,14 +656,16 @@ export default function Settings() {
                   <UserCog size={20} color="#6b7280" />
                   <div>
                     <p style={styles.optionText}>Change Password</p>
-                    <p style={styles.optionDescription}>Update your account password</p>
+                    <p style={styles.optionDescription}>
+                      Update your account password
+                    </p>
                   </div>
                 </div>
                 <Lock size={20} color="#6b7280" />
               </div>
 
               {/* Delete Account Option */}
-              <div 
+              <div
                 onClick={() => setIsDeleteModalOpen(true)}
                 style={styles.dangerOption}
               >
@@ -615,22 +673,23 @@ export default function Settings() {
                   <Trash2 size={20} color="#ef4444" />
                   <div>
                     <p style={styles.dangerText}>Delete Account</p>
-                    <p style={styles.dangerDescription}>Permanently delete your account</p>
+                    <p style={styles.dangerDescription}>
+                      Permanently delete your account
+                    </p>
                   </div>
                 </div>
                 <Trash2 size={20} color="#ef4444" />
               </div>
 
               {/* Sign Out Option */}
-              <div 
-                onClick={handleSignOut}
-                style={styles.accountOption}
-              >
+              <div onClick={handleSignOut} style={styles.accountOption}>
                 <div style={styles.optionIconContainer}>
                   <LogOut size={20} color="#6b7280" />
                   <div>
                     <p style={styles.optionText}>Sign Out</p>
-                    <p style={styles.optionDescription}>Log out of your account</p>
+                    <p style={styles.optionDescription}>
+                      Log out of your account
+                    </p>
                   </div>
                 </div>
                 <LogOut size={20} color="#6b7280" />
@@ -670,7 +729,7 @@ export default function Settings() {
               Personalize
             </button>
           </div>
-          
+
           {/* Save Button Section */}
           <div style={styles.saveButtonContainer}>
             {saveSuccess && (
@@ -678,7 +737,7 @@ export default function Settings() {
                 Settings saved successfully!
               </div>
             )}
-            <button 
+            <button
               style={styles.saveButton}
               onClick={handleSaveSettings}
               disabled={isSaving}
@@ -690,16 +749,18 @@ export default function Settings() {
       </div>
 
       {/* Modals */}
-      <PasswordChangeModal 
+      <PasswordChangeModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
         passwordForm={passwordForm}
         passwordError={passwordError}
-        handlePasswordChange={(field, value) => handlePasswordChange(field as keyof PasswordForm, value)}
+        handlePasswordChange={(field, value) =>
+          handlePasswordChange(field as keyof PasswordForm, value)
+        }
         handlePasswordSubmit={handlePasswordSubmit}
         styles={styles}
       />
-      <DeleteAccountModal 
+      <DeleteAccountModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onDelete={handleDeleteAccount}

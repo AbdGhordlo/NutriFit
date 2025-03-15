@@ -252,60 +252,60 @@ VALUES
 ('Bicycle Crunches', 'Core exercise targeting abs.', 80, TRUE, FALSE);
 
 -- Day 1
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 1, 1, 1, '08:00', 15, 3, NULL), -- Push-ups
-(1, 2, 1, 2, '08:30', 20, 3, NULL), -- Squats
-(1, 3, 1, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
-(1, 4, 1, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 1, 1, 1, '08:00', 15, 3, NULL), -- Push-ups
+    (1, 2, 1, 2, '08:30', 20, 3, NULL), -- Squats
+    (1, 3, 1, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
+    (1, 4, 1, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
 
--- Day 2
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 5, 2, 1, '08:00', 10, 3, NULL), -- Pull-ups
-(1, 6, 2, 2, '08:30', 12, 3, NULL), -- Burpees
-(1, 7, 2, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
-(1, 8, 2, 4, '18:00', 15, 3, NULL); -- Lunges
+    -- Day 2
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 5, 2, 1, '08:00', 10, 3, NULL), -- Pull-ups
+    (1, 6, 2, 2, '08:30', 12, 3, NULL), -- Burpees
+    (1, 7, 2, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
+    (1, 8, 2, 4, '18:00', 15, 3, NULL); -- Lunges
 
--- Day 3
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 9, 3, 1, '08:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
-(1, 10, 3, 2, '08:30', 20, 3, NULL), -- Bicycle Crunches
-(1, 1, 3, 3, '09:00', 15, 3, NULL), -- Push-ups
-(1, 2, 3, 4, '18:00', 20, 3, NULL); -- Squats
+    -- Day 3
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 9, 3, 1, '08:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
+    (1, 10, 3, 2, '08:30', 20, 3, NULL), -- Bicycle Crunches
+    (1, 1, 3, 3, '09:00', 15, 3, NULL), -- Push-ups
+    (1, 2, 3, 4, '18:00', 20, 3, NULL); -- Squats
 
--- Day 4
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 3, 4, 1, '08:00', NULL, NULL, '45 seconds'), -- Plank
-(1, 4, 4, 2, '08:30', NULL, NULL, '25 minutes'), -- Running
-(1, 5, 4, 3, '09:00', 10, 3, NULL), -- Pull-ups
-(1, 6, 4, 4, '18:00', 12, 3, NULL); -- Burpees
+    -- Day 4
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 3, 4, 1, '08:00', NULL, NULL, '45 seconds'), -- Plank
+    (1, 4, 4, 2, '08:30', NULL, NULL, '25 minutes'), -- Running
+    (1, 5, 4, 3, '09:00', 10, 3, NULL), -- Pull-ups
+    (1, 6, 4, 4, '18:00', 12, 3, NULL); -- Burpees
 
--- Day 5
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 7, 5, 1, '08:00', NULL, NULL, '3 minutes'), -- Jumping Jacks
-(1, 8, 5, 2, '08:30', 15, 3, NULL), -- Lunges
-(1, 9, 5, 3, '09:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
-(1, 10, 5, 4, '18:00', 20, 3, NULL); -- Bicycle Crunches
+    -- Day 5
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 7, 5, 1, '08:00', NULL, NULL, '3 minutes'), -- Jumping Jacks
+    (1, 8, 5, 2, '08:30', 15, 3, NULL), -- Lunges
+    (1, 9, 5, 3, '09:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
+    (1, 10, 5, 4, '18:00', 20, 3, NULL); -- Bicycle Crunches
 
--- Day 6
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 1, 6, 1, '08:00', 15, 3, NULL), -- Push-ups
-(1, 2, 6, 2, '08:30', 20, 3, NULL), -- Squats
-(1, 3, 6, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
-(1, 4, 6, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
+    -- Day 6
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 1, 6, 1, '08:00', 15, 3, NULL), -- Push-ups
+    (1, 2, 6, 2, '08:30', 20, 3, NULL), -- Squats
+    (1, 3, 6, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
+    (1, 4, 6, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
 
--- Day 7
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 5, 7, 1, '08:00', 10, 3, NULL), -- Pull-ups
-(1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
-(1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
-(1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
+    -- Day 7
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 5, 7, 1, '08:00', 10, 3, NULL), -- Pull-ups
+    (1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
+    (1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
+    (1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
 
 -- Insert default settings for test user
 INSERT INTO settings (
