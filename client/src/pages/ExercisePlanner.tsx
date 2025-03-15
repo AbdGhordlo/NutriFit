@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Wand2, Edit3 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Wand2, Edit3, Bookmark } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import "../assets/commonStyles.css";
 import "./styles/ExercisePlannerStyles.css";
-import { generateExercisePlan } from "../api/ExercisePlannerAI"; // Import the AI function
+import { generateExercisePlan, saveExercisePlan, saveAndAdoptExercisePlan, adoptExercisePlan, getAllExercisePlansByUser } from "../api/ExercisePlannerAI";
+import { getUserIdFromToken } from "../utils/auth";
+import ErrorMessage from "../components/ErrorMessage";
 
 interface Exercise {
   id: number;
@@ -46,24 +48,33 @@ export default function ExercisePlanner() {
   const [currentDay, setCurrentDay] = useState(0);
   const [loading, setLoading] = useState(true);
   const [weeklyPlan, setWeeklyPlan] = useState<DayPlan[]>([]);
-  const [showPopup, setShowPopup] = useState(false); // Controls popup visibility
-  const [generatedPlan, setGeneratedPlan] = useState<GeneratedExercisePlan | null>(null); // Stores the generated plan
-  const [isGenerating, setIsGenerating] = useState(false); // Tracks loading state during API call
+  const [showPopup, setShowPopup] = useState(false);
+  const [showSavedPlansPopup, setShowSavedPlansPopup] = useState(false);
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedExercisePlan | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [savedPlans, setSavedPlans] = useState<any[]>([]);
 
   useEffect(() => {
+    const id = getUserIdFromToken();
+    if (id) setUserId(id);
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
     const fetchExercisePlan = async () => {
-      const userId = 1; // Replace with the logged-in user's ID
-      const token = localStorage.getItem("token"); // Retrieve JWT from local storage
+      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
-        window.location.href = "/login"; // Redirect if no token is found
+        window.location.href = "/login";
         return;
       }
 
       try {
         const response = await fetch(
-          `http://localhost:5000/exercise-planner/${userId}`,
+          `http://localhost:5000/exercise-planner/${userId}/adopted`,
           {
             method: "GET",
             headers: {
@@ -75,8 +86,8 @@ export default function ExercisePlanner() {
 
         if (response.status === 401) {
           console.error("Unauthorized, removing token and redirecting...");
-          localStorage.removeItem("token"); // Remove expired/invalid token
-          window.location.href = "/login"; // Redirect to login page
+          localStorage.removeItem("token");
+          window.location.href = "/login";
           return;
         }
 
@@ -85,11 +96,8 @@ export default function ExercisePlanner() {
         }
 
         const data = await response.json();
-        // console.log(data); // Log the API response
-
-        // Group exercises by day
         const groupedData = data.reduce((acc: any, exercise: any) => {
-          const day = exercise.day_number - 1; // Convert to 0-based index
+          const day = exercise.day_number - 1;
           if (!acc[day]) {
             acc[day] = { day_number: exercise.day_number, exercises: [] };
           }
@@ -112,12 +120,67 @@ export default function ExercisePlanner() {
       } catch (error) {
         console.error("Error fetching exercise plan:", error);
       } finally {
-        setLoading(false); // Set loading to false after fetching
+        setLoading(false);
       }
     };
 
     fetchExercisePlan();
-  }, []);
+  }, [userId]);
+
+  const handleFetchSavedPlans = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/exercise-planner/${userId}/all`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setSavedPlans(data);
+      setShowSavedPlansPopup(true);
+    } catch (error) {
+      console.error("Error fetching saved plans:", error);
+    }
+  };
+
+  const handleAdoptPlan = async (exercisePlanId: number) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const userId = Number(getUserIdFromToken()); // Ensure userId is a number
+      if (isNaN(userId)) throw new Error("Invalid user ID");
+
+      await adoptExercisePlan(userId, exercisePlanId, token);
+      alert("Exercise plan adopted successfully!");
+      window.location.reload(); // Reload to reflect the new adopted plan
+    } catch (error) {
+      console.error("Error adopting exercise plan:", error);
+      alert("Failed to adopt exercise plan.");
+    }
+  };
 
   const handleGeneratePlan = async () => {
     setIsGenerating(true);
@@ -155,6 +218,53 @@ export default function ExercisePlanner() {
     return day === date.getDay() ? true : false;
   };
 
+  const handleSavePlan = async () => {
+    if (!generatedPlan) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const userId = Number(getUserIdFromToken()); // Ensure userId is a number
+      if (isNaN(userId)) throw new Error("Invalid user ID");
+
+      await saveExercisePlan(userId, generatedPlan, token);
+      alert("Exercise plan saved successfully!");
+    } catch (error) {
+      console.error("Error saving exercise plan:", error);
+      alert("Failed to save exercise plan.");
+    }
+  };
+
+  const handleSaveAndAdoptPlan = async () => {
+    if (!generatedPlan) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const userId = Number(getUserIdFromToken()); // Ensure userId is a number
+      if (isNaN(userId)) throw new Error("Invalid user ID");
+
+      await saveAndAdoptExercisePlan(userId, generatedPlan, token);
+      alert("Exercise plan saved and adopted successfully!");
+      window.location.reload(); // Reload the page to reflect the changes
+    } catch (error) {
+      console.error("Error adopting exercise plan:", error);
+      alert("Failed to adopt exercise plan.");
+    }
+  };
+
   // Group exercises by day
   const groupExercisesByDay = (exercises: GeneratedExercisePlan["exercises"]) => {
     const groupedExercises: { [key: number]: GeneratedExercisePlan["exercises"] } = {};
@@ -178,7 +288,9 @@ export default function ExercisePlanner() {
   }
 
   if (weeklyPlan.length === 0) {
-    return <div>No exercise plan data found.</div>;
+    return <div className="no-plan-error-container">
+        <ErrorMessage message={"No exercise plan data found."} />
+      </div>;
   }
 
   return (
@@ -250,16 +362,57 @@ export default function ExercisePlanner() {
       </div>
 
       <div className="buttons-container">
-        <button className="generate-button" onClick={handleGeneratePlan}>
-          <Wand2 className="button-icon" />
-          <span>Generate Plan</span>
-        </button>
+          <button className="generate-button" onClick={handleGeneratePlan}>
+            <Wand2 className="button-icon" />
+            <span>Generate Plan</span>
+          </button>
 
-        <button className="edit-button">
-          <Edit3 className="button-icon" />
-          <span>Edit Plan</span>
-        </button>
-      </div>
+          <button className="edit-button">
+            <Edit3 className="button-icon" />
+            <span>Edit Plan</span>
+          </button>
+
+          <button className="saved-plans-button" onClick={handleFetchSavedPlans}>
+            <Bookmark className="button-icon" />
+            <span>Saved Plans</span>
+          </button>
+        </div>
+
+        {showSavedPlansPopup && (
+          <div className="popup-overlay">
+            <div className="popup-container">
+              <h2>Saved Plans</h2>
+              <div className="saved-plans-list">
+                {savedPlans.map((plan) => (
+                  <div key={plan.exercise_plan_id} className="saved-plan-item">
+                    <div className="plan-info">
+                      <h3>{plan.exercise_plan_name}</h3>
+                      <p>{plan.exercise_plan_description}</p>
+                    </div>
+                    {plan.is_adopted_plan ? (
+                      <button
+                        className="adopt-button adopted"
+                        disabled
+                      >
+                        Already Adopted
+                      </button>
+                    ) : (
+                      <button
+                        className="adopt-button"
+                        onClick={() => handleAdoptPlan(plan.exercise_plan_id)}
+                      >
+                        Adopt
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button className="close-button" onClick={() => setShowSavedPlansPopup(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        )}
 
       {showPopup && (
         <div className="popup-overlay">
@@ -328,9 +481,17 @@ export default function ExercisePlanner() {
                     )}
                   </div>
                 )}
-                <button className="close-button" onClick={handleClosePopup}>
-                  Close
-                </button>
+                <div className="popup-buttons">
+                  <button className="save-button" onClick={handleSavePlan}>
+                    Add to Saved Plans
+                  </button>
+                  <button className="adopt-button" onClick={handleSaveAndAdoptPlan}>
+                    Save & Adopt
+                  </button>
+                  <button className="close-button" onClick={handleClosePopup}>
+                    Close
+                  </button>
+                </div>
               </>
             )}
           </div>
