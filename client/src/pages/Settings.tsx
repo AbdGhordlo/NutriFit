@@ -126,7 +126,7 @@ export default function Settings() {
   // Fetch settings data on component mount
   useEffect(() => {
     const fetchUserSettings = async () => {
-      const userId = 2; // Replace with the logged-in user's ID
+      const userId = 1; // Replace with the logged-in user's ID
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -136,22 +136,73 @@ export default function Settings() {
       }
 
       try {
-        // Simulate API call - would be replaced with actual fetch in production
-        setTimeout(() => {
-          // Set user profile data
+        setLoading(true);
+        
+        // Fetch user profile and settings data
+        const response = await fetch(
+          `http://localhost:5000/settings/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.status === 401) {
+          console.error("Unauthorized, removing token and redirecting...");
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched settings data:", data);
+        
+        // Update state with the fetched data
+        if (data) {
+          // Update profile information
           setProfile({
-            fullName: "John Doe",
-            email: "johndoe@example.com",
-            photoUrl: "",
+            fullName: data.profile.fullName || "John Doe",
+            email: data.profile.email || "johndoe@example.com",
+            photoUrl: data.profile.photoUrl || "",
           });
-
-          // Check if user has completed personalization
-          setPersonalizationCompleted(true);
-
-          setLoading(false);
-        }, 1000);
+          
+          // Update notification settings
+          const notificationSettings = data.notifications;
+          setSettingsList((prevSettingsList) => {
+            const newSettingsList = [...prevSettingsList];
+            
+            // Update individual notification settings in the notifications section (index 1)
+            if (newSettingsList[1] && newSettingsList[1].settings) {
+              newSettingsList[1].settings = newSettingsList[1].settings.map(setting => {
+                if (setting.name === "Meal Reminders") {
+                  return { ...setting, value: notificationSettings.mealReminders };
+                } else if (setting.name === "Exercise Reminders") {
+                  return { ...setting, value: notificationSettings.exerciseReminders };
+                } else if (setting.name === "Progress Updates") {
+                  return { ...setting, value: notificationSettings.progressUpdates };
+                } else if (setting.name === "Water Intake Reminder") {
+                  return { ...setting, value: notificationSettings.waterIntakeReminder };
+                }
+                return setting;
+              });
+            }
+            
+            return newSettingsList;
+          });
+          
+          // Set personalization status
+          setPersonalizationCompleted(data.personalizationCompleted || false);
+        }
       } catch (error) {
         console.error("Error fetching settings:", error);
+      } finally {
         setLoading(false);
       }
     };
