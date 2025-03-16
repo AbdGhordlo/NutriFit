@@ -1,7 +1,10 @@
 const express = require('express');
-const { signup, login } = require('../controllers/authController');
-const passport = require('passport');
+const auth = require('../middleware/auth');
 const router = express.Router();
+
+// Public routes
+const { signup, login, deleteAccount } = require('../controllers/authController');
+const passport = require('passport');
 
 // Google OAuth routes
 router.get('/google',
@@ -18,5 +21,8 @@ router.get('/google/callback',
 
 router.post('/signup', signup);
 router.post('/login', login);
+
+// Protected routes
+router.delete('/:userId', auth, deleteAccount);
 
 module.exports = router;
