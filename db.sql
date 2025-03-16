@@ -308,27 +308,27 @@ VALUES
     (1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
     (1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
 
--- Insert default settings for test user
-INSERT INTO settings (
-  user_id, 
-  meal_reminders, 
-  exercise_reminders, 
-  progress_updates, 
-  water_intake_reminder,
-  profile_picture, 
-  personalize_completed
-)
-VALUES (
-  1, -- Replace with a valid user ID when testing
-  TRUE, 
-  TRUE, 
-  TRUE, 
-  TRUE, 
-  NULL,
-  FALSE
-)
-ON CONFLICT (user_id) 
-DO NOTHING; -- Skip if the user already has settings
+-- -- Insert default settings for test user
+-- INSERT INTO settings (
+--   user_id, 
+--   meal_reminders, 
+--   exercise_reminders, 
+--   progress_updates, 
+--   water_intake_reminder,
+--   profile_picture, 
+--   personalize_completed
+-- )
+-- VALUES (
+--   1, -- Replace with a valid user ID when testing
+--   TRUE, 
+--   TRUE, 
+--   TRUE, 
+--   TRUE, 
+--   NULL,
+--   FALSE
+-- )
+-- ON CONFLICT (user_id) 
+-- DO NOTHING; -- Skip if the user already has settings
 
 --Insert Ingredients
 INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
