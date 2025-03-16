@@ -394,7 +394,7 @@ export default function ExercisePlanner() {
                         className="adopt-button adopted"
                         disabled
                       >
-                        Already Adopted
+                        Adopted
                       </button>
                     ) : (
                       <button
