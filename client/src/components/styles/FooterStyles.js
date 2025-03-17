@@ -6,7 +6,8 @@ export const styles = {
     right: 0,
     backgroundColor: 'white',
     borderTop: '1px solid #e5e7eb',
-    padding: '16px 24px'
+    padding: '16px 24px',
+    zIndex: 45  // Ensure footer is above other elements
   },
   container: {
     maxWidth: '1920px',
