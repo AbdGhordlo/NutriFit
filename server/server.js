@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv'); 
+const path = require('path');
 
 //Import Middleware
 const verifyToken = require('./middleware/auth'); // Import middleware
@@ -28,7 +29,6 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-app.use("/", authRoutes); 
 app.use('/auth', authRoutes); // This mounts the authRoutes router under the /auth path.
 app.use('/', homeRoutes); // This mounts the homeRoutes router under the root path.
 app.use('/meal-planner', verifyToken, mealPlannerRoutes);

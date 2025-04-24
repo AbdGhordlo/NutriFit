@@ -163,7 +163,7 @@ const googleAuth = async (req, res) => {
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
       
       const newUser = await pool.query(
-        'INSERT INTO "user" (username, email, password_hash, google_id, profile_image) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        'INSERT INTO "user" (username, email, password_hash, google_id, profile_picture) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [name, email, hashedPassword, googleId, picture]
       );
       userId = newUser.rows[0].id;
@@ -172,7 +172,7 @@ const googleAuth = async (req, res) => {
       
       // Update Google ID if it's not set (linking existing account)
       if (!existingUser.rows[0].google_id) {
-        await pool.query('UPDATE "user" SET google_id = $1, profile_image = $2 WHERE id = $3', 
+        await pool.query('UPDATE "user" SET google_id = $1, profile_picture = $2 WHERE id = $3', 
           [googleId, picture, userId]);
       }
     }

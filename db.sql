@@ -5,7 +5,7 @@ CREATE TABLE "user" (
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
     google_id VARCHAR(255),
-    profile_image TEXT,
+    profile_picture TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
