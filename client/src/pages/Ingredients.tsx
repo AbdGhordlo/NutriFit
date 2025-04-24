@@ -3,6 +3,7 @@ import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import "../pages/Ingredients.css";
 import "../assets/commonStyles.css";
+import { getUserIdFromToken } from "../utils/auth";
 
 interface Ingredient {
   id: number;
@@ -24,10 +25,17 @@ export default function Ingredients() {
   const [ingredients, setIngredients] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentCategory, setCurrentCategory] = useState(0);
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
+    const id = getUserIdFromToken();
+    if (id) setUserId(id);
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return; // Prevent running when userId is not set
+    
     const fetchIngredients = async () => {
-      const userId = 1;
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -100,7 +108,7 @@ export default function Ingredients() {
     };
 
     fetchIngredients();
-  }, []);
+  }, [userId]);
 
   const handlePrevCategory = () => {
     if (currentCategory > 0) {

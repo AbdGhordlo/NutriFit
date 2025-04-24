@@ -43,7 +43,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/auth', authRoutes); // This mounts the authRoutes router under the /auth path.
-app.use('/', homeRoutes); // This mounts the homeRoutes router under the root path.
+app.use('/home', homeRoutes); // This mounts the homeRoutes router under the root path.
 app.use('/meal-planner', verifyToken, mealPlannerRoutes);
 app.use('/exercise-planner', verifyToken, exercisePlannerRoutes);
 app.use('/ingredients', verifyToken, ingredientsRoutes); 
