@@ -12,7 +12,7 @@
 }
 
 /* Container */
-.container {
+.header-container {
   max-width: 1920px;
   margin: 0 auto;
   height: 100%;
@@ -46,14 +46,20 @@
   gap: 16px;
 }
 
+/* Notification wrapper */
+.notification-wrapper {
+  position: relative;
+}
+
 /* Notification Button */
 .notification-button {
-  padding: 8px 8px 4px;
-  border-radius: 50%;
-  background-color: white;
   position: relative;
-  border: 2px solid transparent;
-  transition: background-color 0.3s ease;
+  padding: 8px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .notification-button:hover {
@@ -62,39 +68,63 @@
 
 .notification-icon {
   height: 24px;
+  width: 24px;
   color: #4b5563;
 }
 
-.notification-dot {
+.notification-badge {
   position: absolute;
-  top: 7px;
-  right: 10px;
-  width: 8px;
-  height: 8px;
+  top: 0;
+  right: 0;
+  height: 18px;
+  width: 18px;
   background-color: #ef4444;
+  color: white;
   border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+/* Account wrapper */
+.account-wrapper {
+  position: relative;
 }
 
 /* Account Button */
 .account-button {
   display: flex;
   align-items: center;
-  background-color: white;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 9999px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background-color: transparent;
+  border: none;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .account-button:hover {
   background-color: #f3f4f6;
 }
 
+.account-avatar {
+  height: 32px;
+  width: 32px;
+  background-color: #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .account-icon {
-  height: 24px;
-  color: #4b5563;
+  height: 20px;
+  width: 20px;
+  color: #6b7280;
 }
 
 .account-text {
@@ -103,27 +133,109 @@
   color: #4b5563;
 }
 
+.dropdown-arrow {
+  height: 16px;
+  width: 16px;
+  color: #6b7280;
+}
+
 /* Dropdown */
 .dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   right: 0;
+  min-width: 240px;
   background-color: white;
-  border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   z-index: 10;
-  width: 300px;
-  padding: 12px;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.notifications-dropdown {
+  width: 320px;
+}
+
+.account-dropdown {
+  width: 240px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown header */
+.dropdown-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdown-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.signed-in-text {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.user-email {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin: 4px 0 0 0;
+}
+
+/* Notifications container */
+.notifications-container {
+  max-height: 360px;
+  overflow-y: auto;
 }
 
 /* Notification Item */
 .notification-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  background-color: #f9fafb;
+}
+
+.notification-item.unread {
+  background-color: #eff6ff;
+}
+
+.notification-item.unread:hover {
+  background-color: #dbeafe;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item-icon {
+  height: 20px;
+  width: 20px;
+  color: #4b5563;
+  margin-top: 2px;
 }
 
 .notification-content {
@@ -132,40 +244,93 @@
 
 .notification-title {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #111827;
   margin: 0;
 }
 
 .notification-message {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 0;
+  font-size: 13px;
+  color: #4b5563;
+  margin: 4px 0 0 0;
 }
 
 .notification-time {
-  font-size: 10px;
-  color: #9ca3af;
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
 }
 
-/* Account Dropdown Item */
-.account-dropdown-item {
-  padding: 8px 12px;
+/* Dropdown menu */
+.dropdown-menu {
+  padding: 8px 0;
+}
+
+/* Dropdown item */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color 0.2s ease;
   cursor: pointer;
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
 }
 
-.account-dropdown-item:hover {
+.dropdown-item:hover {
   background-color: #f3f4f6;
+}
+
+.dropdown-item-icon {
+  height: 18px;
+  width: 18px;
+  color: #6b7280;
+}
+
+.logout-item {
+  color: #ef4444;
+}
+
+.logout-item .dropdown-item-icon {
+  color: #ef4444;
+}
+
+/* Dropdown footer */
+.dropdown-footer {
+  padding: 8px 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.view-all-button {
+  width: 100%;
+  padding: 6px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3b82f6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.view-all-button:hover {
+  color: #2563eb;
 }
 
 .sidebar-toggle {
   display: none;
-  /* Hide by default */
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0px;
-  margin-right: 20px;
-  height: 24px;
+  padding: 8px;
+  margin-right: 16px;
 }
 
 .menu-icon {
@@ -179,17 +344,51 @@
   align-items: center;
 }
 
-/* .logo-container-anchor {
-  padding: 0px;
-  margin: 0px;
-  height: 33px;
-} */
-
 @media (max-width: 1000px) {
   .sidebar-toggle {
     display: block;
-    /* Show on small screens */
   }
-
-
+  
+  .account-text {
+    display: none;
+  }
+  
+  .dropdown-arrow {
+    display: none;
+  }
+  
+  .notifications-dropdown {
+    width: 280px;
+    right: -70px;
+  }
+  
+  .notifications-dropdown:before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 78px;
+    width: 12px;
+    height: 12px;
+    background-color: white;
+    transform: rotate(45deg);
+    border-left: 1px solid #e5e7eb;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .account-dropdown {
+    right: -20px;
+  }
+  
+  .account-dropdown:before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 28px;
+    width: 12px;
+    height: 12px;
+    background-color: white;
+    transform: rotate(45deg);
+    border-left: 1px solid #e5e7eb;
+    border-top: 1px solid #e5e7eb;
+  }
 }

@@ -16,6 +16,7 @@ CREATE TABLE meal_plan (
     user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     description TEXT,
+    is_adopted_plan BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -33,23 +34,13 @@ CREATE TABLE meal (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Meal Plan Meal Table
-CREATE TABLE meal_plan_meal (
-    id SERIAL PRIMARY KEY,
-    meal_plan_id INT REFERENCES meal_plan(id) ON DELETE CASCADE,
-    meal_id INT REFERENCES meal(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    day_number INT NOT NULL DEFAULT 1,
-    meal_order INT NOT NULL DEFAULT 1,
-    time TIME NOT NULL DEFAULT '08:00'
-);
-
 -- Exercise Plan Table
 CREATE TABLE exercise_plan (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     description TEXT,
+    is_adopted_plan BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -62,29 +53,6 @@ CREATE TABLE exercise (
     calories_burned INT,
     has_reps_sets BOOLEAN DEFAULT FALSE,
     has_duration BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Exercise Plan Exercise Table
-CREATE TABLE exercise_plan_exercise (
-    id SERIAL PRIMARY KEY,
-    exercise_plan_id INT REFERENCES exercise_plan(id) ON DELETE CASCADE,
-    exercise_id INT REFERENCES exercise(id) ON DELETE CASCADE,
-    reps INT,
-    sets INT,
-    time TIME NOT NULL DEFAULT '08:00',
-    duration VARCHAR(50), -- Changed to store text-based duration
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    day_number INT NOT NULL DEFAULT 1,
-    exercise_order INT NOT NULL DEFAULT 1
-);
-
--- User Ingredients Table
-CREATE TABLE user_ingredients (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
-    in_stock BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -102,13 +70,55 @@ CREATE TABLE ingredient (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Notification Table
+CREATE TABLE notification (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Meal Plan Meal Table
+CREATE TABLE meal_plan_meal (
+    id SERIAL PRIMARY KEY,
+    meal_plan_id INT REFERENCES meal_plan(id) ON DELETE CASCADE,
+    meal_id INT REFERENCES meal(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    day_number INT NOT NULL DEFAULT 1,
+    meal_order INT NOT NULL DEFAULT 1,
+    time TIME NOT NULL DEFAULT '08:00'
+);
+
+-- Exercise Plan Exercise Table
+CREATE TABLE exercise_plan_exercise (
+    id SERIAL PRIMARY KEY,
+    exercise_plan_id INT REFERENCES exercise_plan(id) ON DELETE CASCADE,
+    exercise_id INT REFERENCES exercise(id) ON DELETE CASCADE,
+    reps INT,
+    sets INT,
+    time TIME NOT NULL DEFAULT '08:00',
+    duration VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    day_number INT NOT NULL DEFAULT 1,
+    exercise_order INT NOT NULL DEFAULT 1
+);
+
+-- User Ingredients Table
+CREATE TABLE user_ingredients (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    in_stock BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- User Ingredient Ingredient Table
 CREATE TABLE user_ingredient_ingredient (
     id SERIAL PRIMARY KEY,
     user_ingredients_id INT REFERENCES user_ingredients(id) ON DELETE CASCADE,
     ingredient_id INT REFERENCES ingredient(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_ingredients_id, ingredient_id) -- Prevent duplicate entries
+    UNIQUE (user_ingredients_id, ingredient_id)
 );
 
 -- User Notification Table
@@ -119,33 +129,24 @@ CREATE TABLE user_notification (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, notification_id) -- Prevent duplicate notifications
-);
-
--- Notification Table
-CREATE TABLE notification (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    UNIQUE (user_id, notification_id)
 );
 
 -- Settings Table
 CREATE TABLE settings (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
-    weight_goal INT,
-    calorie_target INT,
-    dark_mode BOOLEAN DEFAULT FALSE,
     meal_reminders BOOLEAN DEFAULT TRUE,
     exercise_reminders BOOLEAN DEFAULT TRUE,
     progress_updates BOOLEAN DEFAULT TRUE,
     water_intake_reminder BOOLEAN DEFAULT TRUE,
-    language VARCHAR(50) DEFAULT 'English',
+    profile_picture VARCHAR(255),
+    personalize_steps JSONB,
+    personalize_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id)
 );
-
 
 -- Personalization Table
 CREATE TABLE personalization (
@@ -154,10 +155,9 @@ CREATE TABLE personalization (
     steps_data JSONB,
     completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id)
 );
-
-
 
 
 -- Data
@@ -235,12 +235,12 @@ INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time)
 (1, 12, 7, 4, '17:00'), -- Snack: Fruit & Nuts
 (1, 13, 7, 5, '20:00'); -- Dinner: Cottage Cheese with Pineapple
 
-
-
+-- Insert Exercise Plan
 INSERT INTO exercise_plan (user_id, name, description)
 VALUES 
 (1, '7-Day Fitness Plan', 'A balanced 7-day exercise plan focusing on strength and cardio.');
 
+-- Insert Exercises
 INSERT INTO exercise (name, description, calories_burned, has_reps_sets, has_duration)
 VALUES 
 ('Push-ups', 'Bodyweight exercise targeting chest, shoulders, and triceps.', 100, TRUE, FALSE),
@@ -255,62 +255,82 @@ VALUES
 ('Bicycle Crunches', 'Core exercise targeting abs.', 80, TRUE, FALSE);
 
 -- Day 1
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 1, 1, 1, '08:00', 15, 3, NULL), -- Push-ups
-(1, 2, 1, 2, '08:30', 20, 3, NULL), -- Squats
-(1, 3, 1, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
-(1, 4, 1, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 1, 1, 1, '08:00', 15, 3, NULL), -- Push-ups
+    (1, 2, 1, 2, '08:30', 20, 3, NULL), -- Squats
+    (1, 3, 1, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
+    (1, 4, 1, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
 
--- Day 2
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 5, 2, 1, '08:00', 10, 3, NULL), -- Pull-ups
-(1, 6, 2, 2, '08:30', 12, 3, NULL), -- Burpees
-(1, 7, 2, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
-(1, 8, 2, 4, '18:00', 15, 3, NULL); -- Lunges
+    -- Day 2
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 5, 2, 1, '08:00', 10, 3, NULL), -- Pull-ups
+    (1, 6, 2, 2, '08:30', 12, 3, NULL), -- Burpees
+    (1, 7, 2, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
+    (1, 8, 2, 4, '18:00', 15, 3, NULL); -- Lunges
 
--- Day 3
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 9, 3, 1, '08:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
-(1, 10, 3, 2, '08:30', 20, 3, NULL), -- Bicycle Crunches
-(1, 1, 3, 3, '09:00', 15, 3, NULL), -- Push-ups
-(1, 2, 3, 4, '18:00', 20, 3, NULL); -- Squats
+    -- Day 3
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 9, 3, 1, '08:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
+    (1, 10, 3, 2, '08:30', 20, 3, NULL), -- Bicycle Crunches
+    (1, 1, 3, 3, '09:00', 15, 3, NULL), -- Push-ups
+    (1, 2, 3, 4, '18:00', 20, 3, NULL); -- Squats
 
--- Day 4
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 3, 4, 1, '08:00', NULL, NULL, '45 seconds'), -- Plank
-(1, 4, 4, 2, '08:30', NULL, NULL, '25 minutes'), -- Running
-(1, 5, 4, 3, '09:00', 10, 3, NULL), -- Pull-ups
-(1, 6, 4, 4, '18:00', 12, 3, NULL); -- Burpees
+    -- Day 4
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 3, 4, 1, '08:00', NULL, NULL, '45 seconds'), -- Plank
+    (1, 4, 4, 2, '08:30', NULL, NULL, '25 minutes'), -- Running
+    (1, 5, 4, 3, '09:00', 10, 3, NULL), -- Pull-ups
+    (1, 6, 4, 4, '18:00', 12, 3, NULL); -- Burpees
 
--- Day 5
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 7, 5, 1, '08:00', NULL, NULL, '3 minutes'), -- Jumping Jacks
-(1, 8, 5, 2, '08:30', 15, 3, NULL), -- Lunges
-(1, 9, 5, 3, '09:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
-(1, 10, 5, 4, '18:00', 20, 3, NULL); -- Bicycle Crunches
+    -- Day 5
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 7, 5, 1, '08:00', NULL, NULL, '3 minutes'), -- Jumping Jacks
+    (1, 8, 5, 2, '08:30', 15, 3, NULL), -- Lunges
+    (1, 9, 5, 3, '09:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
+    (1, 10, 5, 4, '18:00', 20, 3, NULL); -- Bicycle Crunches
 
--- Day 6
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 1, 6, 1, '08:00', 15, 3, NULL), -- Push-ups
-(1, 2, 6, 2, '08:30', 20, 3, NULL), -- Squats
-(1, 3, 6, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
-(1, 4, 6, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
+    -- Day 6
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 1, 6, 1, '08:00', 15, 3, NULL), -- Push-ups
+    (1, 2, 6, 2, '08:30', 20, 3, NULL), -- Squats
+    (1, 3, 6, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
+    (1, 4, 6, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
 
--- Day 7
-INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-VALUES 
-(1, 5, 7, 1, '08:00', 10, 3, NULL), -- Pull-ups
-(1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
-(1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
-(1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
+    -- Day 7
+    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+    VALUES 
+    (1, 5, 7, 1, '08:00', 10, 3, NULL), -- Pull-ups
+    (1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
+    (1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
+    (1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
 
-
+-- -- Insert default settings for test user
+-- INSERT INTO settings (
+--   user_id, 
+--   meal_reminders, 
+--   exercise_reminders, 
+--   progress_updates, 
+--   water_intake_reminder,
+--   profile_picture, 
+--   personalize_completed
+-- )
+-- VALUES (
+--   1, -- Replace with a valid user ID when testing
+--   TRUE, 
+--   TRUE, 
+--   TRUE, 
+--   TRUE, 
+--   NULL,
+--   FALSE
+-- )
+-- ON CONFLICT (user_id) 
+-- DO NOTHING; -- Skip if the user already has settings
 
 --Insert Ingredients
 INSERT INTO ingredient (name, category, calories, protein, carbs, fats)

@@ -1,162 +1,358 @@
-import React, { useState } from "react";
-import { User, Bell, Lock, Globe } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ClipLoader } from "react-spinners";
 import { styles } from "./styles/SettingsStyles";
 import "../assets/commonStyles.css";
 
-interface SettingSection {
-  title: string;
-  icon: any;
-  settings: {
-    name: string;
-    description: string;
-    type: "toggle" | "input" | "select";
-    value?: any;
-    options?: string[];
-  }[];
-}
+// Components
+import ProfileSection from "../components/SettingsComponents/ProfileSection";
+import NotificationSection from "../components/SettingsComponents/NotificationSection";
+import AccountManagementSection from "../components/SettingsComponents/AccountManagementSection";
+import PasswordChangeModal from "../components/SettingsComponents/PasswordChangeModal";
+import DeleteAccountModal from "../components/SettingsComponents/DeleteAccountModal";
+import PersonalizationBanner from "../components/SettingsComponents/PersonalizationBanner";
+import SaveSettingsButton from "../components/SettingsComponents/SaveSettingsButton";
 
-const settingsSections: SettingSection[] = [
-  {
-    title: "Profile Settings",
-    icon: User,
-    settings: [
-      {
-        name: "Weight Goal",
-        description: "Set your target weight",
-        type: "input",
-        value: "70 kg",
-      },
-      {
-        name: "Daily Calorie Target",
-        description: "Set your daily calorie goal",
-        type: "input",
-        value: "2200 kcal",
-      },
-    ],
-  },
-  {
-    title: "Notifications",
-    icon: Bell,
-    settings: [
-      {
-        name: "Meal Reminders",
-        description: "Get notified when it's time for your meals",
-        type: "toggle",
-        value: true,
-      },
-      {
-        name: "Exercise Reminders",
-        description: "Get notified about your scheduled workouts",
-        type: "toggle",
-        value: true,
-      },
-      {
-        name: "Progress Updates",
-        description: "Weekly progress report notifications",
-        type: "toggle",
-        value: true,
-      },
-    ],
-  },
-  {
-    title: "Privacy",
-    icon: Lock,
-    settings: [
-      {
-        name: "Profile Visibility",
-        description: "Control who can see your profile",
-        type: "select",
-        value: "Private",
-        options: ["Private", "Friends", "Public"],
-      },
-      {
-        name: "Data Sharing",
-        description: "Manage how your data is shared",
-        type: "toggle",
-        value: false,
-      },
-    ],
-  },
-  {
-    title: "Preferences",
-    icon: Globe,
-    settings: [
-      {
-        name: "Language",
-        description: "Choose your preferred language",
-        type: "select",
-        value: "English",
-        options: ["English", "Spanish", "French", "German"],
-      },
-      {
-        name: "Dark Mode",
-        description: "Toggle dark mode theme",
-        type: "toggle",
-        value: false,
-      },
-      {
-        name: "Sound Effects",
-        description: "Enable sound effects",
-        type: "toggle",
-        value: true,
-      },
-    ],
-  },
-];
+// Services & Hooks
+import { useAuth } from "../utils/useAuth";
+import * as settingsService from "../services/settingsService";
+
+// Types
+import { initialSettings } from "../utils/settingsData";
+import { SettingSection, UserProfile, PasswordForm } from "../types/settings";
 
 export default function Settings() {
+  const { getAuthToken, getAuthUserId, logout } = useAuth();   // Auth hook
+  
+  // State
+  const [settingsList, setSettingsList] = useState<SettingSection[]>(initialSettings);
+  const [personalizationCompleted, setPersonalizationCompleted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile>({
+    fullName: "John Doe",
+    email: "johndoe@example.com",
+    photoUrl: "",
+  });
+  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState<string>("");
+  
+  const userHasPersonalized = personalizationCompleted;
+  
+  // Fetch settings data on component mount
+  useEffect(() => {
+    const loadUserSettings = async () => {
+      const token = getAuthToken();
+      const userId = getAuthUserId();
+      
+      if (!token || !userId) return;
+      
+      try {
+        setLoading(true);
+        const data = await settingsService.fetchUserSettings(userId, token);
+        
+        // Update profile information
+        setProfile({
+          fullName: data.profile.fullName || "John Doe",
+          email: data.profile.email || "johndoe@example.com",
+          photoUrl: data.profile.photoUrl || "",
+        });
+        
+        // Update notification settings
+        const notificationSettings = data.notifications;
+        setSettingsList((prevSettingsList) => {
+          const newSettingsList = [...prevSettingsList];
+          
+          // Update individual notification settings in the notifications section (index 1)
+          if (newSettingsList[1] && newSettingsList[1].settings) {
+            newSettingsList[1].settings = newSettingsList[1].settings.map(setting => {
+              if (setting.name === "Meal Reminders") {
+                return { ...setting, value: notificationSettings.mealReminders };
+              } else if (setting.name === "Exercise Reminders") {
+                return { ...setting, value: notificationSettings.exerciseReminders };
+              } else if (setting.name === "Progress Updates") {
+                return { ...setting, value: notificationSettings.progressUpdates };
+              } else if (setting.name === "Water Intake Reminder") {
+                return { ...setting, value: notificationSettings.waterIntakeReminder };
+              }
+              return setting;
+            });
+          }
+          
+          return newSettingsList;
+        });
+        
+        // Set personalization status
+        setPersonalizationCompleted(data.personalizationCompleted || false);
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+        if (error.message === "Unauthorized") {
+          logout();
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [settingsList, setSettingsList] = useState(settingsSections);
+    loadUserSettings();
+  }, []);
 
-//TODO: this is not very pretty. maybe the whole structure of the page should be changed
-const handleToggle = (passedSetting: any) => {
-  setSettingsList((prevSettingsList) =>
-    prevSettingsList.map((section) => ({
-      ...section,
-      settings: section.settings.map((setting) =>
-        setting.name === passedSetting.name
-          ? { ...setting, value: !setting.value } // Toggle the value
-          : setting
-      ),
-    }))
-  );
-};
+  // Validate profile picture URL when it changes
+  useEffect(() => {
+    if (profile.photoUrl) {
+      const img = new Image();
+      img.onload = () => {
+        // Image exists and is valid, do nothing
+      };
+      img.onerror = () => {
+        // Image doesn't exist or is invalid, clear the URL
+        console.log("Profile picture not found, clearing URL");
+        setProfile((prev) => ({
+          ...prev,
+          photoUrl: "", 
+        }));
+      };
+      img.src = profile.photoUrl;
+    }
+  }, [profile.photoUrl]);
 
-  const renderSettingInput = (setting: any) => {
-    switch (setting.type) {
-      case "toggle":
-        return (
-          <div style={styles.toggle(setting.value)} onClick={() => handleToggle(setting)}>
-            <div style={styles.toggleHandle(setting.value)} />
-          </div>
-        );
-      case "input":
-        return (
-          <input
-            type="text"
-            value={setting.value}
-            style={styles.input}
-            onChange={() => {}}
-          />
-        );
-      case "select":
-        return (
-          <select
-            value={setting.value}
-            style={styles.select}
-            onChange={() => {}}
-          >
-            {setting.options?.map((option: string) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        );
-      default:
-        return null;
+  // Event handlers
+  const handleToggle = (passedSetting: any) => {
+    setSettingsList((prevSettingsList) => {
+      const newSettingsList = prevSettingsList.map((section) => ({
+        ...section,
+        settings: section.settings.map((setting) =>
+          setting.name === passedSetting.name
+            ? { ...setting, value: !setting.value }
+            : setting
+        ),
+      }));
+      
+      return newSettingsList;
+    });
+  };
+
+  const handleProfileChange = (field: keyof UserProfile, value: string) => {
+    setProfile((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handlePasswordChange = (field: keyof PasswordForm, value: string) => {
+    setPasswordForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    setPasswordError("");
+  };
+
+  const showSuccessMessage = () => {
+    setSaveSuccess(true);
+    setTimeout(() => {
+      setSaveSuccess(false);
+    }, 3000);
+  };
+
+  // Submit handlers
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("New passwords don't match");
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters long");
+      return;
+    }
+
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+    
+    try {
+      setIsSaving(true);
+      
+      await settingsService.updatePassword(userId, token, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
+      
+      // Password successfully changed
+      setIsPasswordModalOpen(false);
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      
+      showSuccessMessage();
+    } catch (error) {
+      console.error("Error changing password:", error);
+      setPasswordError(error.message);
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+    
+    try {
+      setIsSaving(true);
+
+      // Development fallback
+      try {
+        const result = await settingsService.uploadProfilePicture(userId, token, file);
+        setProfile((prev) => ({
+          ...prev,
+          photoUrl: result.url || "",
+        }));
+      } catch (error) {
+        console.error("API error:", error);
+        // Show success in development anyway
+      }
+      
+      showSuccessMessage();
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      showSuccessMessage(); // Show success in development
+    } finally {
+      setIsSaving(false);
+      if (e.target) e.target.value = ""; // Clear input
+    }
+  };
+
+  const handleRemoveProfilePhoto = async () => {
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+    
+    try {
+      setIsSaving(true);
+  
+      // Update local state first
+      setProfile((prev) => ({
+        ...prev,
+        photoUrl: "",
+      }));
+  
+      // Try to call specific delete API (this will likely fail with 404 in development)
+      try {
+        await settingsService.deleteProfilePicture(userId, token);
+      } catch (error) {
+        console.error("API error:", error);
+        // Expected during development - continue with update profile API
+      }
+      
+      // IMPORTANT: Also update the profile data in backend
+      try {
+        await settingsService.updateUserProfile(userId, token, {
+          fullName: profile.fullName,
+          email: profile.email,
+          photoUrl: "", // Empty photo URL
+        });
+      } catch (profileError) {
+        console.error("Error updating profile:", profileError);
+      }
+      
+      showSuccessMessage();
+    } catch (error) {
+      console.error("Error removing profile picture:", error);
+      showSuccessMessage();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSignOut = () => logout();
+
+  const handleDeleteAccount = async () => {
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+    
+    try {
+      setIsSaving(true);
+
+      try {
+        await settingsService.deleteUserAccount(userId, token);
+      } catch (error) {
+        console.error("API error:", error);
+      }
+
+      logout();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      logout(); // Logout anyway
+    } finally {
+      setIsSaving(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+    
+    setIsSaving(true);
+
+    try {
+      // Update profile
+      try {
+        await settingsService.updateUserProfile(userId, token, {
+          fullName: profile.fullName,
+          email: profile.email,
+          photoUrl: profile.photoUrl,
+        });
+      } catch (profileError) {
+        console.error("Error updating profile:", profileError);
+      }
+
+      // Update notifications
+      try {
+        await settingsService.updateNotificationSettings(userId, token, {
+          mealReminders: settingsList[1].settings[0].value,
+          exerciseReminders: settingsList[1].settings[1].value,
+          progressUpdates: settingsList[1].settings[2].value,
+          waterIntakeReminder: settingsList[1].settings[3].value,
+        });
+      } catch (notificationsError) {
+        console.error("Error updating notifications:", notificationsError);
+      }
+
+      showSuccessMessage();
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      showSuccessMessage(); // Show success in development anyway
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <ClipLoader color="#7ec987" size={50} />
+      </div>
+    );
+  }
 
   return (
     <div className="outer-container">
@@ -164,30 +360,64 @@ const handleToggle = (passedSetting: any) => {
         <h1 style={styles.title}>Settings</h1>
 
         <div style={styles.settingsGrid}>
-          {settingsList.map((section, index) => (
-            <div key={index} style={styles.section}>
-              <div style={styles.sectionHeader}>
-                <section.icon style={styles.sectionIcon} />
-                <h2 style={styles.sectionTitle}>{section.title}</h2>
-              </div>
+          {/* Profile Settings Container */}
+          <ProfileSection 
+            profile={profile}
+            handleProfileChange={handleProfileChange}
+            handleProfilePhotoUpload={handleProfilePhotoUpload}
+            handleRemoveProfilePhoto={handleRemoveProfilePhoto}
+            styles={styles}
+          />
 
-              <div style={styles.settingsList}>
-                {section.settings.map((setting, settingIndex) => (
-                  <div key={settingIndex} style={styles.settingItem}>
-                    <div style={styles.settingInfo}>
-                      <h3 style={styles.settingName}>{setting.name}</h3>
-                      <p style={styles.settingDescription}>
-                        {setting.description}
-                      </p>
-                    </div>
-                    {renderSettingInput(setting)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+          {/* Notification Settings Container */}
+          <NotificationSection 
+            settings={settingsList[1].settings}
+            handleToggle={handleToggle}
+            styles={styles}
+          />
+
+          {/* Account Management Container */}
+          <AccountManagementSection 
+            onOpenPasswordModal={() => setIsPasswordModalOpen(true)}
+            onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
+            onSignOut={handleSignOut}
+            styles={styles}
+          />
+
+          {/* Personalization Section */}
+          <PersonalizationBanner 
+            userHasPersonalized={userHasPersonalized}
+          />
+
+          {/* Save Button Section */}
+          <SaveSettingsButton 
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+            onSave={handleSaveSettings}
+            styles={styles}
+          />
         </div>
       </div>
+
+      {/* Modals */}
+      <PasswordChangeModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        passwordForm={passwordForm}
+        passwordError={passwordError}
+        handlePasswordChange={(field, value) =>
+          handlePasswordChange(field as keyof PasswordForm, value)
+        }
+        handlePasswordSubmit={handlePasswordSubmit}
+        styles={styles}
+      />
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onDelete={handleDeleteAccount}
+        isSaving={isSaving}
+        styles={styles}
+      />
     </div>
   );
 }

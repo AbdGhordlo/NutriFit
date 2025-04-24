@@ -201,3 +201,13 @@
     align-items: center;
     height: 100vh;
 }
+
+.generated-plan-day {
+    color: #4d7051;
+}
+
+.no-plan-error-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+  }
