@@ -52,7 +52,7 @@ export const styles = {
   divider: {
     position: 'relative',
     textAlign: 'center',
-    margin: '24px 0',
+    margin: '6px 0',
     '&::before': {
       content: '""',
       position: 'absolute',
