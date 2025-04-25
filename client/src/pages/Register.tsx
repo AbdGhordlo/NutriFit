@@ -3,6 +3,7 @@ import { User, Mail, Lock } from "lucide-react";
 import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Register() {
   const [emailFocus, setEmailFocus] = useState(false);
@@ -10,11 +11,13 @@ export default function Register() {
   const [nameFocus, setNameFocus] = useState(false);
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     setErrorMessage("");
     e.preventDefault(); // Prevent page reload
     try {
+      setIsLoading(true);
       const response = await fetch("http://localhost:5000/auth/signup", {
         method: "POST",
         headers: {
@@ -28,18 +31,47 @@ export default function Register() {
         localStorage.setItem("token", data.token); // Store JWT in localStorage
         window.location.href = "/home"; // Redirect to home page
       } else {
-        setErrorMessage(data.message || "Registration failed");
+        setErrorMessage(data.message ?? "Registration failed");
       }
     } catch (err) {
       console.error(err);
       setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Function to handle Google login
-  const handleGoogleSignup = () => {
-    // Redirect to the backend's Google OAuth endpoint
-    window.location.href = "http://localhost:5000/auth/google";
+  const handleSignupSuccess = async (response) => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+      
+      const googleResponse = await fetch("http://localhost:5000/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+      
+      const data = await googleResponse.json();
+      
+      if (googleResponse.ok) {
+        localStorage.setItem("token", data.token);
+        window.location.href = "/home";
+      } else {
+        setErrorMessage(data.message ?? "Google signup failed");
+      }
+    } catch (err) {
+      console.error("Google signup error:", err);
+      setErrorMessage("Google authentication failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupError = () => {
+    setErrorMessage("Google signup failed");
   };
 
   return (
@@ -52,14 +84,20 @@ export default function Register() {
           </p>
 
           {/* Google Signup Button */}
-          <button style={styles.googleButton} onClick={handleGoogleSignup}>
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google"
-              style={styles.googleIcon}
+          <div className="w-full flex justify-center items-center">
+            <GoogleLogin
+              onSuccess={handleSignupSuccess}
+              onError={() => {
+                console.log("Google signup failed");
+                handleSignupError();
+              }}
+              type="standard"
+              size="large"
+              text="signup_with"
+              shape="rectangular"
+              width={250}
             />
-            Sign up with Google
-          </button>
+          </div>
 
           <div style={styles.divider}>
             <span style={styles.dividerText}>or register with email</span>
@@ -80,6 +118,7 @@ export default function Register() {
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
                   }
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -98,6 +137,7 @@ export default function Register() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -116,13 +156,16 @@ export default function Register() {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             {errorMessage && <ErrorMessage message={errorMessage} />}
 
-            <button style={styles.submitButton}>Create Account</button>
+            <button style={styles.submitButton} disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Create Account"}
+            </button>
           </form>
 
           <p style={styles.footer}>
