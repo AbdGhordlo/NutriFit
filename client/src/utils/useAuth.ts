@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { getUserIdFromToken } from "./authUtils";
+import { getUserIdFromToken } from "./auth";
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export const useAuth = () => {
     const token = getAuthToken();
     if (!token) return null;
     
-    const userId = getUserIdFromToken(token);
+    const userId = getUserIdFromToken();
     
     if (!userId) {
       localStorage.removeItem("token");

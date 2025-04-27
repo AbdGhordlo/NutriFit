@@ -55,6 +55,8 @@ export default function ExercisePlanner() {
   const [userId, setUserId] = useState('');
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
 
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     const id = getUserIdFromToken();
     if (id) setUserId(id);
@@ -64,7 +66,6 @@ export default function ExercisePlanner() {
     if (!userId) return;
 
     const fetchExercisePlan = async () => {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -129,7 +130,6 @@ export default function ExercisePlanner() {
 
   const handleFetchSavedPlans = async () => {
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -162,7 +162,6 @@ export default function ExercisePlanner() {
 
   const handleAdoptPlan = async (exercisePlanId: number) => {
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -186,8 +185,14 @@ export default function ExercisePlanner() {
     setIsGenerating(true);
     setShowPopup(true);
 
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+
     try {
-      const plan = await generateExercisePlan(); // Call the AI function
+      const plan = await generateExercisePlan(Number(userId), token); // Call the AI function
       setGeneratedPlan(plan);
     } catch (error) {
       console.error("Error generating exercise plan:", error);
@@ -222,7 +227,6 @@ export default function ExercisePlanner() {
     if (!generatedPlan) return;
 
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -245,7 +249,6 @@ export default function ExercisePlanner() {
     if (!generatedPlan) return;
 
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");

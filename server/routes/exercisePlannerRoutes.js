@@ -26,6 +26,6 @@ router.post('/save-and-adopt-exercise-plan', saveAndAdoptExercisePlan);
 router.post('/adopt-exercise-plan', adoptExercisePlan);
 
 // Generate an exercise plan using AI
-router.post('/generate-exercise-plan', generateExercisePlan);
+router.post('/:userId/generate-exercise-plan', generateExercisePlan);
 
 module.exports = router;

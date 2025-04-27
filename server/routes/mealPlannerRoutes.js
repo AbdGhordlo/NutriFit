@@ -26,6 +26,6 @@ router.post('/save-and-adopt-meal-plan', saveAndAdoptMealPlan);
 router.post('/adopt-meal-plan', adoptMealPlan);
 
 // Generate a meal plan using AI
-router.post('/generate-meal-plan', getMealPlan);
+router.post('/:userId/generate-meal-plan', getMealPlan);
 
 module.exports = router;

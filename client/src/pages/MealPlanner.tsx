@@ -6,6 +6,7 @@ import "../assets/commonStyles.css";
 import { generateMealPlan, saveMealPlan, saveAndAdoptMealPlan, adoptMealPlan, getAllMealPlansByUser } from "../api/MealPlannerAI";
 import { getUserIdFromToken } from "../utils/auth";
 import ErrorMessage from "../components/ErrorMessage";
+import { userInfo } from "os";
 
 interface Meal {
   id: number;
@@ -51,6 +52,8 @@ export default function MealPlanner() {
   const [userId, setUserId] = useState('');
   const [savedPlans, setSavedPlans] = useState<any[]>([]); // State to store saved plans
 
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     const id = getUserIdFromToken();
     if (id) setUserId(id);
@@ -60,7 +63,6 @@ export default function MealPlanner() {
     if (!userId) return; // Prevent running when userId is not set
 
     const fetchMealPlan = async () => {
-      const token = localStorage.getItem("token"); // Retrieve JWT from local storage
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -68,6 +70,7 @@ export default function MealPlanner() {
         return;
       }
 
+      // Fetch the adopted plan
       try {
         const response = await fetch(
           `http://localhost:5000/meal-planner/${userId}/adopted`,
@@ -127,40 +130,22 @@ export default function MealPlanner() {
 
   const handleFetchSavedPlans = async () => {
     try {
-      const token = localStorage.getItem("token");
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
         return;
       }
-
-      const response = await fetch(
-        `http://localhost:5000/meal-planner/${userId}/all`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
+  
+      const data = await getAllMealPlansByUser(Number(userId), token);
       setSavedPlans(data);
       setShowSavedPlansPopup(true);
     } catch (error) {
       console.error("Error fetching saved plans:", error);
     }
-  };
+  };  
 
   const handleAdoptPlan = async (mealPlanId: number) => {
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -183,9 +168,15 @@ export default function MealPlanner() {
   const handleGeneratePlan = async () => {
     setIsGenerating(true);
     setShowPopup(true);
+    
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
 
     try {
-      const plan = await generateMealPlan(); // Call the AI function
+      const plan = await generateMealPlan(Number(userId), token); // Call the AI function
       setGeneratedPlan(plan);
     } catch (error) {
       console.error("Error generating meal plan:", error);
@@ -253,7 +244,6 @@ export default function MealPlanner() {
     if (!generatedPlan) return;
 
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -276,7 +266,6 @@ export default function MealPlanner() {
     if (!generatedPlan) return;
 
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
