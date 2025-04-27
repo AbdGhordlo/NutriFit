@@ -28,6 +28,31 @@ const getUserIngredients = async (req, res) => {
   }
 };
 
+const getInStockUserIngredients = async (userId) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        i.id AS ingredient_id,
+        i.name AS ingredient_name,
+        i.category AS ingredient_category,
+        i.calories AS ingredient_calories,
+        i.protein AS ingredient_protein,
+        i.carbs AS ingredient_carbs,
+        i.fats AS ingredient_fats
+      FROM user_ingredients ui
+      JOIN user_ingredient_ingredient uii ON ui.id = uii.user_ingredients_id
+      JOIN ingredient i ON uii.ingredient_id = i.id
+      WHERE ui.user_id = $1 AND ui.in_stock = true
+      ORDER BY i.category, i.name`,
+      [userId]
+    );
+    return result.rows;
+  } catch (err) {
+    console.error(err);
+    throw err; // Throw error to be handled by the calling function
+  }
+};
+
 const toggleIngredientStock = async (req, res) => {
   const { userId, ingredientId } = req.params;
   const { inStock } = req.body;
@@ -105,4 +130,5 @@ module.exports = {
   getUserIngredients,
   toggleIngredientStock,
   addIngredient,
+  getInStockUserIngredients
 };

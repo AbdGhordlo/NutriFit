@@ -1,6 +1,7 @@
 const pool = require('../db');
 const { HfInference } = require('@huggingface/inference'); // Import Hugging Face Inference
 const Groq = require("groq-sdk");
+const { getInStockUserIngredients } = require('./ingredientsController');
 const hf = new HfInference(process.env.HF_ACCESS_TOKEN); // Initialize with your Hugging Face token
 const groq = new Groq(process.env.GROQ_API_KEY);
 
@@ -70,16 +71,15 @@ const getAllMealPlansByUser = async (req, res) => {
   }
 };
 
-// API: deepseek-r1-distill-llama-70b using Groq
 const getMealPlan = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Fetch the user's personalization data
-    const personalizationData = await pool.query(
-      `SELECT steps_data FROM personalization WHERE user_id = $1`,
-      [userId]
-    );
+    // Fetch both personalization data and ingredients in parallel
+    const [personalizationData, ingredients] = await Promise.all([
+      pool.query(`SELECT steps_data FROM personalization WHERE user_id = $1`, [userId]),
+      getInStockUserIngredients(userId) // Use the new function
+    ]);
 
     if (personalizationData.rows.length === 0) {
       return res.status(404).json({ error: "Personalization data not found" });
@@ -98,6 +98,11 @@ const getMealPlan = async (req, res) => {
     const activityLevel = steps_data.step_4?.activityLevel || "moderate";
     const budget = steps_data.step_5?.budget || "basic";
 
+    // Format ingredients for the prompt
+    const ingredientsList = ingredients.map(ing => 
+      `${ing.ingredient_name} (${ing.ingredient_category})`
+    ).join(", ");
+
     // Create a detailed user profile for the prompt
     const userProfile = `
       User Profile:
@@ -113,10 +118,14 @@ const getMealPlan = async (req, res) => {
       - Meals Per Day: ${mealsPerDay}
       - Activity Level: ${activityLevel}
       - Budget: ${budget}
+      - Available Ingredients: ${ingredientsList}
     `;
 
     // Define the system prompt with personalization
-    const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a personalized 7-day meal plan in valid JSON format based on the user's profile. The plan should include meals for breakfast, lunch, and dinner each day, or more meals if specified. Each meal should have a name, description, calories, protein, carbs, fats, and time. Consider the user's dietary restrictions, preferences, and goals. 
+        const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a personalized 7-day meal plan in valid JSON format based on the user's 
+        profile and available ingredients. The plan should include meals for breakfast, lunch, and dinner each day, or more meals if specified. 
+        Each meal should have a name, description, calories, protein, carbs, fats, and time. Consider the user's dietary restrictions, preferences, 
+        goals, and available ingredients.
 
     Requirements:
     - Strictly follow dietary restrictions: ${dietPreference}
@@ -125,6 +134,9 @@ const getMealPlan = async (req, res) => {
     - Budget level: ${budget}
     - Target calories based on user's weight goal and activity level
     - Make sure the total calories in a single day meet the Target Calories
+    - Prioritize using these available ingredients: ${ingredientsList}
+    - Only include meals that can be made with available ingredients or common pantry staples (salt, pepper, basic spices)
+    - If no suitable meals can be made with available ingredients, suggest simple meals that require minimal additional ingredients
 
     The JSON structure should match this format:
     {
