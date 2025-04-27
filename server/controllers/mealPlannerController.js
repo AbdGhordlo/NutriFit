@@ -73,12 +73,64 @@ const getAllMealPlansByUser = async (req, res) => {
 // API: deepseek-r1-distill-llama-70b using Groq
 const getMealPlan = async (req, res) => {
   try {
-    // Define the system prompt to guide the AI
-    const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a 7-day meal plan in valid JSON format. The plan should include meals for breakfast, lunch, and dinner each day. Each meal should have a name, description, calories, protein, carbs, fats, and time. The JSON structure should match this format:
+    const { userId } = req.params;
+
+    // Fetch the user's personalization data
+    const personalizationData = await pool.query(
+      `SELECT steps_data FROM personalization WHERE user_id = $1`,
+      [userId]
+    );
+
+    if (personalizationData.rows.length === 0) {
+      return res.status(404).json({ error: "Personalization data not found" });
+    }
+
+    const { steps_data } = personalizationData.rows[0];
+    
+    // Extract relevant personalization data
+    const personalInfo = steps_data.step_1?.personalInfo || {};
+    const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
+    const weightGoal = steps_data.step_2?.weightGoal || {};
+    const cuisinePreferences = steps_data.step_3?.cuisinePreferences || [];
+    const dietPreference = steps_data.step_3?.dietPreference || "none";
+    const healthIssues = steps_data.step_3?.healthIssues || ["none"];
+    const mealsPerDay = steps_data.step_3?.mealsPerDay || 3;
+    const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+    const budget = steps_data.step_5?.budget || "basic";
+
+    // Create a detailed user profile for the prompt
+    const userProfile = `
+      User Profile:
+      - Age: ${personalInfo.age}
+      - Gender: ${personalInfo.gender}
+      - Height: ${personalInfo.height} inches
+      - Weight: ${personalInfo.weight} lbs
+      - Fitness Goal: ${fitnessGoal.type}
+      - Weight Goal: ${weightGoal.targetWeight} lbs in ${weightGoal.timeframe} weeks
+      - Cuisine Preferences: ${cuisinePreferences.join(", ")}
+      - Diet Preference: ${dietPreference}
+      - Health Issues: ${healthIssues.join(", ")}
+      - Meals Per Day: ${mealsPerDay}
+      - Activity Level: ${activityLevel}
+      - Budget: ${budget}
+    `;
+
+    // Define the system prompt with personalization
+    const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a personalized 7-day meal plan in valid JSON format based on the user's profile. The plan should include meals for breakfast, lunch, and dinner each day, or more meals if specified. Each meal should have a name, description, calories, protein, carbs, fats, and time. Consider the user's dietary restrictions, preferences, and goals. 
+
+    Requirements:
+    - Strictly follow dietary restrictions: ${dietPreference}
+    - Avoid ingredients that might affect these health issues: ${healthIssues.join(", ")}
+    - Prioritize these cuisines: ${cuisinePreferences.join(", ")}
+    - Budget level: ${budget}
+    - Target calories based on user's weight goal and activity level
+    - Make sure the total calories in a single day meet the Target Calories
+
+    The JSON structure should match this format:
     {
       "meal_plan": {
-        "name": "7-Day Meal Plan",
-        "description": "A balanced meal plan for a week."
+        "name": "7-Day Personalized Meal Plan",
+        "description": "A balanced meal plan tailored to the user's needs."
       },
       "meals": [
         {
@@ -95,15 +147,17 @@ const getMealPlan = async (req, res) => {
     }
     Make sure the response is valid JSON and does not include any additional text or explanations.`;
 
-    // Make the request to Groq
+    // Make the request to Groq with both system prompt and user profile
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         { role: "system", content: SYSTEM_PROMPT }, // System prompt to guide the AI
-        { role: "user", content: "Generate a 7-day meal plan in JSON format." }, // User prompt
+        { role: "user", content: userProfile }, // User prompt
       ],
-      model: "deepseek-r1-distill-llama-70b", // Use the desired model
-      temperature: 0.6, // Adjust for creativity
-      max_tokens: 4096, // Adjust based on your needs
+      //model: "deepseek-r1-distill-llama-70b", // Use the desired model
+      model: "llama3-70b-8192", // Use the desired model
+      //temperature: 0.6, // Adjust for creativity
+      temperature: 0.4, // Adjust for creativity
+      max_tokens: 5000, // Adjust based on your needs
       top_p: 0.95, // Adjust for diversity
       stream: false, // Disable streaming for a single response
     });

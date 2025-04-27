@@ -1,10 +1,10 @@
-export const generateMealPlan = async (): Promise<any> => {
+export const generateMealPlan = async (userId: number, token: string): Promise<any> => {
   try {
-    const response = await fetch("http://localhost:5000/meal-planner/generate-meal-plan", {
+    const response = await fetch(`http://localhost:5000/meal-planner/${userId}/generate-meal-plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 

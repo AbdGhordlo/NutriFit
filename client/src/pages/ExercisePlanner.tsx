@@ -186,8 +186,15 @@ export default function ExercisePlanner() {
     setIsGenerating(true);
     setShowPopup(true);
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+
     try {
-      const plan = await generateExercisePlan(); // Call the AI function
+      const plan = await generateExercisePlan(Number(userId), token); // Call the AI function
       setGeneratedPlan(plan);
     } catch (error) {
       console.error("Error generating exercise plan:", error);
