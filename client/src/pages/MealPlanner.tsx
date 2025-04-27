@@ -52,6 +52,8 @@ export default function MealPlanner() {
   const [userId, setUserId] = useState('');
   const [savedPlans, setSavedPlans] = useState<any[]>([]); // State to store saved plans
 
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     const id = getUserIdFromToken();
     if (id) setUserId(id);
@@ -61,7 +63,6 @@ export default function MealPlanner() {
     if (!userId) return; // Prevent running when userId is not set
 
     const fetchMealPlan = async () => {
-      const token = localStorage.getItem("token"); // Retrieve JWT from local storage
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -129,7 +130,6 @@ export default function MealPlanner() {
 
   const handleFetchSavedPlans = async () => {
     try {
-      const token = localStorage.getItem("token");
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -146,7 +146,6 @@ export default function MealPlanner() {
 
   const handleAdoptPlan = async (mealPlanId: number) => {
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -170,7 +169,6 @@ export default function MealPlanner() {
     setIsGenerating(true);
     setShowPopup(true);
     
-    const token = localStorage.getItem("token");
     if (!token) {
       console.error("No token found, redirecting to login...");
       window.location.href = "/login";
@@ -246,7 +244,6 @@ export default function MealPlanner() {
     if (!generatedPlan) return;
 
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -269,7 +266,6 @@ export default function MealPlanner() {
     if (!generatedPlan) return;
 
     try {
-      const token = localStorage.getItem("token");
 
       if (!token) {
         console.error("No token found, redirecting to login...");
