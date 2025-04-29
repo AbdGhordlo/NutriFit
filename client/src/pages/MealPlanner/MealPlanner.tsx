@@ -1,56 +1,42 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Wand2, Edit3, Bookmark } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Wand2,
+  Edit3,
+  Bookmark,
+} from "lucide-react";
 import { ClipLoader } from "react-spinners";
-import "./styles/MealPlannerStyles.css";
-import "../assets/commonStyles.css";
-import { generateMealPlan, saveMealPlan, saveAndAdoptMealPlan, adoptMealPlan, getAllMealPlansByUser } from "../api/MealPlannerAI";
-import { getUserIdFromToken } from "../utils/auth";
-import ErrorMessage from "../components/ErrorMessage";
-import { userInfo } from "os";
-
-interface Meal {
-  id: number;
-  name: string;
-  description: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  time: string;
-}
-
-interface DayPlan {
-  day_number: number;
-  meals: Meal[];
-}
-
-interface GeneratedMealPlan {
-  meal_plan: {
-    name: string;
-    description: string;
-  };
-  meals: {
-    name: string;
-    description: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fats: number;
-    time: string;
-    day_number: number;
-  }[];
-}
+import "../styles/MealPlannerStyles.css";
+import "../../assets/commonStyles.css";
+import {
+  generateMealPlan,
+  saveMealPlan,
+  saveAndAdoptMealPlan,
+  adoptMealPlan,
+  getAllMealPlansByUser,
+} from "../../api/MealPlannerAI";
+import { getUserIdFromToken } from "../../utils/auth";
+import ErrorMessage from "../../components/ErrorMessage";
+import SavedPlansPopup from "./SavedPlansPopup";
+import GeneratedPlanPopup from "./GeneratedPlanPopup";
+import { DayPlan, GeneratedMealPlan, Meal } from "../../types/mealPlannerTypes";
+import { EditPlanPopup } from "./EditPlanPopup";
 
 export default function MealPlanner() {
   const [currentDay, setCurrentDay] = useState(0);
   const [weeklyPlan, setWeeklyPlan] = useState<DayPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showGeneratePlanPopup, setShowGeneratePlanPopup] = useState(false);
   const [showSavedPlansPopup, setShowSavedPlansPopup] = useState(false); // New state for saved plans popup
-  const [generatedPlan, setGeneratedPlan] = useState<GeneratedMealPlan | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedMealPlan | null>(
+    null
+  );
   const [isGenerating, setIsGenerating] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState("");
   const [savedPlans, setSavedPlans] = useState<any[]>([]); // State to store saved plans
+  const [showEditPlanPopup, setShowEditPlanPopup] = useState(false);
+  const [favoriteMeals, setFavoriteMeals] = useState<Meal[]>([]);
 
   const token = localStorage.getItem("token");
 
@@ -63,10 +49,9 @@ export default function MealPlanner() {
     if (!userId) return; // Prevent running when userId is not set
 
     const fetchMealPlan = async () => {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
-        window.location.href = "/login"; // Redirect if no token is found
+        window.location.href = "/login";
         return;
       }
 
@@ -135,18 +120,17 @@ export default function MealPlanner() {
         window.location.href = "/login";
         return;
       }
-  
+
       const data = await getAllMealPlansByUser(Number(userId), token);
       setSavedPlans(data);
       setShowSavedPlansPopup(true);
     } catch (error) {
       console.error("Error fetching saved plans:", error);
     }
-  };  
+  };
 
   const handleAdoptPlan = async (mealPlanId: number) => {
     try {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -167,8 +151,8 @@ export default function MealPlanner() {
 
   const handleGeneratePlan = async () => {
     setIsGenerating(true);
-    setShowPopup(true);
-    
+    setShowGeneratePlanPopup(true);
+
     if (!token) {
       console.error("No token found, redirecting to login...");
       window.location.href = "/login";
@@ -185,8 +169,110 @@ export default function MealPlanner() {
     }
   };
 
+  // Edit Plan functions ------------------------------------
+  const fetchFavoriteMeals = async () => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+  
+      const response = await fetch(
+        `http://localhost:5000/meals/favorites/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      setFavoriteMeals(data);
+    } catch (error) {
+      console.error("Error fetching favorite meals:", error);
+    }
+  };
+  
+  // Add these handler functions
+  const handleRegenerateDay = async (dayNumber: number) => {
+    try {
+      // Call your API to regenerate the day
+      console.log(`Regenerating day ${dayNumber}`);
+      // After regeneration, refetch the weekly plan
+    } catch (error) {
+      console.error("Error regenerating day:", error);
+    }
+  };
+  
+  const handleRegenerateMeal = async (mealId: number) => {
+    try {
+      // Call your API to regenerate the specific meal
+      console.log(`Regenerating meal ${mealId}`);
+      // After regeneration, refetch the weekly plan
+    } catch (error) {
+      console.error("Error regenerating meal:", error);
+    }
+  };
+  
+  const handleAddToFavorites = async (meal: Meal) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+  
+      const response = await fetch(
+        `http://localhost:5000/meals/favorites/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(meal),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      setFavoriteMeals([...favoriteMeals, data]);
+      alert("Meal added to favorites!");
+    } catch (error) {
+      console.error("Error adding meal to favorites:", error);
+    }
+  };
+  
+  const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+  
+      // Call your API to replace the meal
+      console.log(`Replacing meal ${mealId} with favorite ${favoriteMeal.id}`);
+      // After replacement, refetch the weekly plan
+    } catch (error) {
+      console.error("Error replacing meal with favorite:", error);
+    }
+  };
+
+  // ----------------------------------------------------------------
+
   const handleClosePopup = () => {
-    setShowPopup(false);
+    setShowGeneratePlanPopup(false);
     setGeneratedPlan(null);
   };
 
@@ -223,28 +309,17 @@ export default function MealPlanner() {
   }
 
   if (weeklyPlan.length === 0) {
-    return <div className="no-plan-error-container"><ErrorMessage message={"No meal plan data found."} /></div>;
+    return (
+      <div className="no-plan-error-container">
+        <ErrorMessage message={"No meal plan data found."} />
+      </div>
+    );
   }
-
-  // Group meals by day
-  const groupMealsByDay = (meals: GeneratedMealPlan["meals"]) => {
-    const groupedMeals: { [key: number]: GeneratedMealPlan["meals"] } = {};
-
-    meals.forEach((meal) => {
-      if (!groupedMeals[meal.day_number]) {
-        groupedMeals[meal.day_number] = [];
-      }
-      groupedMeals[meal.day_number].push(meal);
-    });
-
-    return groupedMeals;
-  };
 
   const handleSavePlan = async () => {
     if (!generatedPlan) return;
 
     try {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -266,7 +341,6 @@ export default function MealPlanner() {
     if (!generatedPlan) return;
 
     try {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -348,140 +422,57 @@ export default function MealPlanner() {
       </div>
 
       <div className="buttons-container">
-          <button className="generate-button" onClick={handleGeneratePlan}>
-            <Wand2 className="button-icon" />
-            <span>Generate Plan</span>
-          </button>
+        <button className="generate-button" onClick={handleGeneratePlan}>
+          <Wand2 className="button-icon" />
+          <span>Generate Plan</span>
+        </button>
 
-          <button className="edit-button">
-            <Edit3 className="button-icon" />
-            <span>Edit Plan</span>
-          </button>
+        <button 
+          className="edit-button" 
+          onClick={() => {
+            setShowEditPlanPopup(true);
+            fetchFavoriteMeals();
+          }}
+        >
+          <Edit3 className="button-icon" />
+          <span>Edit Plan</span>
+        </button>
 
-          <button className="saved-plans-button" onClick={handleFetchSavedPlans}>
-            <Bookmark className="button-icon" />
-            <span>Saved Plans</span>
-          </button>
-        </div>
+        <button className="saved-plans-button" onClick={handleFetchSavedPlans}>
+          <Bookmark className="button-icon" />
+          <span>Saved Plans</span>
+        </button>
+      </div>
 
-        {showSavedPlansPopup && (
-          <div className="popup-overlay">
-            <div className="popup-container">
-              <h2>Saved Plans</h2>
-              <div className="saved-plans-list">
-                {savedPlans.map((plan) => (
-                  <div key={plan.meal_plan_id} className="saved-plan-item">
-                    <div className="plan-info">
-                      <h3>{plan.meal_plan_name}</h3>
-                      <p>{plan.meal_plan_description}</p>
-                    </div>
-                    {plan.is_adopted_plan ? (
-                      <button
-                        className="adopt-button adopted"
-                        disabled
-                      >
-                        Adopted
-                      </button>
-                    ) : (
-                      <button
-                        className="adopt-button"
-                        onClick={() => handleAdoptPlan(plan.meal_plan_id)}
-                      >
-                        Adopt
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button className="close-button" onClick={() => setShowSavedPlansPopup(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+      {showSavedPlansPopup && (
+        <SavedPlansPopup
+          savedPlans={savedPlans}
+          handleAdoptPlan={handleAdoptPlan}
+          closePopup={() => setShowSavedPlansPopup(false)}
+        />
+      )}
 
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-container">
-            {isGenerating ? (
-              <div className="loading-container">
-                <ClipLoader color="#7ec987" size={50} />
-                <p>Generating your meal plan...</p>
-              </div>
-            ) : (
-              <>
-                <h2>Generated Meal Plan</h2>
-                {generatedPlan && (
-                  <div className="generated-plan">
-                    <h3>{generatedPlan.meal_plan.name}</h3>
-                    <p>{generatedPlan.meal_plan.description}</p>
-                    {Object.entries(groupMealsByDay(generatedPlan.meals)).map(
-                      ([day, meals]) => (
-                        <div
-                          key={day}
-                          className={`day-container`}
-                        >
-                          <div className="day-header">
-                            <h2 className="day-name">Day {day}</h2>
-                          </div>
-                          <div className="items-list">
-                            {meals.map((meal, index) => (
-                              <div key={index} className="list-item">
-                                <div className="item-info">
-                                  <h3 className="item-name">{meal.name}</h3>
-                                  <div className="item-time-info">
-                                    <span className="item-time">
-                                      {meal.time}
-                                    </span>
-                                    <span className="dot">•</span>
-                                    <span className="item-time">
-                                      {meal.calories} kcal
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="macros-container">
-                                  <div className="macro-item">
-                                    <span className="macro-value">
-                                      {meal.protein}g
-                                    </span>
-                                    <span className="macro-label">Protein</span>
-                                  </div>
-                                  <div className="macro-item">
-                                    <span className="macro-value">
-                                      {meal.carbs}g
-                                    </span>
-                                    <span className="macro-label">Carbs</span>
-                                  </div>
-                                  <div className="macro-item">
-                                    <span className="macro-value">
-                                      {meal.fats}g
-                                    </span>
-                                    <span className="macro-label">Fats</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-                <div className="popup-buttons">
-                  <button className="save-button" onClick={handleSavePlan}>
-                    Add to Saved Plans
-                  </button>
-                  <button className="adopt-button" onClick={handleSaveAndAdoptPlan}>
-                    Save & Adopt
-                  </button>
-                  <button className="close-button" onClick={handleClosePopup}>
-                    Close
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+      {showGeneratePlanPopup && (
+        <GeneratedPlanPopup
+          generatedPlan={generatedPlan}
+          isGenerating={isGenerating}
+          handleSavePlan={handleSavePlan}
+          handleSaveAndAdoptPlan={handleSaveAndAdoptPlan}
+          handleClosePopup={handleClosePopup}
+        />
+      )}
+
+      {showEditPlanPopup && (
+        <EditPlanPopup
+          weeklyPlan={weeklyPlan}
+          currentDay={currentDay}
+          onRegenerateDay={handleRegenerateDay}
+          onRegenerateMeal={handleRegenerateMeal}
+          onAddToFavorites={handleAddToFavorites}
+          onReplaceWithFavorite={handleReplaceWithFavorite}
+          onClose={() => setShowEditPlanPopup(false)}
+          favoriteMeals={favoriteMeals}
+        />
       )}
     </div>
   );

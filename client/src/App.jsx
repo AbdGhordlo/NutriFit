@@ -8,9 +8,9 @@ import {
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Footer from "./components/Footer";
-import MealPlanner from "./pages/MealPlanner";
+import MealPlanner from "./pages/MealPlanner/MealPlanner";
 import Home from "./pages/Home";
-import ExercisePlanner from "./pages/ExercisePlanner";
+import ExercisePlanner from "./pages/ExercisePlanner/ExercisePlanner";
 import Ingredients from "./pages/Ingredients";
 import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
