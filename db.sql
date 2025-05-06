@@ -365,3 +365,26 @@ RETURNING id;
 -- Son olarak ilişkiyi ekleyin
 INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
 VALUES (1, 2);
+
+WITH duplicates AS (
+  SELECT
+    	id,
+    ROW_NUMBER() OVER (
+      PARTITION BY name
+      ORDER BY id
+    ) AS rn
+  FROM ingredient
+)
+DELETE FROM ingredient
+WHERE id IN (
+  SELECT id FROM duplicates WHERE rn > 1
+);
+
+ALTER TABLE ingredient
+ADD CONSTRAINT unique_ingredient_name UNIQUE (name);
+
+-- protein, carbs and fats changed to NUMERIC instead of integers
+ALTER TABLE ingredients
+ALTER COLUMN protein TYPE NUMERIC USING protein::NUMERIC,
+ALTER COLUMN carbs TYPE NUMERIC USING carbs::NUMERIC,
+ALTER COLUMN fats TYPE NUMERIC USING fats::NUMERIC;

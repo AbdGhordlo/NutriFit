@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Wand2, Edit3, Bookmark } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Wand2,
+  Edit3,
+  Bookmark,
+} from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import "./styles/MealPlannerStyles.css";
 import "../assets/commonStyles.css";
-import { generateMealPlan, saveMealPlan, saveAndAdoptMealPlan, adoptMealPlan, getAllMealPlansByUser } from "../api/MealPlannerAI";
+import {
+  generateMealPlan,
+  saveMealPlan,
+  saveAndAdoptMealPlan,
+  adoptMealPlan,
+  getAllMealPlansByUser,
+} from "../api/MealPlannerAI";
 import { getUserIdFromToken } from "../utils/auth";
 import ErrorMessage from "../components/ErrorMessage";
 
@@ -46,9 +58,11 @@ export default function MealPlanner() {
   const [loading, setLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [showSavedPlansPopup, setShowSavedPlansPopup] = useState(false); // New state for saved plans popup
-  const [generatedPlan, setGeneratedPlan] = useState<GeneratedMealPlan | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedMealPlan | null>(
+    null
+  );
   const [isGenerating, setIsGenerating] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState("");
   const [savedPlans, setSavedPlans] = useState<any[]>([]); // State to store saved plans
 
   useEffect(() => {
@@ -232,7 +246,11 @@ export default function MealPlanner() {
   }
 
   if (weeklyPlan.length === 0) {
-    return <div className="no-plan-error-container"><ErrorMessage message={"No meal plan data found."} /></div>;
+    return (
+      <div className="no-plan-error-container">
+        <ErrorMessage message={"No meal plan data found."} />
+      </div>
+    );
   }
 
   // Group meals by day
@@ -359,57 +377,57 @@ export default function MealPlanner() {
       </div>
 
       <div className="buttons-container">
-          <button className="generate-button" onClick={handleGeneratePlan}>
-            <Wand2 className="button-icon" />
-            <span>Generate Plan</span>
-          </button>
+        <button className="generate-button" onClick={handleGeneratePlan}>
+          <Wand2 className="button-icon" />
+          <span>Generate Plan</span>
+        </button>
 
-          <button className="edit-button">
-            <Edit3 className="button-icon" />
-            <span>Edit Plan</span>
-          </button>
+        <button className="edit-button">
+          <Edit3 className="button-icon" />
+          <span>Edit Plan</span>
+        </button>
 
-          <button className="saved-plans-button" onClick={handleFetchSavedPlans}>
-            <Bookmark className="button-icon" />
-            <span>Saved Plans</span>
-          </button>
-        </div>
+        <button className="saved-plans-button" onClick={handleFetchSavedPlans}>
+          <Bookmark className="button-icon" />
+          <span>Saved Plans</span>
+        </button>
+      </div>
 
-        {showSavedPlansPopup && (
-          <div className="popup-overlay">
-            <div className="popup-container">
-              <h2>Saved Plans</h2>
-              <div className="saved-plans-list">
-                {savedPlans.map((plan) => (
-                  <div key={plan.meal_plan_id} className="saved-plan-item">
-                    <div className="plan-info">
-                      <h3>{plan.meal_plan_name}</h3>
-                      <p>{plan.meal_plan_description}</p>
-                    </div>
-                    {plan.is_adopted_plan ? (
-                      <button
-                        className="adopt-button adopted"
-                        disabled
-                      >
-                        Adopted
-                      </button>
-                    ) : (
-                      <button
-                        className="adopt-button"
-                        onClick={() => handleAdoptPlan(plan.meal_plan_id)}
-                      >
-                        Adopt
-                      </button>
-                    )}
+      {showSavedPlansPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container">
+            <h2>Saved Plans</h2>
+            <div className="saved-plans-list">
+              {savedPlans.map((plan) => (
+                <div key={plan.meal_plan_id} className="saved-plan-item">
+                  <div className="plan-info">
+                    <h3>{plan.meal_plan_name}</h3>
+                    <p>{plan.meal_plan_description}</p>
                   </div>
-                ))}
-              </div>
-              <button className="close-button" onClick={() => setShowSavedPlansPopup(false)}>
-                Close
-              </button>
+                  {plan.is_adopted_plan ? (
+                    <button className="adopt-button adopted" disabled>
+                      Adopted
+                    </button>
+                  ) : (
+                    <button
+                      className="adopt-button"
+                      onClick={() => handleAdoptPlan(plan.meal_plan_id)}
+                    >
+                      Adopt
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
+            <button
+              className="close-button"
+              onClick={() => setShowSavedPlansPopup(false)}
+            >
+              Close
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
       {showPopup && (
         <div className="popup-overlay">
@@ -428,10 +446,7 @@ export default function MealPlanner() {
                     <p>{generatedPlan.meal_plan.description}</p>
                     {Object.entries(groupMealsByDay(generatedPlan.meals)).map(
                       ([day, meals]) => (
-                        <div
-                          key={day}
-                          className={`day-container`}
-                        >
+                        <div key={day} className={`day-container`}>
                           <div className="day-header">
                             <h2 className="day-name">Day {day}</h2>
                           </div>
@@ -482,7 +497,10 @@ export default function MealPlanner() {
                   <button className="save-button" onClick={handleSavePlan}>
                     Add to Saved Plans
                   </button>
-                  <button className="adopt-button" onClick={handleSaveAndAdoptPlan}>
+                  <button
+                    className="adopt-button"
+                    onClick={handleSaveAndAdoptPlan}
+                  >
                     Save & Adopt
                   </button>
                   <button className="close-button" onClick={handleClosePopup}>

@@ -11,7 +11,9 @@ export const styles = {
   title: {
     fontSize: '24px',
     fontWeight: 'bold',
-    color: '#1f2937'
+    color: '#1f2937',
+    padding: '12px 24px',
+
   },
   addButton: {
     display: 'flex',
@@ -50,6 +52,25 @@ export const styles = {
     height: '24px',
     color: '#4d7051'
   },
+  'category-box': {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease', // HOVER efekti için EKLEDİM
+    cursor: 'pointer', // Hover olunca mouse değişsin diye
+  },
+  'category-box-hover': {
+    transform: 'scale(1.02)', // HOVER efekti için EKLEDİM
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', // HOVER efekti için EKLEDİM
+  },
+  'category-header-box': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '20px'
+  },
+
   stockButton: (inStock) => ({
     padding: '8px 12px',
     borderRadius: '16px',
@@ -93,14 +114,20 @@ export const styles = {
   },
   categoriesGrid: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column', // ALT ALTA sıralamak için EKLEDİM
     gap: '32px'
   } as React.CSSProperties,
   categoryContainer: {
     backgroundColor: 'white',
     borderRadius: '12px',
     padding: '24px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease', // HOVER efekti için
+    cursor: 'pointer', // HOVER efekti için
+  } as React.CSSProperties,
+  categoryContainerHover: {
+    transform: 'scale(1.02)', // HOVER efekti için
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', // HOVER efekti için
   },
   categoryHeader: {
     display: 'flex',
@@ -132,10 +159,11 @@ export const styles = {
     borderBottom: '1px solid #f3f4f6'
   },
   tableCell: {
-    padding: '12px 16px',
+    padding: '10px 12px',
     fontSize: '14px',
     color: '#1f2937',
-    textAlign: 'center',
+    fontWeight: '400',
+    borderBottom: '1px solid #f3f4f6',
     verticalAlign: 'middle',
   } as React.CSSProperties,
 };

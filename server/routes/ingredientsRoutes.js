@@ -1,15 +1,18 @@
-const express = require('express');
+const express = require("express");
 const {
   getUserIngredients,
   toggleIngredientStock,
   addIngredient,
-} = require('../controllers/ingredientsController');
+  deleteIngredient,
+} = require("../controllers/ingredientsController");
 const router = express.Router();
 
-router.get('/:userId', getUserIngredients);
+router.get("/:userId", getUserIngredients);
 
-router.put('/:userId/:ingredientId', toggleIngredientStock);
+router.patch("/:userIngredientId/toggle-stock", toggleIngredientStock);
 
-router.post('/', addIngredient);
+router.post("/", addIngredient);
+
+router.delete("/:userIngredientId", deleteIngredient);
 
 module.exports = router;
