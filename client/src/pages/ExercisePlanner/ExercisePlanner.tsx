@@ -15,7 +15,7 @@ import {
   saveAndAdoptExercisePlan,
   adoptExercisePlan,
   getAllExercisePlansByUser,
-} from "../../api/ExercisePlannerAI";
+} from "../../api/ExercisePlannerAPI";
 import { getUserIdFromToken } from "../../utils/auth";
 import ErrorMessage from "../../components/ErrorMessage";
 import {

@@ -89,7 +89,7 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
 
               <div className="meal-actions">
                 <button
-                  onClick={() => handleRegenerateMeal(meal.id)}
+                  onClick={() => handleRegenerateMeal(meal.mealPlanMealId)}
                   disabled={regeneratingMealId === meal.id}
                   className="action-button small"
                 >

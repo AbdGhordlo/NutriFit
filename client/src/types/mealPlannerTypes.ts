@@ -7,6 +7,7 @@ export interface Meal {
   carbs: number;
   fats: number;
   time: string;
+  mealPlanMealId: number;
 }
 
 export interface DayPlan {

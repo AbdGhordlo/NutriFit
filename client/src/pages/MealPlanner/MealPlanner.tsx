@@ -15,7 +15,14 @@ import {
   saveAndAdoptMealPlan,
   adoptMealPlan,
   getAllMealPlansByUser,
-} from "../../api/MealPlannerAI";
+  getFavoriteMeals,
+  regenerateDay,
+  regenerateMeal,
+  addFavoriteMeal,
+  removeFavoriteMeal,
+  replaceMealWithFavorite,
+  getAdoptedMealPlan,
+} from "../../api/MealPlannerAPI";
 import { getUserIdFromToken } from "../../utils/auth";
 import ErrorMessage from "../../components/ErrorMessage";
 import SavedPlansPopup from "./SavedPlansPopup";
@@ -48,71 +55,57 @@ export default function MealPlanner() {
   useEffect(() => {
     if (!userId) return; // Prevent running when userId is not set
 
-    const fetchMealPlan = async () => {
-      if (!token) {
-        console.error("No token found, redirecting to login...");
-        window.location.href = "/login";
-        return;
-      }
-
-      // Fetch the adopted plan
-      try {
-        const response = await fetch(
-          `http://localhost:5000/meal-planner/${userId}/adopted`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.status === 401) {
-          console.error("Unauthorized, removing token and redirecting...");
-          localStorage.removeItem("token"); // Remove expired/invalid token
-          window.location.href = "/login"; // Redirect to login page
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        // console.log(data); // Log the API response
-
-        // Group meals by day
-        const groupedData = data.reduce((acc: any, meal: any) => {
-          const day = meal.day_number - 1; // Convert to 0-based index
-          if (!acc[day]) {
-            acc[day] = { day_number: meal.day_number, meals: [] };
-          }
-          acc[day].meals.push({
-            id: meal.meal_plan_meal_id, // Use meal_plan_meal.id as the unique key
-            meal_id: meal.meal_id, // Keep meal_id for reference
-            name: meal.meal_name,
-            description: meal.meal_description,
-            calories: meal.calories,
-            protein: meal.protein,
-            carbs: meal.carbs,
-            fats: meal.fats,
-            time: meal.time,
-          });
-          return acc;
-        }, []);
-
-        setWeeklyPlan(groupedData);
-      } catch (error) {
-        console.error("Error fetching meal plan:", error);
-      } finally {
-        setLoading(false); // Set loading to false after fetching
-      }
-    };
-
     fetchMealPlan();
   }, [userId]); // Runs only when userId is updated
 
+  const fetchMealPlan = async () => {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+
+    // Fetch the adopted plan
+    try {
+      const data = await getAdoptedMealPlan(Number(userId), token);
+
+      // Group meals by day
+      // Find unique sorted day_numbers
+      const dayNumbers = ([...new Set(data.map(meal => meal.day_number))] as number[]).sort((a, b) => a - b);
+
+      // Map real day_number to 0-based index
+      const dayNumberToIndex: { [key: number]: number } = {};
+      dayNumbers.forEach((day, index) => {
+        dayNumberToIndex[day] = index;
+      });
+      const groupedData = data.reduce((acc: any[], meal: any) => {
+        const index = dayNumberToIndex[meal.day_number];
+        if (!acc[index]) {
+          acc[index] = { day_number: meal.day_number, meals: [] };
+        }
+        acc[index].meals.push({
+          id: meal.meal_plan_meal_id,
+          mealPlanMealId:meal.meal_plan_meal_id,
+          meal_id: meal.meal_id,
+          name: meal.meal_name,
+          description: meal.meal_description,
+          calories: meal.calories,
+          protein: meal.protein,
+          carbs: meal.carbs,
+          fats: meal.fats,
+          time: meal.time,
+        });
+        return acc;
+      }, []);
+      console.log("groupedData: ",groupedData);
+      setWeeklyPlan(groupedData);
+    } catch (error) {
+      console.error("Error fetching meal plan:", error);
+    } finally {
+      setLoading(false); // Set loading to false after fetching
+    }
+  };
+  
   const handleFetchSavedPlans = async () => {
     try {
       if (!token) {
@@ -169,105 +162,127 @@ export default function MealPlanner() {
     }
   };
 
-  // Edit Plan functions ------------------------------------
+
+
+
+  // ------------------------------------------- Edit Plan functions ------------------------------------
   const fetchFavoriteMeals = async () => {
-    try {
-      if (!token) {
-        console.error("No token found, redirecting to login...");
-        window.location.href = "/login";
-        return;
-      }
-  
-      const response = await fetch(
-        `http://localhost:5000/meals/favorites/${userId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-  
-      const data = await response.json();
-      setFavoriteMeals(data);
-    } catch (error) {
-      console.error("Error fetching favorite meals:", error);
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
     }
-  };
-  
-  // Add these handler functions
-  const handleRegenerateDay = async (dayNumber: number) => {
-    try {
-      // Call your API to regenerate the day
-      console.log(`Regenerating day ${dayNumber}`);
-      // After regeneration, refetch the weekly plan
-    } catch (error) {
-      console.error("Error regenerating day:", error);
+    
+    const data = await getFavoriteMeals(Number(userId), token);
+    setFavoriteMeals(data);
+  } catch (error) {
+    console.error("Error fetching favorite meals:", error);
+  }
+};
+
+const handleRegenerateDay = async (dayNumber: number) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
     }
-  };
-  
-  const handleRegenerateMeal = async (mealId: number) => {
-    try {
-      // Call your API to regenerate the specific meal
-      console.log(`Regenerating meal ${mealId}`);
-      // After regeneration, refetch the weekly plan
-    } catch (error) {
-      console.error("Error regenerating meal:", error);
+
+    const regeneratedDay = await regenerateDay(Number(userId), dayNumber, token);
+    
+    await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
+    
+    alert("Day regenerated successfully!");
+  } catch (error) {
+    console.error("Error regenerating day:", error);
+    alert("Failed to regenerate day");
+  }
+};
+
+const handleRegenerateMeal = async (mealPlanMealId: number) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
     }
-  };
-  
-  const handleAddToFavorites = async (meal: Meal) => {
-    try {
-      if (!token) {
-        console.error("No token found, redirecting to login...");
-        window.location.href = "/login";
-        return;
-      }
-  
-      const response = await fetch(
-        `http://localhost:5000/meals/favorites/${userId}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(meal),
-        }
-      );
-  
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-  
-      const data = await response.json();
-      setFavoriteMeals([...favoriteMeals, data]);
-      alert("Meal added to favorites!");
-    } catch (error) {
-      console.error("Error adding meal to favorites:", error);
+
+    const regeneratedMeal = await regenerateMeal(Number(userId), mealPlanMealId, token);
+    await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
+    
+    alert("Meal regenerated successfully!");
+  } catch (error) {
+    console.error("Error regenerating meal:", error);
+    alert("Failed to regenerate meal");
+  }
+};
+
+const handleAddToFavorites = async (meal: Meal) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
     }
-  };
-  
-  const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => {
-    try {
-      if (!token) {
-        console.error("No token found, redirecting to login...");
-        window.location.href = "/login";
-        return;
-      }
-  
-      // Call your API to replace the meal
-      console.log(`Replacing meal ${mealId} with favorite ${favoriteMeal.id}`);
-      // After replacement, refetch the weekly plan
-    } catch (error) {
-      console.error("Error replacing meal with favorite:", error);
+
+    await addFavoriteMeal(Number(userId), meal.id, token);
+    
+    // Refresh favorites list
+    const updatedFavorites = await getFavoriteMeals(Number(userId), token);
+    setFavoriteMeals(updatedFavorites);
+    
+    alert("Meal added to favorites!");
+  } catch (error) {
+    console.error("Error adding meal to favorites:", error);
+    alert("Failed to add meal to favorites");
+  }
+};
+
+const handleRemoveFromFavorites = async (mealId: number) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
     }
-  };
+
+    await removeFavoriteMeal(Number(userId), mealId, token);
+    
+    // Refresh favorites list
+    const updatedFavorites = await getFavoriteMeals(Number(userId), token);
+    setFavoriteMeals(updatedFavorites);
+    
+    alert("Meal removed from favorites!");
+  } catch (error) {
+    console.error("Error removing meal from favorites:", error);
+    alert("Failed to remove meal from favorites");
+  }
+};
+
+const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+
+    const updatedMeal = await replaceMealWithFavorite(
+      Number(userId),
+      mealId,
+      favoriteMeal.id,
+      token
+    );
+    
+    await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
+
+    alert("Meal replaced with favorite successfully!");
+  } catch (error) {
+    console.error("Error replacing meal with favorite:", error);
+    alert("Failed to replace meal with favorite");
+  }
+};
 
   // ----------------------------------------------------------------
 
@@ -283,7 +298,7 @@ export default function MealPlanner() {
   };
 
   const handleNextDay = () => {
-    if (currentDay < 6) {
+    if (currentDay < weeklyPlan.length - 1) {
       setCurrentDay(currentDay + 1);
     }
   };
@@ -413,8 +428,8 @@ export default function MealPlanner() {
 
           <button
             onClick={handleNextDay}
-            disabled={currentDay === 6}
-            className={`nav-button ${currentDay === 6 ? "disabled" : ""}`}
+            disabled={currentDay >= weeklyPlan.length - 1}
+            className={`nav-button ${currentDay >= weeklyPlan.length - 1 ? "disabled" : ""}`}
           >
             <ChevronRight className="nav-icon" />
           </button>
