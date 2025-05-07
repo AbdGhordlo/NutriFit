@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const styles = {
   container: {
     padding: '24px'
