@@ -6,6 +6,12 @@ const {
   saveAndAdoptMealPlan,
   adoptMealPlan,
   getMealPlan,
+  getFavoriteMeals,
+  addFavoriteMeal,
+  removeFavoriteMeal,
+  regenerateDay,
+  regenerateMeal,
+  replaceMealWithFavorite,
 } = require('../controllers/mealPlannerController');
 
 const router = express.Router();
@@ -27,5 +33,18 @@ router.post('/adopt-meal-plan', adoptMealPlan);
 
 // Generate a meal plan using AI
 router.post('/:userId/generate-meal-plan', getMealPlan);
+
+
+// ------------------- Edit Plan
+
+// Favorite meals routes
+router.get('/favorites/:userId', getFavoriteMeals);
+router.post('/favorites/:userId', addFavoriteMeal);
+router.delete('/favorites/:userId/:mealId', removeFavoriteMeal);
+
+// Meal plan editing routes
+router.post('/regenerate-day/:userId/:dayNumber', regenerateDay);
+router.post('/regenerate-meal/:userId/:mealPlanMealId', regenerateMeal);
+router.post('/replace-with-favorite/:userId', replaceMealWithFavorite);
 
 module.exports = router;

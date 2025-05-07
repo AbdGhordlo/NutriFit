@@ -1,58 +1,40 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Wand2, Edit3, Bookmark } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Wand2,
+  Edit3,
+  Bookmark,
+} from "lucide-react";
 import { ClipLoader } from "react-spinners";
-import "../assets/commonStyles.css";
-import "./styles/ExercisePlannerStyles.css";
-import { generateExercisePlan, saveExercisePlan, saveAndAdoptExercisePlan, adoptExercisePlan, getAllExercisePlansByUser } from "../api/ExercisePlannerAI";
-import { getUserIdFromToken } from "../utils/auth";
-import ErrorMessage from "../components/ErrorMessage";
-
-interface Exercise {
-  id: number;
-  name: string;
-  description: string;
-  calories_burned: number;
-  has_reps_sets: boolean;
-  has_duration: boolean;
-  reps?: number;
-  sets?: number;
-  duration?: number;
-  time: string;
-}
-
-interface DayPlan {
-  day_number: number;
-  exercises: Exercise[];
-}
-
-interface GeneratedExercisePlan {
-  exercise_plan: {
-    name: string;
-    description: string;
-  };
-  exercises: {
-    name: string;
-    description: string;
-    calories_burned: number;
-    has_reps_sets: boolean;
-    has_duration: boolean;
-    reps?: number;
-    sets?: number;
-    duration?: number;
-    time: string;
-    day_number: number;
-  }[];
-}
+import "../../assets/commonStyles.css";
+import "../styles/ExercisePlannerStyles.css";
+import {
+  generateExercisePlan,
+  saveExercisePlan,
+  saveAndAdoptExercisePlan,
+  adoptExercisePlan,
+  getAllExercisePlansByUser,
+} from "../../api/ExercisePlannerAPI";
+import { getUserIdFromToken } from "../../utils/auth";
+import ErrorMessage from "../../components/ErrorMessage";
+import {
+  DayPlan,
+  GeneratedExercisePlan,
+} from "../../types/exercisePlannerTypes";
+import SavedPlansPopup from "./SavedPlansPopup";
+import GeneratedPlanPopup from "./GeneratedPlanPopup";
 
 export default function ExercisePlanner() {
   const [currentDay, setCurrentDay] = useState(0);
   const [loading, setLoading] = useState(true);
   const [weeklyPlan, setWeeklyPlan] = useState<DayPlan[]>([]);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showGeneratePlanPopup, setShowGeneratePlanPopup] = useState(false);
   const [showSavedPlansPopup, setShowSavedPlansPopup] = useState(false);
-  const [generatedPlan, setGeneratedPlan] = useState<GeneratedExercisePlan | null>(null);
+  const [generatedPlan, setGeneratedPlan] =
+    useState<GeneratedExercisePlan | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState("");
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
 
   const token = localStorage.getItem("token");
@@ -66,7 +48,6 @@ export default function ExercisePlanner() {
     if (!userId) return;
 
     const fetchExercisePlan = async () => {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -130,29 +111,13 @@ export default function ExercisePlanner() {
 
   const handleFetchSavedPlans = async () => {
     try {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
         return;
       }
 
-      const response = await fetch(
-        `http://localhost:5000/exercise-planner/${userId}/all`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await getAllExercisePlansByUser(Number(userId), token);
       setSavedPlans(data);
       setShowSavedPlansPopup(true);
     } catch (error) {
@@ -162,7 +127,6 @@ export default function ExercisePlanner() {
 
   const handleAdoptPlan = async (exercisePlanId: number) => {
     try {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -183,7 +147,7 @@ export default function ExercisePlanner() {
 
   const handleGeneratePlan = async () => {
     setIsGenerating(true);
-    setShowPopup(true);
+    setShowGeneratePlanPopup(true);
 
     if (!token) {
       console.error("No token found, redirecting to login...");
@@ -202,7 +166,7 @@ export default function ExercisePlanner() {
   };
 
   const handleClosePopup = () => {
-    setShowPopup(false);
+    setShowGeneratePlanPopup(false);
     setGeneratedPlan(null);
   };
 
@@ -227,7 +191,6 @@ export default function ExercisePlanner() {
     if (!generatedPlan) return;
 
     try {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -249,7 +212,6 @@ export default function ExercisePlanner() {
     if (!generatedPlan) return;
 
     try {
-
       if (!token) {
         console.error("No token found, redirecting to login...");
         window.location.href = "/login";
@@ -268,20 +230,6 @@ export default function ExercisePlanner() {
     }
   };
 
-  // Group exercises by day
-  const groupExercisesByDay = (exercises: GeneratedExercisePlan["exercises"]) => {
-    const groupedExercises: { [key: number]: GeneratedExercisePlan["exercises"] } = {};
-
-    exercises.forEach((exercise) => {
-      if (!groupedExercises[exercise.day_number]) {
-        groupedExercises[exercise.day_number] = [];
-      }
-      groupedExercises[exercise.day_number].push(exercise);
-    });
-
-    return groupedExercises;
-  };
-
   if (loading) {
     return (
       <div className="loading-container">
@@ -291,9 +239,11 @@ export default function ExercisePlanner() {
   }
 
   if (weeklyPlan.length === 0) {
-    return <div className="no-plan-error-container">
+    return (
+      <div className="no-plan-error-container">
         <ErrorMessage message={"No exercise plan data found."} />
-      </div>;
+      </div>
+    );
   }
 
   return (
@@ -303,7 +253,9 @@ export default function ExercisePlanner() {
 
         <div className={`day-container ${isToday(currentDay) ? "today" : ""}`}>
           <div className="day-header">
-            <h2 className="day-name">Day {weeklyPlan[currentDay].day_number}</h2>
+            <h2 className="day-name">
+              Day {weeklyPlan[currentDay].day_number}
+            </h2>
           </div>
 
           <div className="items-list">
@@ -365,140 +317,38 @@ export default function ExercisePlanner() {
       </div>
 
       <div className="buttons-container">
-          <button className="generate-button" onClick={handleGeneratePlan}>
-            <Wand2 className="button-icon" />
-            <span>Generate Plan</span>
-          </button>
+        <button className="generate-button" onClick={handleGeneratePlan}>
+          <Wand2 className="button-icon" />
+          <span>Generate Plan</span>
+        </button>
 
-          <button className="edit-button">
-            <Edit3 className="button-icon" />
-            <span>Edit Plan</span>
-          </button>
+        <button className="edit-button">
+          <Edit3 className="button-icon" />
+          <span>Edit Plan</span>
+        </button>
 
-          <button className="saved-plans-button" onClick={handleFetchSavedPlans}>
-            <Bookmark className="button-icon" />
-            <span>Saved Plans</span>
-          </button>
-        </div>
+        <button className="saved-plans-button" onClick={handleFetchSavedPlans}>
+          <Bookmark className="button-icon" />
+          <span>Saved Plans</span>
+        </button>
+      </div>
 
-        {showSavedPlansPopup && (
-          <div className="popup-overlay">
-            <div className="popup-container">
-              <h2>Saved Plans</h2>
-              <div className="saved-plans-list">
-                {savedPlans.map((plan) => (
-                  <div key={plan.exercise_plan_id} className="saved-plan-item">
-                    <div className="plan-info">
-                      <h3>{plan.exercise_plan_name}</h3>
-                      <p>{plan.exercise_plan_description}</p>
-                    </div>
-                    {plan.is_adopted_plan ? (
-                      <button
-                        className="adopt-button adopted"
-                        disabled
-                      >
-                        Adopted
-                      </button>
-                    ) : (
-                      <button
-                        className="adopt-button"
-                        onClick={() => handleAdoptPlan(plan.exercise_plan_id)}
-                      >
-                        Adopt
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button className="close-button" onClick={() => setShowSavedPlansPopup(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+      {showSavedPlansPopup && (
+        <SavedPlansPopup
+          savedPlans={savedPlans}
+          handleAdoptPlan={handleAdoptPlan}
+          closePopup={() => setShowSavedPlansPopup(false)}
+        />
+      )}
 
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-container">
-            {isGenerating ? (
-              <div className="loading-container">
-                <ClipLoader color="#7ec987" size={50} />
-                <p>Generating your exercise plan...</p>
-              </div>
-            ) : (
-              <>
-                <h2>Generated Exercise Plan</h2>
-                {generatedPlan && (
-                  <div className="generated-plan">
-                    <h3>{generatedPlan.exercise_plan.name}</h3>
-                    <p>{generatedPlan.exercise_plan.description}</p>
-                    {Object.entries(groupExercisesByDay(generatedPlan.exercises)).map(
-                      ([day, exercises]) => (
-                        <div
-                          key={day}
-                          className={`day-container`}
-                        >
-                          <div className="day-header">
-                            <h2 className="day-name">Day {day}</h2>
-                          </div>
-                          <div className="items-list">
-                            {exercises.map((exercise, index) => (
-                              <div key={index} className="list-item">
-                                <div className="item-info">
-                                  <h3 className="item-name">{exercise.name}</h3>
-                                  <div className="item-time-info">
-                                    <span className="item-time">
-                                      {exercise.time}
-                                    </span>
-                                    <span className="dot">•</span>
-                                    <span className="item-time">
-                                      {exercise.calories_burned} kcal
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="details-container">
-                                  {exercise.has_reps_sets && (
-                                    <div className="detail-item">
-                                      <span className="detail-label">Reps:</span>
-                                      <span className="detail-value">{exercise.reps}</span>
-                                    </div>
-                                  )}
-                                  {exercise.has_reps_sets && (
-                                    <div className="detail-item">
-                                      <span className="detail-label">Sets:</span>
-                                      <span className="detail-value">{exercise.sets}</span>
-                                    </div>
-                                  )}
-                                  {exercise.has_duration && (
-                                    <div className="detail-item">
-                                      <span className="detail-label">Duration:</span>
-                                      <span className="detail-value">{exercise.duration}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-                <div className="popup-buttons">
-                  <button className="save-button" onClick={handleSavePlan}>
-                    Add to Saved Plans
-                  </button>
-                  <button className="adopt-button" onClick={handleSaveAndAdoptPlan}>
-                    Save & Adopt
-                  </button>
-                  <button className="close-button" onClick={handleClosePopup}>
-                    Close
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+      {showGeneratePlanPopup && (
+        <GeneratedPlanPopup
+          generatedPlan={generatedPlan}
+          isGenerating={isGenerating}
+          handleSavePlan={handleSavePlan}
+          handleSaveAndAdoptPlan={handleSaveAndAdoptPlan}
+          handleClosePopup={handleClosePopup}
+        />
       )}
     </div>
   );
