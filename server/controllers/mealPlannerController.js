@@ -180,7 +180,8 @@ const getMealPlan = async (req, res) => {
         }
       ]
     }
-    Make sure the response is valid JSON and does not include any additional text or explanations.`;
+    Make sure the response is valid JSON and does not include any additional text or explanations.
+    And make sure you generate the full plan, not just one day.`;
 
     // Make the request to Groq with both system prompt and user profile
     const chatCompletion = await groq.chat.completions.create({
