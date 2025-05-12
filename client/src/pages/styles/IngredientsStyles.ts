@@ -50,9 +50,10 @@ export const styles = {
     justifyContent: 'center'
   },
   categoryIcon: {
-    width: '24px',
-    height: '24px',
-    color: '#4d7051'
+    width: '20px',
+    height: '20px',
+    color: '#4d7051',
+    verticalAlign: "middle",
   },
   'category-box': {
     backgroundColor: 'white',

@@ -11,17 +11,17 @@ import {
   UtensilsCrossed,
   Droplet as Oil,
   X,
-  Trash2, // Added Trash2 icon for delete button
+  Trash2,
 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import { styles } from "./styles/IngredientsStyles";
 import "../pages/Ingredients.css";
 import "../assets/commonStyles.css";
 import "./Ingredients.css";
-import SelectIngredients from "./SelectIngredients"; // yolunu kendi yapına göre düzelt
-import { mapCategory } from "../utils/mapCategory"; // yolunu yapına göre ayarla
-
-const SpicesIcon = () => <svg /* SVG */></svg>;
+import { getUserIdFromToken } from "../utils/auth";
+import SelectIngredients from "./SelectIngredients";
+import { mapCategory } from "../utils/mapCategory";
+import SpicesIcon from "../components/icons/SpicesIcon";
 
 const categories: {
   [key: string]: { icon: React.ComponentType<any> | string };
@@ -67,6 +67,13 @@ interface NewIngredient {
 }
 
 export default function Ingredients() {
+  const userId = getUserIdFromToken();
+  const token = localStorage.getItem("token");
+
+  if (!token || !userId) {
+    window.location.href = "/login";
+    return null;
+  }
   const [ingredients, setIngredients] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredStock, setHoveredStock] = useState<number | null>(null);
@@ -75,6 +82,8 @@ export default function Ingredients() {
   const [showSelectPopup, setShowSelectPopup] = useState(false);
   const [selectedIngredient, setSelectedIngredient] =
     useState<Ingredient | null>(null);
+  const [apiError, setApiError] = useState("");
+
   const [newIngredient, setNewIngredient] = useState<NewIngredient>({
     name: "",
     category: "",
@@ -98,7 +107,6 @@ export default function Ingredients() {
     fetchIngredients();
   }, []);
 
-  // Reset form when popup opens/closes
   useEffect(() => {
     if (showPopup && ingredients.length > 0) {
       setNewIngredient({
@@ -115,8 +123,35 @@ export default function Ingredients() {
     }
   }, [showPopup, ingredients]);
 
+  const sortCategoriesWithOtherLast = (categories: Category[]): Category[] => {
+    return [
+      ...categories.filter((c) => c.name !== "Other"),
+      ...categories.filter((c) => c.name === "Other"),
+    ];
+  };
+  function getSmartServingSize(foodDetails, category) {
+    const unit = (foodDetails.servingSizeUnit || "").toLowerCase();
+    const size = foodDetails.servingSize || 100;
+    const household = foodDetails.householdServingFullText;
+
+    if (household) return household;
+
+    if (["Drinks", "Fats & Oils", "Other Drinks"].includes(category)) {
+      return `${Math.round(size)}ml`;
+    }
+
+    // Küçük gramajlı kategoriler için küçük g
+    if (
+      ["Spices, Herbs & Condiments", "Legumes, Nuts & Seeds"].includes(category)
+    ) {
+      return `${Math.round(size)}g`;
+    }
+
+    // Varsayılan
+    return `${Math.round(size)}g`;
+  }
+
   const fetchIngredients = async () => {
-    const userId = 1;
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -172,7 +207,7 @@ export default function Ingredients() {
         return acc;
       }, {});
 
-      setIngredients(Object.values(groupedData));
+      setIngredients(sortCategoriesWithOtherLast(Object.values(groupedData)));
     } catch (error) {
       console.error("Error fetching ingredients:", error);
     } finally {
@@ -184,14 +219,13 @@ export default function Ingredients() {
     userIngredientId: number,
     currentInStock: boolean
   ) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token, redirecting...");
-        window.location.href = "/login";
-        return;
-      }
+    if (!token || !userId) {
+      console.error("Unauthorized access. Redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
 
+    try {
       const response = await fetch(
         `http://localhost:5000/ingredients/${userIngredientId}/toggle-stock`,
         {
@@ -205,26 +239,26 @@ export default function Ingredients() {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+        const errMsg = await response.text();
+        throw new Error(`Toggle stock failed: ${response.status} - ${errMsg}`);
       }
 
-      setIngredients((prev) =>
-        prev.map((category) => ({
+      setIngredients((prevIngredients) =>
+        prevIngredients.map((category) => ({
           ...category,
-          ingredients: category.ingredients.map((ing) =>
-            ing.user_ingredient_id === userIngredientId
-              ? { ...ing, in_stock: !currentInStock }
-              : ing
+          ingredients: category.ingredients.map((ingredient) =>
+            ingredient.user_ingredient_id === userIngredientId
+              ? { ...ingredient, in_stock: !currentInStock }
+              : ingredient
           ),
         }))
       );
     } catch (error) {
-      console.error("Error toggling stock:", error);
+      console.error("Error toggling ingredient stock:", error);
       fetchIngredients();
     }
   };
 
-  // Add delete ingredient function
   const handleDeleteIngredient = async () => {
     if (deleteIngredientId === null) return;
 
@@ -252,17 +286,15 @@ export default function Ingredients() {
         throw new Error(`HTTP error: ${response.status}`);
       }
 
-      // Update UI by removing the deleted ingredient
-      setIngredients(
-        (prev) =>
-          prev
-            .map((category) => ({
-              ...category,
-              ingredients: category.ingredients.filter(
-                (ing) => ing.user_ingredient_id !== deleteIngredientId
-              ),
-            }))
-            .filter((category) => category.ingredients.length > 0) // Remove empty categories
+      setIngredients((prev) =>
+        prev
+          .map((category) => ({
+            ...category,
+            ingredients: category.ingredients.filter(
+              (ing) => ing.user_ingredient_id !== deleteIngredientId
+            ),
+          }))
+          .filter((category) => category.ingredients.length > 0)
       );
 
       // Close the confirmation popup
@@ -271,14 +303,12 @@ export default function Ingredients() {
       setDeleteIngredientName("");
     } catch (error) {
       console.error("Error deleting ingredient:", error);
-      // Refresh ingredients to ensure UI is synced with backend
       fetchIngredients();
     } finally {
       setDeleting(false);
     }
   };
 
-  // Show delete confirmation dialog
   const confirmDelete = (userIngredientId: number, ingredientName: string) => {
     setDeleteIngredientId(userIngredientId);
     setDeleteIngredientName(ingredientName);
@@ -313,7 +343,6 @@ export default function Ingredients() {
     e.preventDefault();
     setSubmitting(true);
 
-    const userId = 1; // This should be the actual user ID
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -347,13 +376,18 @@ export default function Ingredients() {
         }),
       });
 
+      if (response.status === 409) {
+        setApiError("This ingredient already exists.");
+        return; // 👈 buraya dikkat, form kapanmasın
+      }
+
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
 
-      // Refresh ingredients list and close popup
       await fetchIngredients();
       setShowPopup(false);
+      setApiError("");
     } catch (error) {
       console.error("Error adding ingredient:", error);
     } finally {
@@ -361,9 +395,7 @@ export default function Ingredients() {
     }
   };
 
-  const handleAddFromAPI = async (item: any) => {
-    console.log("Selected item from API:", item);
-    const userId = 1;
+  const handleAddFromAPI = async (item, selectedCategory) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -372,8 +404,7 @@ export default function Ingredients() {
     }
 
     try {
-      // 1️⃣ Detayları getir
-      const fetchFoodDetails = async (fdcId: number) => {
+      const fetchFoodDetails = async (fdcId) => {
         const apiKey = "xOhA0U8ldEU349zVzOAiS9qJxvyU1VJGMcM6lYVW";
         const response = await fetch(
           `https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${apiKey}`
@@ -382,30 +413,25 @@ export default function Ingredients() {
         return data;
       };
 
-      // 2️⃣ Makro değerleri nutrient listesinden al
       const foodDetails = await fetchFoodDetails(item.fdcId);
       const nutrients = foodDetails.foodNutrients || [];
       console.log("🔬 Food Nutrients:", nutrients);
-      const getValue = (id: number) => {
-        const nutrient = nutrients.find((n: any) => n.nutrient?.id === id);
+      const getValue = (id) => {
+        const nutrient = nutrients.find((n) => n.nutrient?.id === id);
         return nutrient?.amount ?? 0;
       };
 
       const payload = {
         userId,
         name: item.description,
-        category: mapCategory(item.foodCategory || "Other"),
-        servingSize: `${foodDetails.servingSize || 100}${
-          foodDetails.servingSizeUnit || "g"
-        }`,
+        category: selectedCategory,
+        servingSize: getSmartServingSize(foodDetails, selectedCategory),
         calories: getValue(1008), // Energy
         protein: getValue(1003),
         carbs: getValue(1005),
         fats: getValue(1004),
       };
       console.log("Payload to send:", payload);
-
-      // 3️⃣ Backend'e gönder
       const response = await fetch("http://localhost:5000/ingredients", {
         method: "POST",
         headers: {
@@ -414,6 +440,15 @@ export default function Ingredients() {
         },
         body: JSON.stringify(payload),
       });
+
+      if (response.status === 409) {
+        setApiError("This ingredient already exists.");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Add from API failed");
+      }
 
       if (!response.ok) throw new Error("Add from API failed");
 
@@ -424,7 +459,6 @@ export default function Ingredients() {
     }
   };
 
-  // Get all category names for the dropdown
   const allCategories = ingredients.map((category) => category.name);
 
   if (loading) {
@@ -578,18 +612,35 @@ export default function Ingredients() {
           </button>
           <button
             style={styles.addButton}
-            onClick={() => setShowSelectPopup(true)}
+            onClick={() => {
+              setShowSelectPopup(true);
+              setApiError(""); // ✅ önceki hatayı sıfırla
+            }}
           >
             <Plus style={{ width: "20px", height: "20px" }} />
-            <span>Select from API</span>
+            <span>Search Ingredients</span>
           </button>
         </div>
 
         {showSelectPopup && (
-          <SelectIngredients
-            onClose={() => setShowSelectPopup(false)}
-            onAdd={handleAddFromAPI}
-          />
+          <>
+            <SelectIngredients
+              onClose={() => {
+                setShowSelectPopup(false);
+                setApiError(""); // popup kapanınca hata sıfırlansın
+              }}
+              onAdd={handleAddFromAPI}
+              categories={ingredients}
+            />
+
+            {apiError && (
+              <div
+                style={{ color: "red", textAlign: "center", marginTop: "12px" }}
+              >
+                {apiError}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -737,9 +788,25 @@ export default function Ingredients() {
                     <button type="button" onClick={() => setShowPopup(false)}>
                       Cancel
                     </button>
-                    <button type="submit">Add Ingredient</button>
+                    <button type="submit">Create Custom Ingredient</button>
                   </div>
                 </form>
+                {apiError && (
+                  <div
+                    style={{
+                      backgroundColor: "#f8d7da",
+                      color: "#721c24",
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      textAlign: "center",
+                      fontWeight: "500",
+                      marginTop: "16px",
+                      border: "1px solid #721c24",
+                    }}
+                  >
+                    {apiError}
+                  </div>
+                )}
               </>
             )}
           </div>

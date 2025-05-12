@@ -13,6 +13,7 @@ const getUserIngredients = async (req, res) => {
         i.protein AS ingredient_protein,
         i.carbs AS ingredient_carbs,
         i.fats AS ingredient_fats,
+        i.serving_size AS ingredient_serving_size,
         ui.in_stock AS in_stock,
         ui.id AS user_ingredient_id
         
@@ -65,7 +66,16 @@ const toggleIngredientStock = async (req, res) => {
   }
 };
 const addIngredient = async (req, res) => {
-  const { userId, name, category, calories, protein, carbs, fats } = req.body;
+  const {
+    userId,
+    name,
+    category,
+    calories,
+    protein,
+    carbs,
+    fats,
+    servingSize: serving_size,
+  } = req.body;
 
   const client = await pool.connect();
   try {
@@ -99,10 +109,10 @@ const addIngredient = async (req, res) => {
     } else {
       // 3️⃣ Insert new ingredient
       const insertIngredientResult = await client.query(
-        `INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO ingredient (name, category, calories, protein, carbs, fats, serving_size)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
-        [name, category, calories, protein, carbs, fats]
+        [name, category, calories, protein, carbs, fats, serving_size]
       );
       ingredientId = insertIngredientResult.rows[0].id;
     }
@@ -136,11 +146,17 @@ const addIngredient = async (req, res) => {
         protein,
         carbs,
         fats,
+        serving_size,
         in_stock: true,
       },
     });
   } catch (error) {
     await client.query("ROLLBACK");
+
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "Ingredient name must be unique." });
+    }
+
     console.error("Error adding ingredient:", error);
     res.status(500).json({ error: "Server error" });
   } finally {
