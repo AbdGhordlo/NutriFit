@@ -159,24 +159,6 @@ CREATE TABLE personalization (
     UNIQUE (user_id)
 );
 
-CREATE TABLE progress (
-id SERIAL PRIMARY KEY,
-user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
-heights JSONB DEFAULT '[]', -- array of { value: number, date: timestamp }
-weights JSONB DEFAULT '[]', -- array of { value: number, date: timestamp }
-waists JSONB DEFAULT '[]', -- array of { value: number, date: timestamp }
-hips JSONB DEFAULT '[]', -- array of { value: number, date: timestamp }
-fat_masses JSONB DEFAULT '[]', -- array of { value: number, date: timestamp }
-lean_masses JSONB DEFAULT '[]', -- array of { value: number, date: timestamp }
-images JSONB DEFAULT '[]', -- array of { url: string, date: timestamp }
-start_date DATE NOT NULL,
-target_date DATE NOT NULL,
-penalty_days INT DEFAULT 0,
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-UNIQUE (user_id)
-);
-
 -- Data
 
 -- Insert Meal Plan
