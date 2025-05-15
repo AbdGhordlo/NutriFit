@@ -20,8 +20,11 @@ import {
 } from "../types/personalization";
 import ClipLoader from "react-spinners/ClipLoader";
 import ErrorModal from "../components/ErrorModal";
+import { getUserIdFromToken } from "../utils/auth";
+import { useNavigate } from "react-router-dom";
 
 function Personalization() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isSkipModalOpen, setIsSkipModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,12 +53,19 @@ function Personalization() {
   const [budget, setBudget] = useState<Budget>("basic");
   const [hasKitchenInventory, setHasKitchenInventory] = useState(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [userId, setUserId] = useState('');
 
-  const userId = 1; // Replace with the logged-in user's ID
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const id = getUserIdFromToken();
+    if (id) setUserId(id);
+  }, []);
 
   // Fetch personalization data on component mount
   useEffect(() => {
+    if (!userId) return; // Prevent running when userId is not set
+
     const fetchPersonalizationData = async () => {
       if (!token) {
         setError("No token found. Please log in.");
@@ -164,24 +174,35 @@ function Personalization() {
 
   // Handle next step
   const handleNext = async () => {
+    // Save current step data before proceeding
+    const stepData = {
+      step_1: { personalInfo },
+      step_2: { fitnessGoal, weightGoal },
+      step_3: {
+        cuisinePreferences,
+        dietPreference,
+        healthIssues,
+        mealsPerDay,
+      },
+      step_4: { activityLevel },
+      step_5: { budget, hasKitchenInventory },
+    };
+  
     if (currentStep < 5) {
-      // Save current step data before proceeding
-      const stepData = {
-        step_1: { personalInfo },
-        step_2: { fitnessGoal, weightGoal },
-        step_3: {
-          cuisinePreferences,
-          dietPreference,
-          healthIssues,
-          mealsPerDay,
-        },
-        step_4: { activityLevel },
-        step_5: { budget, hasKitchenInventory },
-      };
       await saveStepData(currentStep, stepData[`step_${currentStep}`]);
       setCurrentStep((prev) => (prev + 1) as Step);
+    } else {
+      // This is the "Finish" action
+      await saveStepData(5, stepData.step_5);
+      console.log("Finish Button in Personalization pressed!");
+      if (hasKitchenInventory) {
+        navigate("/ingredients");
+      } else {
+        navigate("/home");
+      }
     }
   };
+  
 
   // Handle back step
   const handleBack = () => {

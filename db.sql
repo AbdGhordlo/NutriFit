@@ -355,20 +355,6 @@ VALUES
   ('Spinach', 'Vegetables', 23, 2.9, 3.6, 0.4),
   ('Chicken Breast', 'Meat & Poultry', 165, 31, 0, 3.6),
   ('Brown Rice', 'Grains & Cereals', 111, 2.6, 23, 0.9);
-SELECT 
-        i.id AS ingredient_id,
-        i.name AS ingredient_name,
-        i.category AS ingredient_category,
-        i.calories AS ingredient_calories,
-        i.protein AS ingredient_protein,
-        i.carbs AS ingredient_carbs,
-        i.fats AS ingredient_fats,
-        ui.in_stock AS inStock
-      FROM user_ingredients ui
-      JOIN user_ingredient_ingredient uii ON ui.id = uii.user_ingredients_id
-      JOIN ingredient i ON uii.ingredient_id = i.id
-      WHERE ui.user_id = 1
-      ORDER BY i.category, i.name
 
 INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
 VALUES ('Salmon', 'Seafood', 208, 20, 0, 13)
@@ -382,3 +368,41 @@ RETURNING id;
 -- Son olarak ilişkiyi ekleyin
 INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
 VALUES (1, 2);
+
+
+-- Insert all ingredients into the ingredient table
+INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
+VALUES 
+  ('Chicken Breast', 'Meat & Poultry', 165, 31, 0, 3.6),
+  ('Carrot', 'Vegetables', 41, 0.9, 9.6, 0.2),
+  ('Apple', 'Fruits', 52, 0.3, 14, 0.2),
+  ('Milk', 'Dairy & Eggs', 103, 8, 12, 2.4),
+  ('Brown Rice', 'Grains & Cereals', 111, 2.6, 23, 0.9),
+  ('Lentils', 'Legumes, Nuts & Seeds', 116, 9, 20, 0.4),
+  ('Salmon', 'Seafood', 208, 20, 0, 13),
+  ('Olive Oil', 'Fats & Oils', 119, 0, 0, 13.5),
+  ('Black Pepper', 'Spices, Herbs & Condiments', 6, 0.2, 1.5, 0.1),
+  ('Red Pepper', 'Spices, Herbs & Condiments', 6, 0.2, 1.5, 0.1),
+  ('Pink Pepper', 'Spices, Herbs & Condiments', 6, 0.2, 1.5, 0.1)
+RETURNING id;
+
+-- Insert user_ingredients entry for user_id 1
+INSERT INTO user_ingredients (user_id)
+VALUES (1)
+RETURNING id;
+
+-- Insert the ingredient-user relationship
+INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
+VALUES 
+  (1, 1),  -- Chicken Breast
+  (1, 2),  -- Carrot
+  (1, 3),  -- Apple
+  (1, 4),  -- Milk
+  (1, 5),  -- Brown Rice
+  (1, 6),  -- Lentils
+  (1, 7),  -- Salmon
+  (1, 8),  -- Olive Oil
+  (1, 9),  -- Black Pepper
+  (1, 10), -- Red Pepper
+  (1, 11); -- Pink Pepper
+
