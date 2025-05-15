@@ -627,7 +627,7 @@ export default function Ingredients() {
             <SelectIngredients
               onClose={() => {
                 setShowSelectPopup(false);
-                setApiError(""); // popup kapanınca hata sıfırlansın
+                setApiError("");
               }}
               onAdd={handleAddFromAPI}
               categories={ingredients}

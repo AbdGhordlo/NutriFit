@@ -390,3 +390,24 @@ ALTER COLUMN carbs TYPE NUMERIC USING carbs::NUMERIC,
 ALTER COLUMN fats TYPE NUMERIC USING fats::NUMERIC;
 ALTER TABLE ingredient
 ADD COLUMN serving_size TEXT;
+
+
+---
+ALTER TABLE user_ingredients
+ADD COLUMN ingredient_id INTEGER;
+
+UPDATE user_ingredients
+SET ingredient_id = 1
+WHERE id = 1;
+
+UPDATE user_ingredients
+SET ingredient_id = 2
+WHERE id = 2;
+
+ALTER TABLE user_ingredients
+ADD CONSTRAINT fk_ingredient
+FOREIGN KEY (ingredient_id)
+REFERENCES ingredient(id)
+ON DELETE CASCADE;
+
+ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;

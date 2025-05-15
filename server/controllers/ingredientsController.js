@@ -16,20 +16,10 @@ const getUserIngredients = async (req, res) => {
         i.serving_size AS ingredient_serving_size,
         ui.in_stock AS in_stock,
         ui.id AS user_ingredient_id
-        
-      FROM user_ingredient_ingredient uii
-      JOIN (
-        SELECT DISTINCT ON (uii.ingredient_id)
-          uii.ingredient_id,
-          uii.user_ingredients_id
-        FROM user_ingredient_ingredient uii
-        JOIN user_ingredients ui ON uii.user_ingredients_id = ui.id
-        WHERE ui.user_id = $1
-        ORDER BY uii.ingredient_id, uii.created_at DESC
-      ) latest ON latest.ingredient_id = uii.ingredient_id AND latest.user_ingredients_id = uii.user_ingredients_id
-      JOIN user_ingredients ui ON uii.user_ingredients_id = ui.id
-      JOIN ingredient i ON uii.ingredient_id = i.id
-      ORDER BY i.category, i.name`,
+      FROM user_ingredients ui
+      JOIN ingredient i ON ui.ingredient_id = i.id
+      WHERE ui.user_id = $1
+      ORDER BY i.category, i.name;`,
       [userId]
     );
 
@@ -91,12 +81,10 @@ const addIngredient = async (req, res) => {
     if (existingIngredientResult.rows.length > 0) {
       ingredientId = existingIngredientResult.rows[0].id;
 
-      // 2️⃣ Check if this user already added this ingredient
       const alreadyLinkedResult = await client.query(
-        `SELECT ui.id
-         FROM user_ingredients ui
-         JOIN user_ingredient_ingredient uii ON ui.id = uii.user_ingredients_id
-         WHERE ui.user_id = $1 AND uii.ingredient_id = $2`,
+        `SELECT id
+         FROM user_ingredients
+          WHERE user_id = $1 AND ingredient_id = $2`,
         [userId, ingredientId]
       );
 
@@ -117,21 +105,13 @@ const addIngredient = async (req, res) => {
       ingredientId = insertIngredientResult.rows[0].id;
     }
 
-    // 4️⃣ Create user_ingredients row
     const insertUserIngredientResult = await client.query(
-      `INSERT INTO user_ingredients (user_id, in_stock)
-       VALUES ($1, $2)
+      `INSERT INTO user_ingredients (user_id, in_stock, ingredient_id)
+       VALUES ($1, $2, $3)
        RETURNING id`,
-      [userId, true]
+      [userId, true, ingredientId]
     );
     const userIngredientId = insertUserIngredientResult.rows[0].id;
-
-    // 5️⃣ Link user_ingredients with ingredient
-    await client.query(
-      `INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
-       VALUES ($1, $2)`,
-      [userIngredientId, ingredientId]
-    );
 
     await client.query("COMMIT");
 
@@ -185,14 +165,6 @@ const deleteIngredient = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // First delete the link in user_ingredient_ingredient table
-    const deleteIngredientLinkResult = await client.query(
-      `DELETE FROM user_ingredient_ingredient
-       WHERE user_ingredients_id = $1
-       RETURNING *`,
-      [userIngredientId]
-    );
-
     // Then delete the user_ingredients entry
     const deleteUserIngredientResult = await client.query(
       `DELETE FROM user_ingredients
@@ -226,4 +198,5 @@ module.exports = {
   toggleIngredientStock,
   addIngredient,
   deleteIngredient,
+  searchFood,
 };
