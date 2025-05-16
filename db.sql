@@ -9,7 +9,7 @@ CREATE TABLE "user" (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+ 
 -- Meal Plan Table
 CREATE TABLE meal_plan (
     id SERIAL PRIMARY KEY,
@@ -158,7 +158,6 @@ CREATE TABLE personalization (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id)
 );
-
 
 -- Data
 
