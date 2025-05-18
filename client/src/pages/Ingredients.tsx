@@ -12,6 +12,7 @@ import {
   Droplet as Oil,
   X,
   Trash2,
+  CupSoda,
 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import { styles } from "./styles/IngredientsStyles";
@@ -20,11 +21,14 @@ import "../assets/commonStyles.css";
 import "./Ingredients.css";
 import { getUserIdFromToken } from "../utils/auth";
 import SelectIngredients from "./SelectIngredients";
-import { mapCategory } from "../utils/mapCategory";
+import { mappedCategories } from "../utils/mapCategory";
 import SpicesIcon from "../components/icons/SpicesIcon";
 
 const categories: {
-  [key: string]: { icon: React.ComponentType<any> | string };
+  [key: string]: {
+    icon: React.ComponentType<any> | string;
+    displayName?: string;
+  };
 } = {
   Vegetables: { icon: Carrot },
   Fruits: { icon: Apple },
@@ -36,6 +40,8 @@ const categories: {
   "Fats & Oils": { icon: Oil },
   "Spices, Herbs & Condiments": { icon: SpicesIcon },
   Other: { icon: UtensilsCrossed },
+  "Other Drinks": { icon: CupSoda, displayName: "Drink" },
+  Drinks: { icon: CupSoda },
 };
 
 interface Ingredient {
@@ -395,7 +401,7 @@ export default function Ingredients() {
     }
   };
 
-  const handleAddFromAPI = async (item, selectedCategory) => {
+  const handleAddFromAPI = async (item, selectedCategory, onError) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -409,13 +415,11 @@ export default function Ingredients() {
         const response = await fetch(
           `https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${apiKey}`
         );
-        const data = await response.json();
-        return data;
+        return await response.json();
       };
 
       const foodDetails = await fetchFoodDetails(item.fdcId);
       const nutrients = foodDetails.foodNutrients || [];
-      console.log("🔬 Food Nutrients:", nutrients);
       const getValue = (id) => {
         const nutrient = nutrients.find((n) => n.nutrient?.id === id);
         return nutrient?.amount ?? 0;
@@ -426,12 +430,12 @@ export default function Ingredients() {
         name: item.description,
         category: selectedCategory,
         servingSize: getSmartServingSize(foodDetails, selectedCategory),
-        calories: getValue(1008), // Energy
+        calories: getValue(1008),
         protein: getValue(1003),
         carbs: getValue(1005),
         fats: getValue(1004),
       };
-      console.log("Payload to send:", payload);
+
       const response = await fetch("http://localhost:5000/ingredients", {
         method: "POST",
         headers: {
@@ -442,24 +446,24 @@ export default function Ingredients() {
       });
 
       if (response.status === 409) {
-        setApiError("This ingredient already exists.");
+        if (onError) onError("This ingredient already exists.");
         return;
       }
 
       if (!response.ok) {
-        throw new Error("Add from API failed");
+        if (onError) onError("Add from API failed.");
+        return;
       }
 
-      if (!response.ok) throw new Error("Add from API failed");
-
-      await fetchIngredients(); // Refresh UI
+      await fetchIngredients();
       setShowSelectPopup(false);
     } catch (err) {
-      console.error("Error adding from API:", err);
+      console.error("❌ API error:", err);
+      if (onError) onError("Something went wrong.");
     }
   };
 
-  const allCategories = ingredients.map((category) => category.name);
+  const allCategories = mappedCategories;
 
   if (loading) {
     return (
@@ -614,7 +618,7 @@ export default function Ingredients() {
             style={styles.addButton}
             onClick={() => {
               setShowSelectPopup(true);
-              setApiError(""); // ✅ önceki hatayı sıfırla
+              setApiError("");
             }}
           >
             <Plus style={{ width: "20px", height: "20px" }} />
@@ -625,19 +629,14 @@ export default function Ingredients() {
         {showSelectPopup && (
           <>
             <SelectIngredients
-              onClose={() => {
-                setShowSelectPopup(false);
-                setApiError("");
-              }}
+              onClose={() => setShowSelectPopup(false)}
               onAdd={handleAddFromAPI}
               categories={ingredients}
             />
 
             {apiError && (
-              <div
-                style={{ color: "red", textAlign: "center", marginTop: "12px" }}
-              >
-                {apiError}
+              <div className="error-message">
+                <p className="error-font">{apiError}</p>
               </div>
             )}
           </>
@@ -782,6 +781,11 @@ export default function Ingredients() {
                         step="0.1"
                       />
                     </div>
+                    {apiError && (
+                      <div className="error-message">
+                        <p className="error-font">{apiError}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-actions">
@@ -792,19 +796,8 @@ export default function Ingredients() {
                   </div>
                 </form>
                 {apiError && (
-                  <div
-                    style={{
-                      backgroundColor: "#f8d7da",
-                      color: "#721c24",
-                      padding: "12px 16px",
-                      borderRadius: "8px",
-                      textAlign: "center",
-                      fontWeight: "500",
-                      marginTop: "16px",
-                      border: "1px solid #721c24",
-                    }}
-                  >
-                    {apiError}
+                  <div className="error-message">
+                    <p className="error-font">{apiError}</p>
                   </div>
                 )}
               </>
@@ -813,7 +806,6 @@ export default function Ingredients() {
         </div>
       )}
 
-      {/* Delete Confirmation Popup */}
       {showDeleteConfirm && (
         <div className="popup-overlay">
           <div className="popup-container" style={{ maxWidth: "400px" }}>

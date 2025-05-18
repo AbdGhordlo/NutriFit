@@ -73,6 +73,7 @@ export const styles = {
     gap: '12px',
     marginBottom: '20px'
   },
+  
 
   stockButton: (inStock) => ({
     padding: '8px 12px',

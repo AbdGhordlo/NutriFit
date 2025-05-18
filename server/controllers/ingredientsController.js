@@ -7,7 +7,7 @@ const getUserIngredients = async (req, res) => {
     const result = await pool.query(
       `SELECT 
         i.id AS ingredient_id,
-        i.name AS ingredient_name,
+        SPLIT_PART(i.name, '_', 1) AS ingredient_name, -- Extract original name before '_'
         i.category AS ingredient_category,
         i.calories AS ingredient_calories,
         i.protein AS ingredient_protein,
@@ -19,7 +19,7 @@ const getUserIngredients = async (req, res) => {
       FROM user_ingredients ui
       JOIN ingredient i ON ui.ingredient_id = i.id
       WHERE ui.user_id = $1
-      ORDER BY i.category, i.name;`,
+      ORDER BY i.category, SPLIT_PART(i.name, '_', 1);`,
       [userId]
     );
 
@@ -67,50 +67,64 @@ const addIngredient = async (req, res) => {
     servingSize: serving_size,
   } = req.body;
 
+  // Validation
+  if (!name || !category) {
+    return res.status(400).json({ error: "Name and category are required" });
+  }
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // 1️⃣ Check if the ingredient exists in general
+    // Generate a unique name by incorporating the category if needed
+    // This approach treats the ingredient name as "{original_name}_{category}"
+    // We'll display just the original name to the user, but store it uniquely
+    const processedName = `${name}_${category}`;
+
+    // Check if this exact processed name already exists
     const existingIngredientResult = await client.query(
-      `SELECT id FROM ingredient WHERE name = $1 AND category = $2`,
-      [name, category]
+      `SELECT id FROM ingredient WHERE name = $1`,
+      [processedName]
     );
 
     let ingredientId;
+
     if (existingIngredientResult.rows.length > 0) {
+      // This exact ingredient with this name and category already exists
       ingredientId = existingIngredientResult.rows[0].id;
 
+      // Check if the user already has this ingredient
       const alreadyLinkedResult = await client.query(
-        `SELECT id
-         FROM user_ingredients
-          WHERE user_id = $1 AND ingredient_id = $2`,
+        `SELECT id FROM user_ingredients
+         WHERE user_id = $1 AND ingredient_id = $2`,
         [userId, ingredientId]
       );
 
       if (alreadyLinkedResult.rows.length > 0) {
         await client.query("ROLLBACK");
         return res
-          .status(400)
-          .json({ error: "Ingredient already added by user" });
+          .status(409)
+          .json({ error: "This ingredient is already added for the user." });
       }
     } else {
-      // 3️⃣ Insert new ingredient
+      // No conflict, insert new ingredient with the processed name
       const insertIngredientResult = await client.query(
         `INSERT INTO ingredient (name, category, calories, protein, carbs, fats, serving_size)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
-        [name, category, calories, protein, carbs, fats, serving_size]
+        [processedName, category, calories, protein, carbs, fats, serving_size]
       );
       ingredientId = insertIngredientResult.rows[0].id;
     }
 
+    // Create user_ingredients entry
     const insertUserIngredientResult = await client.query(
       `INSERT INTO user_ingredients (user_id, in_stock, ingredient_id)
        VALUES ($1, $2, $3)
        RETURNING id`,
       [userId, true, ingredientId]
     );
+
     const userIngredientId = insertUserIngredientResult.rows[0].id;
 
     await client.query("COMMIT");
@@ -120,7 +134,8 @@ const addIngredient = async (req, res) => {
       ingredient: {
         user_ingredient_id: userIngredientId,
         ingredient_id: ingredientId,
-        name,
+        // We return the original name to the user, not the processed one
+        name: name,
         category,
         calories,
         protein,
@@ -133,19 +148,14 @@ const addIngredient = async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    if (error.code === "23505") {
-      return res.status(409).json({ error: "Ingredient name must be unique." });
-    }
-
     console.error("Error adding ingredient:", error);
     res.status(500).json({ error: "Server error" });
   } finally {
     client.release();
   }
 };
-
 const searchFood = async (query) => {
-  const apiKey = "xOhA0U8ldEU349zVzOAiS9qJxvyU1VJGMcM6lYVW"; // Replace with your actual API key
+  const apiKey = "xOhA0U8ldEU349zVzOAiS9qJxvyU1VJGMcM6lYVW";
   if (!query) {
     throw new Error("Query parameter is required");
   }
@@ -155,7 +165,7 @@ const searchFood = async (query) => {
     )}`
   );
   const data = await response.json();
-  return data.foods; // Bu, arama sonuçlarının listesi
+  return data.foods;
 };
 
 const deleteIngredient = async (req, res) => {
@@ -165,7 +175,6 @@ const deleteIngredient = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // Then delete the user_ingredients entry
     const deleteUserIngredientResult = await client.query(
       `DELETE FROM user_ingredients
        WHERE id = $1
