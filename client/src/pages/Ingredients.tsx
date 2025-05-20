@@ -89,6 +89,9 @@ export default function Ingredients() {
   const [selectedIngredient, setSelectedIngredient] =
     useState<Ingredient | null>(null);
   const [apiError, setApiError] = useState("");
+  const [currentCategory, setCurrentCategory] = useState(0);
+  // Add userId state if you need to track it through state
+  const [userIdState, setUserIdState] = useState("");
 
   const [newIngredient, setNewIngredient] = useState<NewIngredient>({
     name: "",
@@ -108,10 +111,19 @@ export default function Ingredients() {
   );
   const [deleteIngredientName, setDeleteIngredientName] = useState("");
   const [deleting, setDeleting] = useState(false);
+  // Ensure userId is set in state if needed
+  useEffect(() => {
+    const id = getUserIdFromToken();
+    if (id) setUserIdState(id);
+  }, []);
 
   useEffect(() => {
     fetchIngredients();
-  }, []);
+  }, [userId]);
+
+  useEffect(() => {
+    fetchIngredients();
+  }, [userId]);
 
   useEffect(() => {
     if (showPopup && ingredients.length > 0) {
@@ -248,7 +260,6 @@ export default function Ingredients() {
         const errMsg = await response.text();
         throw new Error(`Toggle stock failed: ${response.status} - ${errMsg}`);
       }
-
       setIngredients((prevIngredients) =>
         prevIngredients.map((category) => ({
           ...category,

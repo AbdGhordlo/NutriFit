@@ -4,17 +4,20 @@ import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
 import "./styles/AuthStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Login() {
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     setErrorMessage("");
     e.preventDefault(); // Prevent page reload
     try {
+      setIsLoading(true);
       const response = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
         headers: {
@@ -33,13 +36,42 @@ export default function Login() {
     } catch (err) {
       console.error(err);
       setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Function to handle Google login
-  const handleGoogleLogin = () => {
-    // Redirect to the backend's Google OAuth endpoint
-    window.location.href = "http://localhost:5000/auth/google";
+  const handleLoginSuccess = async (response) => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+      
+      const googleResponse = await fetch("http://localhost:5000/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+      
+      const data = await googleResponse.json();
+      
+      if (googleResponse.ok) {
+        localStorage.setItem("token", data.token);
+        window.location.href = "/home";
+      } else {
+        setErrorMessage(data.message || "Google login failed");
+      }
+    } catch (err) {
+      console.error("Google login error:", err);
+      setErrorMessage("Google authentication failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLoginError = () => {
+    setErrorMessage("Google login failed");
   };
 
   return (
@@ -50,14 +82,20 @@ export default function Login() {
           <p style={styles.subtitle}>Sign in to continue to NutriFit</p>
 
           {/* Google Login Button */}
-          <button style={styles.googleButton} onClick={handleGoogleLogin}>
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google"
-              style={styles.googleIcon}
+          <div className="w-full flex justify-center items-center">
+            <GoogleLogin
+              onSuccess={handleLoginSuccess}
+              onError={() => {
+                console.log("Google login failed");
+                handleLoginError();
+              }}
+              type="standard"
+              size="large"
+              text="continue_with"
+              shape="rectangular"
+              width={250}
             />
-            Sign in with Google
-          </button>
+          </div>
 
           <div style={styles.divider}>
             <span style={styles.dividerText}>or continue with email</span>
@@ -71,7 +109,7 @@ export default function Login() {
                 <input
                   type="email"
                   name="email"
-                  autoComplete="email" // Suggests the email field for autofill
+                  autoComplete="email"
                   placeholder="Enter your email"
                   className={`input ${emailFocus ? "input-focused" : ""}`}
                   onFocus={() => setEmailFocus(true)}
@@ -79,6 +117,7 @@ export default function Login() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -90,7 +129,7 @@ export default function Login() {
                 <input
                   type="password"
                   name="password"
-                  autoComplete="current-password" // Suggests password autofill
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   className={`input ${passwordFocus ? "input-focused" : ""}`}
                   onFocus={() => setPasswordFocus(true)}
@@ -98,6 +137,7 @@ export default function Login() {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -110,9 +150,9 @@ export default function Login() {
 
             {errorMessage && <ErrorMessage message={errorMessage} />}
 
-            <button style={styles.submitButton}>
+            <button style={styles.submitButton} disabled={isLoading}>
               <LogIn style={styles.buttonIcon} />
-              Sign In
+              {isLoading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 

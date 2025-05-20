@@ -1,5 +1,5 @@
 const pool = require('../db');
-
+const lastStep = '5';
 // Function to get personalization data for a user
 const getPersonalizationData = async (req, res) => {
     const { userId } = req.params;
@@ -101,12 +101,24 @@ const updatePersonalizationStep = async (req, res) => {
       currentStepData[`step_${stepNumber}`] = steps_data;
   
       // Update the personalization data with the new step
+      // Prepare different SQL depending on whether step 5 is completed
+    if (stepNumber === lastStep) {
+      // If step 5, mark as completed
+      await pool.query(
+        `UPDATE personalization 
+         SET steps_data = $1, completed = TRUE, updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = $2`,
+        [currentStepData, userId]
+      );
+    } else {
+      // Otherwise, just update the steps_data
       await pool.query(
         `UPDATE personalization 
          SET steps_data = $1, updated_at = CURRENT_TIMESTAMP
          WHERE user_id = $2`,
         [currentStepData, userId]
       );
+    }
   
       return res.status(200).json({ message: `Step ${stepNumber} updated successfully.` });
     } catch (err) {

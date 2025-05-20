@@ -1,92 +1,94 @@
 /* Sidebar.css */
 .sidebar-nav {
-    position: fixed;
-    left: 0;
-    top: 64px;
-    height: calc(100vh - 64px);
-    width: 255.2px; /* Default width */
-    background-color: white;
-    border-right: 1px solid #e5e7eb;
-    padding: 24px 0;
-    transition: transform 0.3s ease-in-out;
-    z-index: 40; /* Ensure sidebar is above main content */
+  position: fixed;
+  left: 0;
+  top: 64px;
+  height: calc(100vh - 64px);
+  width: 255.2px; /* Default width */
+  background-color: white;
+  border-right: 1px solid #e5e7eb;
+  padding: 24px 0;
+  transition: transform 0.3s ease-in-out;
+  z-index: 40; /* Below footer's z-index (45) */
+  overflow-y: auto; /* Add scrolling capability */
+}
+
+.sidebar-nav.closed {
+  transform: translateX(-100%); /* Hide sidebar off-screen */
+}
+
+.sidebar-nav.open {
+  transform: translateX(0); /* Show sidebar */
+}
+
+/* Styles for large screens (> 1000px) */
+.sidebar-nav.large-screen {
+  position: fixed;
+  transform: translateX(0); /* Always visible */
+  box-shadow: none; /* No shadow on large screens */
+}
+
+.sidebar-menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px;
+  padding-bottom: 70px; /* Add padding at the bottom to ensure all items are accessible */
+}
+
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  width: 100%; /* Adjust width accordingly */
+  transition: all 0.2s;
+  color: #4b5563;
+  cursor: pointer;
+  border: 2px solid transparent; /* Default transparent border */
+  text-decoration: none;
+  /* box-sizing: border-box; */
+}
+
+.sidebar-menu-item:hover {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.sidebar-menu-item.active {
+  background-color: rgba(126, 201, 135, 0.1);
+  color: #4d7051;
+}
+
+.sidebar-menu-item.active:hover {
+  background-color: rgba(126, 201, 135, 0.2);
+}
+
+.sidebar-menu-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-menu-text {
+  font-weight: 500;
+}
+
+/* Overlay for the rest of the page when sidebar is open (only on small screens) */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  z-index: 30; /* Ensure overlay is below sidebar but above main content */
+  cursor: pointer;
+}
+
+/* Responsive styles */
+@media (max-width: 1000px) {
+  .sidebar-nav {
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); /* Add shadow to the sidebar */
   }
-  
-  .sidebar-nav.closed {
-    transform: translateX(-100%); /* Hide sidebar off-screen */
-  }
-  
-  .sidebar-nav.open {
-    transform: translateX(0); /* Show sidebar */
-  }
-  
-  /* Styles for large screens (> 1000px) */
-  .sidebar-nav.large-screen {
-    position: fixed;
-    transform: translateX(0); /* Always visible */
-    box-shadow: none; /* No shadow on large screens */
-  }
-  
-  .sidebar-menu-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 0 12px;
-  }
-  
-  .sidebar-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    width: 100%; /* Adjust width accordingly */
-    transition: all 0.2s;
-    color: #4b5563;
-    cursor: pointer;
-    border: 2px solid transparent; /* Default transparent border */
-    text-decoration: none;
-    /* box-sizing: border-box; */
-  }
-  
-  .sidebar-menu-item:hover {
-    background-color: #f3f4f6;
-    color: #4b5563;
-  }
-  
-  .sidebar-menu-item.active {
-    background-color: rgba(126, 201, 135, 0.1);
-    color: #4d7051;
-  }
-  
-  .sidebar-menu-item.active:hover {
-    background-color: rgba(126, 201, 135, 0.2);
-  }
-  
-  .sidebar-menu-icon {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .sidebar-menu-text {
-    font-weight: 500;
-  }
-  
-  /* Overlay for the rest of the page when sidebar is open (only on small screens) */
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
-    z-index: 30; /* Ensure overlay is below sidebar but above main content */
-    cursor: pointer;
-  }
-  
-  /* Responsive styles */
-  @media (max-width: 1000px) {
-    .sidebar-nav {
-      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); /* Add shadow to the sidebar */
-    }
-  }
+}
