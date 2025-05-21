@@ -351,40 +351,48 @@ RETURNING id;
 INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
 VALUES (1, 2);
 
+WITH duplicates AS (
+  SELECT
+    	id,
+    ROW_NUMBER() OVER (
+      PARTITION BY name
+      ORDER BY id
+    ) AS rn
+  FROM ingredient
+)
+DELETE FROM ingredient
+WHERE id IN (
+  SELECT id FROM duplicates WHERE rn > 1
+);
 
--- Insert all ingredients into the ingredient table
-INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
-VALUES 
-  ('Chicken Breast', 'Meat & Poultry', 165, 31, 0, 3.6),
-  ('Carrot', 'Vegetables', 41, 0.9, 9.6, 0.2),
-  ('Apple', 'Fruits', 52, 0.3, 14, 0.2),
-  ('Milk', 'Dairy & Eggs', 103, 8, 12, 2.4),
-  ('Brown Rice', 'Grains & Cereals', 111, 2.6, 23, 0.9),
-  ('Lentils', 'Legumes, Nuts & Seeds', 116, 9, 20, 0.4),
-  ('Salmon', 'Seafood', 208, 20, 0, 13),
-  ('Olive Oil', 'Fats & Oils', 119, 0, 0, 13.5),
-  ('Black Pepper', 'Spices, Herbs & Condiments', 6, 0.2, 1.5, 0.1),
-  ('Red Pepper', 'Spices, Herbs & Condiments', 6, 0.2, 1.5, 0.1),
-  ('Pink Pepper', 'Spices, Herbs & Condiments', 6, 0.2, 1.5, 0.1)
-RETURNING id;
+ALTER TABLE ingredient
+ADD CONSTRAINT unique_ingredient_name UNIQUE (name);
 
--- Insert user_ingredients entry for user_id 1
-INSERT INTO user_ingredients (user_id)
-VALUES (1)
-RETURNING id;
+-- protein, carbs and fats changed to NUMERIC instead of integers
+ALTER TABLE ingredients
+ALTER COLUMN protein TYPE NUMERIC USING protein::NUMERIC,
+ALTER COLUMN carbs TYPE NUMERIC USING carbs::NUMERIC,
+ALTER COLUMN fats TYPE NUMERIC USING fats::NUMERIC;
+ALTER TABLE ingredient
+ADD COLUMN serving_size TEXT;
 
--- Insert the ingredient-user relationship
-INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
-VALUES 
-  (1, 1),  -- Chicken Breast
-  (1, 2),  -- Carrot
-  (1, 3),  -- Apple
-  (1, 4),  -- Milk
-  (1, 5),  -- Brown Rice
-  (1, 6),  -- Lentils
-  (1, 7),  -- Salmon
-  (1, 8),  -- Olive Oil
-  (1, 9),  -- Black Pepper
-  (1, 10), -- Red Pepper
-  (1, 11); -- Pink Pepper
 
+---
+ALTER TABLE user_ingredients
+ADD COLUMN ingredient_id INTEGER;
+
+UPDATE user_ingredients
+SET ingredient_id = 1
+WHERE id = 1;
+
+UPDATE user_ingredients
+SET ingredient_id = 2
+WHERE id = 2;
+
+ALTER TABLE user_ingredients
+ADD CONSTRAINT fk_ingredient
+FOREIGN KEY (ingredient_id)
+REFERENCES ingredient(id)
+ON DELETE CASCADE;
+
+ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;

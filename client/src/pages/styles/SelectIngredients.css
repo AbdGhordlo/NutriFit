@@ -1,0 +1,39 @@
+.ingredient-list {
+  list-style: none;
+  padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.ingredient-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.ingredient-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ingredient-info strong {
+  font-size: 15px;
+}
+
+.ingredient-info small {
+  color: gray;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.ingredient-item button {
+  background-color: #6aa17c;
+  border: none;
+  padding: 6px 10px;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}

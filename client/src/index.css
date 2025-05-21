@@ -81,7 +81,7 @@ button:focus-visible {
   }
   /* button {
     background-color: #f9f9f9;
-  } */  /*? TO DISCUSS: this color is overriding the bg color I'm applying to the buttons and I see it defines a kind of a light bg color to buttons globally (this might not be a problem with stylesheets as it may override them but causes a problem in tailwnd) so how about removing it? */
+  } */ /*? TO DISCUSS: this color is overriding the bg color I'm applying to the buttons and I see it defines a kind of a light bg color to buttons globally (this might not be a problem with stylesheets as it may override them but causes a problem in tailwnd) so how about removing it? */
 }
 
 /*~ TAILWIND UTILITIES ~*/
@@ -93,8 +93,8 @@ button:focus-visible {
     display: none;
   }
   .no-scrollbar {
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
@@ -106,24 +106,22 @@ button:focus-visible {
   --color-error-font: #721c24;
 
   /* Green Colors */
-  --color-light-green: #E9F5EB;
-  --color-primary-green: #7EC987;
-  --color-secondary-green: #6C9B79;
-  --color-dark-green: #4D7051;
+  --color-light-green: #e9f5eb;
+  --color-primary-green: #7ec987;
+  --color-secondary-green: #6c9b79;
+  --color-dark-green: #4d7051;
 
   /* Text Colors */
-  --color-primary-text: #1F2937;
-  --color-secondary-text: #4B5563;
-  --color-tertiary-text: #6B7280;
+  --color-primary-text: #1f2937;
+  --color-secondary-text: #4b5563;
+  --color-tertiary-text: #6b7280;
   --color-quaternary-text: #757280;
 
   /* Background Colors */
-  --color-gray-background: #F3F4F6;
-  --color-page-background: #F9FAFB;
+  --color-gray-background: #f3f4f6;
+  --color-page-background: #f9fafb;
 
   /* Button Hover */
-  --color-primary-hover: #7EB687; 
-  --color-secondary-hover: #4D7051;
-
+  --color-primary-hover: #7eb687;
+  --color-secondary-hover: #4d7051;
 }
-
