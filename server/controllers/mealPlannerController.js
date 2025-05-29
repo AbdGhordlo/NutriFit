@@ -92,6 +92,86 @@ const getAllMealPlansByUser = async (req, res) => {
   }
 };
 
+const getTodaysMealsByUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // First, get the adopted meal plan and its adoption date
+    const mealPlanResult = await pool.query(
+      `SELECT id, updated_at
+       FROM meal_plan 
+       WHERE user_id = $1 AND is_adopted_plan = TRUE
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (mealPlanResult.rows.length === 0) {
+      return res.status(404).json({ message: "No adopted meal plan found for this user." });
+    }
+
+    const mealPlan = mealPlanResult.rows[0];
+    const adoptionDate = new Date(mealPlan.updated_at);
+    const currentDate = new Date();
+    
+    // Calculate days since adoption (starting from day 1)
+    const timeDifference = currentDate.getTime() - adoptionDate.getTime();
+    const daysSinceAdoption = Math.floor(timeDifference / (1000 * 3600 * 24));
+    const currentDayNumber = (daysSinceAdoption % 7) + 1; // Assuming 7-day cycle, adjust as needed
+
+    const result = await pool.query(
+      `SELECT 
+        mpm.id AS meal_plan_meal_id,
+        m.id AS meal_id,
+        m.name AS meal_name,
+        m.description AS meal_description,
+        m.calories,
+        m.protein,
+        m.carbs,
+        m.fats,
+        mpm.meal_order,
+        TO_CHAR(mpm.time, 'HH24:MI') AS time
+      FROM meal_plan mp
+      JOIN meal_plan_meal mpm ON mp.id = mpm.meal_plan_id
+      JOIN meal m ON mpm.meal_id = m.id
+      WHERE mp.user_id = $1 AND mp.is_adopted_plan = TRUE AND mpm.day_number = $2
+      ORDER BY mpm.meal_order`,
+      [userId, currentDayNumber]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        message: "No meals found for today.", 
+        currentDay: currentDayNumber,
+        daysSinceAdoption: daysSinceAdoption 
+      });
+    }
+
+    const meals = result.rows.map(meal => ({
+      id: meal.meal_plan_meal_id,
+      mealId: meal.meal_id,
+      name: meal.meal_name,
+      description: meal.meal_description,
+      time: meal.time,
+      calories: meal.calories,
+      protein: meal.protein,
+      carbs: meal.carbs,
+      fats: meal.fats,
+      mealOrder: meal.meal_order,
+      completed: false // Will be handled by separate completion table later
+    }));
+
+    res.json({
+      meals,
+      currentDay: currentDayNumber,
+      daysSinceAdoption: daysSinceAdoption,
+      adoptionDate: adoptionDate.toISOString().split('T')[0] // Just the date part
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
+
 const getMealPlan = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -780,6 +860,7 @@ const regenerateMeal = async (req, res) => {
 module.exports = {
   getAdoptedMealPlanByUser,
   getAllMealPlansByUser,
+  getTodaysMealsByUser,
   getMealPlan,
   saveMealPlan,
   saveAndAdoptMealPlan,
