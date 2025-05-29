@@ -159,6 +159,26 @@ CREATE TABLE personalization (
     UNIQUE (user_id)
 );
 
+CREATE TABLE meal_progress (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  meal_id INT REFERENCES meal(id) ON DELETE CASCADE,
+  completed BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date, meal_id)
+);
+
+CREATE TABLE exercise_progress (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  exercise_id INT REFERENCES exercise(id) ON DELETE CASCADE,
+  completed BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date, exercise_id)
+);
+
 -- Data
 
 -- Insert Meal Plan
