@@ -1,34 +1,66 @@
+// src/components/PersonalizationSteps/utilities.tsx
 import * as React from "react";
 import { FitnessGoal, WeightGoal, ActivityLevel, Budget } from "../../types/personalization";
 import { Slider } from "../Slider";
 
-// Helper function to render weight inputs for fitness goals
+// ────────────────────────────────────────────────────────────
+// Step 2 helper: renders the two sliders for weight-based goals.
+//   • Target Weight: min=20, max=personalWeight
+//   • Time Frame: min = ceil((personalWeight - targetWeight)/2) or 1 if no loss chosen
+//               max = 52
+//
 export const renderGoalWeightInputs = (
+  personalWeight: number,               // new parameter
   weightGoal: WeightGoal,
   setWeightGoal: (goal: WeightGoal) => void
-) => (
-  <div className="w-full space-y-4 mt-4">
-    <Slider
-      label="Target Weight"
-      value={weightGoal.targetWeight}
-      onChange={(value) => setWeightGoal({ ...weightGoal, targetWeight: value })}
-      min={20}
-      max={230}
-      unit="kg"
-    />
-    <Slider
-      label="Time Frame"
-      value={weightGoal.timeframe}
-      onChange={(value) => setWeightGoal({ ...weightGoal, timeframe: value })}
-      min={4}
-      max={52}
-      unit=" weeks"
-    />
-  </div>
-);
+) => {
+  // Compute how many kilograms the user wants to lose:
+  const diff = personalWeight - weightGoal.targetWeight;
+  // Using 2 kg/week rule → if diff > 0, at least ceil(diff/2) weeks; if diff <= 0, default to 1.
+  const minWeeks = diff > 0 ? Math.ceil(diff / 2) : 1;
 
-// Helper function to render fitness goal cards
+  return (
+    <div className="w-full space-y-4 mt-4">
+      {/** Target Weight slider **/}
+      <Slider
+        label="Target Weight"
+        value={weightGoal.targetWeight}
+        onChange={(value) =>
+          setWeightGoal({ ...weightGoal, targetWeight: value })
+        }
+        min={20}
+        max={personalWeight}           // clamp to user’s current weight
+        unit="kg"
+      />
+
+      {/** Time Frame slider **/}
+      <Slider
+        label="Time Frame"
+        value={weightGoal.timeframe}
+        onChange={(value) =>
+          setWeightGoal({ ...weightGoal, timeframe: value })
+        }
+        min={minWeeks}                // dynamic minimum
+        max={52}
+        unit=" weeks"
+      />
+    </div>
+  );
+};
+
+// ────────────────────────────────────────────────────────────
+// Renders a “Goal Card” for one of four goals, including weight sliders if needed.
+// We’ve added personalWeight as the first argument, so that “lose_weight” or “build_muscle”
+// can clamp their sliders accordingly.
+//
+// renderGoalCard signature BEFORE:
+//   ( type, icon, title, description, fitnessGoal, setFitnessGoal, weightGoal, setWeightGoal )
+//
+// renderGoalCard signature NOW:
+//   ( personalWeight, type, icon, title, description, fitnessGoal, setFitnessGoal, weightGoal, setWeightGoal )
+//
 export const renderGoalCard = (
+  personalWeight: number,              // new 1st arg
   type: FitnessGoal["type"],
   icon: React.ReactNode,
   title: string,
@@ -41,6 +73,7 @@ export const renderGoalCard = (
   <button
     onClick={() => {
       if (type === "lose_weight" || type === "build_muscle") {
+        // For weight-related goals, we pass the existing weightGoal in the fitnessGoal payload
         setFitnessGoal({ type, goal: weightGoal });
       } else {
         setFitnessGoal({ type });
@@ -57,13 +90,21 @@ export const renderGoalCard = (
       <h3 className="text-lg font-semibold text-dark-green">{title}</h3>
     </div>
     <p className="text-sm text-secondary-text text-left">{description}</p>
+
+    {/**
+      Only show the two sliders if:
+        • This card is “lose_weight” or “build_muscle”
+        • AND it is currently selected (fitnessGoal.type === type)
+         Then invoke renderGoalWeightInputs(personalWeight, weightGoal, setWeightGoal).
+    **/}
     {(type === "lose_weight" || type === "build_muscle") &&
       fitnessGoal.type === type &&
-      renderGoalWeightInputs(weightGoal, setWeightGoal)}
+      renderGoalWeightInputs(personalWeight, weightGoal, setWeightGoal)}
   </button>
 );
 
-// Helper function to render preference buttons
+// ────────────────────────────────────────────────────────────
+// (The rest of your helpers remain exactly the same.)
 export const renderPreferenceButton = (
   value: string,
   label: string,
@@ -82,7 +123,6 @@ export const renderPreferenceButton = (
   </button>
 );
 
-// Helper function to render activity level cards
 export const renderActivityCard = (
   level: ActivityLevel,
   title: string,
@@ -103,7 +143,6 @@ export const renderActivityCard = (
   </button>
 );
 
-// Helper function to render budget options
 export const renderBudgetOption = (
   option: Budget,
   description: string,

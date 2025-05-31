@@ -223,7 +223,7 @@ function Personalization() {
     await saveStepData(currentStep, {});
   };
 
-  // Conditional rendering for loader, error, or page content
+    // If loading or error, we show the spinner or error modal.
   if (isLoading) {
     return (
       <div
@@ -234,7 +234,7 @@ function Personalization() {
           height: "100vh",
         }}
       >
-        <ClipLoader color="#7ec987" size={50} /> {/* Display the spinner */}
+        <ClipLoader color="#7ec987" size={50} />
       </div>
     );
   }
@@ -256,20 +256,28 @@ function Personalization() {
           <ProgressBar currentStep={currentStep} totalSteps={5} />
 
           <div className="bg-white p-8 rounded-xl shadow-lg">
+            {/** Step 1: Basic Information **/}
             {currentStep === 1 && (
               <Step1
                 personalInfo={personalInfo}
                 setPersonalInfo={setPersonalInfo}
               />
             )}
+
+            {/**
+             * Step 2: “Your Goals”
+             * Pass personalInfo.weight into Step2 as personalWeight.
+             */}
             {currentStep === 2 && (
               <Step2
+                personalWeight={personalInfo.weight}     // <-- NEW PROP
                 fitnessGoal={fitnessGoal}
                 setFitnessGoal={setFitnessGoal}
                 weightGoal={weightGoal}
                 setWeightGoal={setWeightGoal}
               />
             )}
+
             {currentStep === 3 && (
               <Step3
                 cuisinePreferences={cuisinePreferences}
