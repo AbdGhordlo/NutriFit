@@ -1,6 +1,6 @@
 // src/components/PersonalizationSteps/Step3.tsx
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Cuisine, DietPreference, HealthIssue } from "../../types/personalization";
 import { renderPreferenceButton } from "./utilities";
 import { UtensilsCrossed, Salad, HeartPulse, Clock } from "lucide-react";
@@ -22,6 +22,7 @@ const ALLERGEN_OPTIONS = [
 interface Step3Props {
   cuisinePreferences: Cuisine[];
   setCuisinePreferences: (cuisines: Cuisine[]) => void;
+
   dietPreference: DietPreference;
   setDietPreference: (preference: DietPreference) => void;
 
@@ -52,8 +53,6 @@ export const Step3 = ({
   mealsPerDay,
   setMealsPerDay,
 }: Step3Props) => {
-  // We no longer keep specificAllergies in local state; it is lifted.
-
   // Handler for when the user clicks a “health issue” button
   const toggleHealthIssue = (issue: HealthIssue) => {
     if (issue === "none") {
@@ -87,14 +86,33 @@ export const Step3 = ({
     setHealthIssues(updated);
   };
 
-  // Handler for a specific allergen checkbox toggle
-  const toggleAllergen = (allergen: string) => {
+  // Handler for a specific allergen pill toggle
+  const toggleAllergenPill = (allergen: string) => {
     if (specificAllergies.includes(allergen)) {
       setSpecificAllergies(specificAllergies.filter((a) => a !== allergen));
     } else {
       setSpecificAllergies([...specificAllergies, allergen]);
     }
   };
+
+  // A small “pill” for multi‐select items (used for the allergens)
+  const renderAllergenCard = (
+    label: string,
+    isSelected: boolean,
+    onClick: () => void
+  ) => (
+    <button
+      onClick={onClick}
+      className={`px-3 py-2 rounded-lg border-[1.5px] text-sm text-left transition-all 
+        ${
+          isSelected
+            ? "bg-light-green border-primary-green text-dark-green"
+            : "bg-white border-gray-200 hover:border-primary-green"
+        }`}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <div className="space-y-6">
@@ -110,23 +128,29 @@ export const Step3 = ({
             Favorite Cuisines
           </h3>
           <div className="flex flex-wrap gap-2">
-            {(["mediterranean", "asian", "american", "indian", "mexican"] as const).map(
-              (cuisine) => (
-                <div key={cuisine}>
-                  {renderPreferenceButton(
-                    cuisine,
-                    cuisine.charAt(0).toUpperCase() + cuisine.slice(1),
-                    cuisinePreferences.includes(cuisine),
-                    () =>
-                      setCuisinePreferences(
-                        cuisinePreferences.includes(cuisine)
-                          ? cuisinePreferences.filter((c) => c !== cuisine)
-                          : [...cuisinePreferences, cuisine]
-                      )
-                  )}
-                </div>
-              )
-            )}
+            {(
+              [
+                "mediterranean",
+                "asian",
+                "american",
+                "indian",
+                "mexican",
+              ] as const
+            ).map((cuisine) => (
+              <div key={cuisine}>
+                {renderPreferenceButton(
+                  cuisine,
+                  cuisine.charAt(0).toUpperCase() + cuisine.slice(1),
+                  cuisinePreferences.includes(cuisine),
+                  () =>
+                    setCuisinePreferences(
+                      cuisinePreferences.includes(cuisine)
+                        ? cuisinePreferences.filter((c) => c !== cuisine)
+                        : [...cuisinePreferences, cuisine]
+                    )
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -139,20 +163,20 @@ export const Step3 = ({
             Diet Preferences
           </h3>
           <div className="flex flex-wrap gap-2">
-            {(["none", "vegetarian", "vegan", "keto", "paleo"] as const).map(
-              (diet) => (
-                <div key={diet}>
-                  {renderPreferenceButton(
-                    diet,
-                    diet === "none"
-                      ? "No Restrictions"
-                      : diet.charAt(0).toUpperCase() + diet.slice(1),
-                    dietPreference === diet,
-                    () => setDietPreference(diet)
-                  )}
-                </div>
-              )
-            )}
+            {(
+              ["none", "vegetarian", "vegan", "keto", "paleo"] as const
+            ).map((diet) => (
+              <div key={diet}>
+                {renderPreferenceButton(
+                  diet,
+                  diet === "none"
+                    ? "No Restrictions"
+                    : diet.charAt(0).toUpperCase() + diet.slice(1),
+                  dietPreference === diet,
+                  () => setDietPreference(diet)
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -182,27 +206,20 @@ export const Step3 = ({
             ))}
           </div>
 
-          {/* If the user has chosen “allergies,” show the inline panel */}
+          {/* If the user has chosen “allergies,” show the pill‐grid */}
           {healthIssues.includes("allergies") && (
             <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
               <p className="mb-2 text-sm text-gray-700">
                 Which of the following allergens apply?
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                {ALLERGEN_OPTIONS.map((allergen) => (
-                  <label
-                    key={allergen}
-                    className="flex items-center gap-2 text-sm text-gray-800"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={specificAllergies.includes(allergen)}
-                      onChange={() => toggleAllergen(allergen)}
-                      className="h-4 w-4 text-green-600 border-gray-300 rounded"
-                    />
-                    {allergen}
-                  </label>
-                ))}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {ALLERGEN_OPTIONS.map((allergen) =>
+                  renderAllergenCard(
+                    allergen,
+                    specificAllergies.includes(allergen),
+                    () => toggleAllergenPill(allergen)
+                  )
+                )}
               </div>
             </div>
           )}

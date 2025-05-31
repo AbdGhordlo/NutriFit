@@ -17,6 +17,8 @@ import {
   DietPreference,
   HealthIssue,
   ActivityLevel,
+  ActivityType,
+  Equipment,
   Budget,
   Step,
 } from "../types/personalization";
@@ -32,13 +34,15 @@ function Personalization() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // State for personalization data
+  // ─── Step 1 State ─────────────────────────────────────────────────────
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     height: 60,
     weight: 20,
     gender: "male",
     age: 18,
   });
+
+  // ─── Step 2 State ─────────────────────────────────────────────────────
   const [fitnessGoal, setFitnessGoal] = useState<FitnessGoal>({
     type: "improve_health",
   });
@@ -46,28 +50,38 @@ function Personalization() {
     targetWeight: 20,
     timeframe: 4,
   });
+
+  // ─── Step 3 State ─────────────────────────────────────────────────────
   const [cuisinePreferences, setCuisinePreferences] = useState<Cuisine[]>([]);
   const [dietPreference, setDietPreference] = useState<DietPreference>("none");
   const [healthIssues, setHealthIssues] = useState<HealthIssue[]>(["none"]);
   const [specificAllergies, setSpecificAllergies] = useState<string[]>([]);
   const [mealsPerDay, setMealsPerDay] = useState(2);
-  const [activityLevel, setActivityLevel] =
-    useState<ActivityLevel>("very_light");
+
+  // ─── Step 4 State ─────────────────────────────────────────────────────
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>("very_light");
+  const [activityTypes, setActivityTypes] = useState<ActivityType[]>([]);
+  const [equipmentAccess, setEquipmentAccess] = useState<Equipment[]>([]);
+
+  // ─── Step 5 State ─────────────────────────────────────────────────────
   const [budget, setBudget] = useState<Budget>("basic");
   const [hasKitchenInventory, setHasKitchenInventory] = useState(false);
-  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-  const [userId, setUserId] = useState('');
 
+  // ─── Misc ─────────────────────────────────────────────────────────────
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [userId, setUserId] = useState("");
   const token = localStorage.getItem("token");
 
+  // ─── On Mount: grab userId from token ─────────────────────────────────
   useEffect(() => {
     const id = getUserIdFromToken();
     if (id) setUserId(id);
   }, []);
 
-  // Fetch personalization data (including specificAllergies)
+  // ─── Fetch all personalization data if we have a userId ───────────────
   useEffect(() => {
     if (!userId) return;
+
     const fetchPersonalizationData = async () => {
       if (!token) {
         setError("No token found. Please log in.");
@@ -93,25 +107,56 @@ function Personalization() {
         if (!response.ok) {
           throw new Error(`Error: ${response.status} ${response.statusText}`);
         }
+
         const data = await response.json();
         if (data.steps_data) {
           const { steps_data } = data;
-          setPersonalInfo(steps_data.step_1?.personalInfo || personalInfo);
-          setFitnessGoal(steps_data.step_2?.fitnessGoal || fitnessGoal);
-          setWeightGoal(steps_data.step_2?.weightGoal || weightGoal);
+
+          // Step 1
+          setPersonalInfo(
+            steps_data.step_1?.personalInfo || personalInfo
+          );
+
+          // Step 2
+          setFitnessGoal(
+            steps_data.step_2?.fitnessGoal || fitnessGoal
+          );
+          setWeightGoal(
+            steps_data.step_2?.weightGoal || weightGoal
+          );
+
+          // Step 3
           setCuisinePreferences(
             steps_data.step_3?.cuisinePreferences || cuisinePreferences
           );
           setDietPreference(
             steps_data.step_3?.dietPreference || dietPreference
           );
-          setHealthIssues(steps_data.step_3?.healthIssues || healthIssues);
+          setHealthIssues(
+            steps_data.step_3?.healthIssues || healthIssues
+          );
           setSpecificAllergies(
             steps_data.step_3?.specificAllergies || []
           );
-          setMealsPerDay(steps_data.step_3?.mealsPerDay || mealsPerDay);
-          setActivityLevel(steps_data.step_4?.activityLevel || activityLevel);
-          setBudget(steps_data.step_5?.budget || budget);
+          setMealsPerDay(
+            steps_data.step_3?.mealsPerDay || mealsPerDay
+          );
+
+          // Step 4
+          setActivityLevel(
+            steps_data.step_4?.activityLevel || activityLevel
+          );
+          setActivityTypes(
+            steps_data.step_4?.activityTypes || []
+          );
+          setEquipmentAccess(
+            steps_data.step_4?.equipmentAccess || []
+          );
+
+          // Step 5
+          setBudget(
+            steps_data.step_5?.budget || budget
+          );
           setHasKitchenInventory(
             steps_data.step_5?.hasKitchenInventory || hasKitchenInventory
           );
@@ -124,10 +169,11 @@ function Personalization() {
         setIsLoading(false);
       }
     };
+
     fetchPersonalizationData();
   }, [token, userId]);
 
-  // Save personalization data when a step is completed
+  // ─── Save a given step’s data to the backend ──────────────────────────
   const saveStepData = async (stepNumber: number, stepData: any) => {
     if (!token) {
       setError("No token found. Please log in.");
@@ -135,6 +181,8 @@ function Personalization() {
     }
     setIsLoading(true);
     try {
+      console.log(`Saving Step ${stepNumber} Data:`, stepData);
+
       const response = await fetch(
         `http://localhost:5000/personalization/${userId}/step/${stepNumber}`,
         {
@@ -165,9 +213,9 @@ function Personalization() {
     }
   };
 
-  // Handle next step with allergy validation on Step 3
+  // ─── “Next” button handler, with allergy‐validation for Step 3 ──────────
   const handleNext = async () => {
-    // If on Step 3 and user has “allergies” but no specific selections:
+    // If on Step 3 and user selected “allergies” but no specificAllergies:
     if (
       currentStep === 3 &&
       healthIssues.includes("allergies") &&
@@ -177,7 +225,23 @@ function Personalization() {
       return;
     }
 
-    // Otherwise, gather all of stepData up to currentStep
+    // ─── Step 4: ensure at least one activity type AND at least one equipment is chosen ───
+    if (currentStep === 4) {
+      if (activityTypes.length === 0) {
+        alert("Please select at least one physical activity before proceeding.");
+        return;
+      }
+
+      if (equipmentAccess.length === 0) {
+        alert(
+          "Please select at least one equipment/location or choose 'None' before proceeding."
+        );
+        return;
+      }
+    }
+
+
+    // Gather step‐data up to the current step:
     const stepData = {
       step_1: { personalInfo },
       step_2: { fitnessGoal, weightGoal },
@@ -186,9 +250,13 @@ function Personalization() {
         dietPreference,
         healthIssues,
         mealsPerDay,
-        specificAllergies, // include in payload
+        specificAllergies, // newly added field
       },
-      step_4: { activityLevel },
+      step_4: {
+        activityLevel,
+        activityTypes,
+        equipmentAccess,
+      },
       step_5: { budget, hasKitchenInventory },
     };
 
@@ -196,6 +264,7 @@ function Personalization() {
       await saveStepData(currentStep, stepData[`step_${currentStep}`]);
       setCurrentStep((prev) => (prev + 1) as Step);
     } else {
+      // Finished all steps; if user has kitchen inventory, go to /ingredients, else /home
       await saveStepData(5, stepData.step_5);
       if (hasKitchenInventory) {
         navigate("/ingredients");
@@ -205,17 +274,21 @@ function Personalization() {
     }
   };
 
+  // ─── “Back” button handler ────────────────────────────────────────────
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => (prev - 1) as Step);
     }
   };
+
+  // ─── “Skip” and “Skip Confirm” ───────────────────────────────────────
   const handleSkip = () => setIsSkipModalOpen(true);
   const handleSkipConfirm = async () => {
     setIsSkipModalOpen(false);
     await saveStepData(currentStep, {});
   };
 
+  // ─── Show loader if fetching or saving ───────────────────────────────
   if (isLoading) {
     return (
       <div
@@ -230,6 +303,8 @@ function Personalization() {
       </div>
     );
   }
+
+  // ─── Show error modal if something went wrong ────────────────────────
   if (error) {
     return (
       <ErrorModal
@@ -240,6 +315,7 @@ function Personalization() {
     );
   }
 
+  // ─── Render the correct Step component ───────────────────────────────
   return (
     <div className="outer-container">
       <div className="h-full bg-pageBackground w-full">
@@ -247,12 +323,15 @@ function Personalization() {
           <ProgressBar currentStep={currentStep} totalSteps={5} />
 
           <div className="bg-white p-8 rounded-xl shadow-lg">
+            {/** Step 1: Basic Info **/}
             {currentStep === 1 && (
               <Step1
                 personalInfo={personalInfo}
                 setPersonalInfo={setPersonalInfo}
               />
             )}
+
+            {/** Step 2: Your Goals **/}
             {currentStep === 2 && (
               <Step2
                 personalWeight={personalInfo.weight}
@@ -262,6 +341,8 @@ function Personalization() {
                 setWeightGoal={setWeightGoal}
               />
             )}
+
+            {/** Step 3: Dietary Preferences **/}
             {currentStep === 3 && (
               <Step3
                 cuisinePreferences={cuisinePreferences}
@@ -276,12 +357,20 @@ function Personalization() {
                 setMealsPerDay={setMealsPerDay}
               />
             )}
+
+            {/** Step 4: Activity Level & Preferences **/}
             {currentStep === 4 && (
               <Step4
                 activityLevel={activityLevel}
                 setActivityLevel={setActivityLevel}
+                activityTypes={activityTypes}
+                setActivityTypes={setActivityTypes}
+                equipmentAccess={equipmentAccess}
+                setEquipmentAccess={setEquipmentAccess}
               />
             )}
+
+            {/** Step 5: Budget & Kitchen Inventory **/}
             {currentStep === 5 && (
               <Step5
                 budget={budget}
@@ -314,7 +403,7 @@ function Personalization() {
           onClose={() => setIsSkipModalOpen(false)}
           onConfirm={handleSkipConfirm}
           title="Skip Personalization?"
-          message="If you skip the personalization steps, you'll receive a standard plan that isn't tailored to your needs and goals."
+          message="If you skip the personalization steps, you’ll receive a standard plan that isn’t tailored to your needs and goals."
         />
       </div>
     </div>

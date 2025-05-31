@@ -1,28 +1,31 @@
 // src/components/PersonalizationSteps/utilities.tsx
 
 import * as React from "react";
-import { FitnessGoal, WeightGoal, ActivityLevel, Budget } from "../../types/personalization";
+import {
+  FitnessGoal,
+  WeightGoal,
+  ActivityLevel,
+  ActivityType,
+  Equipment,
+  Budget,
+} from "../../types/personalization";
 import { Slider } from "../Slider";
 
-// renderGoalWeightInputs now takes an extra `goalType` parameter:
+// ────────────────────────────────────────────────────────────
+// Step 2 helper: renders “Lose Weight” or “Build Muscle” sliders
 export const renderGoalWeightInputs = (
   personalWeight: number,
   weightGoal: WeightGoal,
   setWeightGoal: (goal: WeightGoal) => void,
   goalType: FitnessGoal["type"]
 ) => {
-  // Compute difference and minimum weeks in both cases:
   if (goalType === "lose_weight") {
-    // If the user wants to lose from personalWeight down to 20kg:
     const diffLose = personalWeight - weightGoal.targetWeight;
     const minLoseWeeks = diffLose > 0 ? Math.ceil(diffLose / 2) : 1;
-
-    // Maximum possible loss is (personalWeight - 20) at 2kg/week:
     const maxLoseWeeks = Math.ceil((personalWeight - 20) / 2);
 
     return (
       <div className="w-full space-y-4 mt-4">
-        {/**** Target Weight Slider ****/}
         <Slider
           label="Target Weight"
           value={weightGoal.targetWeight}
@@ -34,7 +37,6 @@ export const renderGoalWeightInputs = (
           unit="kg"
         />
 
-        {/**** Time Frame Slider ****/}
         <Slider
           label="Time Frame"
           value={weightGoal.timeframe}
@@ -50,17 +52,14 @@ export const renderGoalWeightInputs = (
   }
 
   if (goalType === "build_muscle") {
-    // Suppose our “build up to personalWeight + 50” rule:
-    const muscleCeiling = personalWeight + 50; 
+    // Let’s cap muscle gain at +50kg above personalWeight at 2 kg/week
+    const muscleCeiling = personalWeight + 50;
     const diffGain = weightGoal.targetWeight - personalWeight;
     const minGainWeeks = diffGain > 0 ? Math.ceil(diffGain / 2) : 1;
-
-    // Maximum possible gain is 50kg at 2kg/week:
-    const maxGainWeeks = Math.ceil(50 / 2); // = 25 weeks
+    const maxGainWeeks = Math.ceil(50 / 2); // = 25 weeks to gain 50 kg
 
     return (
       <div className="w-full space-y-4 mt-4">
-        {/**** Target Weight Slider ****/}
         <Slider
           label="Target Weight"
           value={weightGoal.targetWeight}
@@ -72,7 +71,6 @@ export const renderGoalWeightInputs = (
           unit="kg"
         />
 
-        {/**** Time Frame Slider ****/}
         <Slider
           label="Time Frame"
           value={weightGoal.timeframe}
@@ -87,10 +85,11 @@ export const renderGoalWeightInputs = (
     );
   }
 
-  // If it’s not lose/build, return null
   return null;
 };
 
+// ────────────────────────────────────────────────────────────
+// renderGoalCard  (Step 2) now accepts `personalWeight` + `goalType`
 export const renderGoalCard = (
   personalWeight: number,
   type: FitnessGoal["type"],
@@ -105,7 +104,6 @@ export const renderGoalCard = (
   <button
     onClick={() => {
       if (type === "lose_weight" || type === "build_muscle") {
-        // Pass the existing weightGoal so we can edit it in Step 2.
         setFitnessGoal({ type, goal: weightGoal });
       } else {
         setFitnessGoal({ type });
@@ -123,34 +121,14 @@ export const renderGoalCard = (
     </div>
     <p className="text-sm text-secondary-text text-left">{description}</p>
 
-    {/**
-      Only show the weight sliders if this card is “lose_weight” or “build_muscle”
-      and it is currently selected:
-    **/}
     {(type === "lose_weight" || type === "build_muscle") &&
       fitnessGoal.type === type &&
       renderGoalWeightInputs(personalWeight, weightGoal, setWeightGoal, type)}
   </button>
 );
 
-export const renderPreferenceButton = (
-  value: string,
-  label: string,
-  isSelected: boolean,
-  onClick: () => void
-) => (
-  <button
-    onClick={onClick}
-    className={`px-4 py-2 rounded-lg transition-all ${
-      isSelected
-        ? "bg-primary-green text-white"
-        : "bg-white border border-gray-200 hover:border-primary-green"
-    }`}
-  >
-    {label}
-  </button>
-);
-
+// ────────────────────────────────────────────────────────────
+// renderActivityCard  (Step 4)  — reuses your existing style logic
 export const renderActivityCard = (
   level: ActivityLevel,
   title: string,
@@ -168,6 +146,26 @@ export const renderActivityCard = (
   >
     <h3 className="text-lg font-semibold text-dark-green mb-2">{title}</h3>
     <p className="text-sm text-secondary-text">{description}</p>
+  </button>
+);
+
+// ────────────────────────────────────────────────────────────
+// Other helpers (unchanged):
+export const renderPreferenceButton = (
+  value: string,
+  label: string,
+  isSelected: boolean,
+  onClick: () => void
+) => (
+  <button
+    onClick={onClick}
+    className={`px-4 py-2 rounded-lg transition-all ${
+      isSelected
+        ? "bg-primary-green text-white"
+        : "bg-white border border-gray-200 hover:border-primary-green"
+    }`}
+  >
+    {label}
   </button>
 );
 
