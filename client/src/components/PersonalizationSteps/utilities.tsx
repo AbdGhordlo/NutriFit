@@ -3,64 +3,92 @@ import * as React from "react";
 import { FitnessGoal, WeightGoal, ActivityLevel, Budget } from "../../types/personalization";
 import { Slider } from "../Slider";
 
-// ────────────────────────────────────────────────────────────
-// Step 2 helper: renders the two sliders for weight-based goals.
-//   • Target Weight: min=20, max=personalWeight
-//   • Time Frame: min = ceil((personalWeight - targetWeight)/2) or 1 if no loss chosen
-//               max = 52
-//
+// ─────────────────────────────────────────────────────────────────────────────
+// Step 2 helper: renders the two sliders (Target + Time Frame) for weight-based goals.
+// We now branch on goalType to handle lose_weight vs. build_muscle rules.
+// ─────────────────────────────────────────────────────────────────────────────
 export const renderGoalWeightInputs = (
-  personalWeight: number,               // new parameter
+  personalWeight: number,               // user’s current weight from Step 1
   weightGoal: WeightGoal,
-  setWeightGoal: (goal: WeightGoal) => void
+  setWeightGoal: (goal: WeightGoal) => void,
+  goalType: FitnessGoal["type"]         // either "lose_weight" or "build_muscle"
 ) => {
-  // Compute how many kilograms the user wants to lose:
-  const diff = personalWeight - weightGoal.targetWeight;
-  // Using 2 kg/week rule → if diff > 0, at least ceil(diff/2) weeks; if diff <= 0, default to 1.
-  const minWeeks = diff > 0 ? Math.ceil(diff / 2) : 1;
+  if (goalType === "lose_weight") {
+    // -------------------- LOSE WEIGHT --------------------
+    const diff = personalWeight - weightGoal.targetWeight;
+    const minWeeks = diff > 0 ? Math.ceil(diff / 2) : 1;
 
-  return (
-    <div className="w-full space-y-4 mt-4">
-      {/** Target Weight slider **/}
-      <Slider
-        label="Target Weight"
-        value={weightGoal.targetWeight}
-        onChange={(value) =>
-          setWeightGoal({ ...weightGoal, targetWeight: value })
-        }
-        min={20}
-        max={personalWeight}           // clamp to user’s current weight
-        unit="kg"
-      />
+    return (
+      <div className="w-full space-y-4 mt-4">
+        {/** Target Weight slider **/}
+        <Slider
+          label="Target Weight"
+          value={weightGoal.targetWeight}
+          onChange={(value) =>
+            setWeightGoal({ ...weightGoal, targetWeight: value })
+          }
+          min={20}
+          max={personalWeight}           // clamp at current weight
+          unit="kg"
+        />
 
-      {/** Time Frame slider **/}
-      <Slider
-        label="Time Frame"
-        value={weightGoal.timeframe}
-        onChange={(value) =>
-          setWeightGoal({ ...weightGoal, timeframe: value })
-        }
-        min={minWeeks}                // dynamic minimum
-        max={52}
-        unit=" weeks"
-      />
-    </div>
-  );
+        {/** Time Frame slider **/}
+        <Slider
+          label="Time Frame"
+          value={weightGoal.timeframe}
+          onChange={(value) =>
+            setWeightGoal({ ...weightGoal, timeframe: value })
+          }
+          min={minWeeks}                // dynamic minimum (ceil(diff/2) or 1)
+          max={52}
+          unit=" weeks"
+        />
+      </div>
+    );
+  } else if (goalType === "build_muscle") {
+    // -------------------- BUILD MUSCLE --------------------
+    const diff = weightGoal.targetWeight - personalWeight;
+    const minWeeks = diff > 0 ? Math.ceil(diff / 2) : 1;
+
+    return (
+      <div className="w-full space-y-4 mt-4">
+        {/** Target Weight slider **/}
+        <Slider
+          label="Target Weight"
+          value={weightGoal.targetWeight}
+          onChange={(value) =>
+            setWeightGoal({ ...weightGoal, targetWeight: value })
+          }
+          min={personalWeight}          // clamp to at least current weight
+          max={personalWeight + 50}     // allow up to +50 kg above current
+          unit="kg"
+        />
+
+        {/** Time Frame slider **/}
+        <Slider
+          label="Time Frame"
+          value={weightGoal.timeframe}
+          onChange={(value) =>
+            setWeightGoal({ ...weightGoal, timeframe: value })
+          }
+          min={minWeeks}                 // dynamic min = ceil((target–current)/2) or 1
+          max={52}
+          unit=" weeks"
+        />
+      </div>
+    );
+  }
+
+  // If neither “lose_weight” nor “build_muscle,” return null (no sliders)
+  return null;
 };
 
-// ────────────────────────────────────────────────────────────
-// Renders a “Goal Card” for one of four goals, including weight sliders if needed.
-// We’ve added personalWeight as the first argument, so that “lose_weight” or “build_muscle”
-// can clamp their sliders accordingly.
-//
-// renderGoalCard signature BEFORE:
-//   ( type, icon, title, description, fitnessGoal, setFitnessGoal, weightGoal, setWeightGoal )
-//
-// renderGoalCard signature NOW:
-//   ( personalWeight, type, icon, title, description, fitnessGoal, setFitnessGoal, weightGoal, setWeightGoal )
-//
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper function to render each fitness goal card. We added goalType so that
+// renderGoalWeightInputs knows which branch to use.
+// ─────────────────────────────────────────────────────────────────────────────
 export const renderGoalCard = (
-  personalWeight: number,              // new 1st arg
+  personalWeight: number,
   type: FitnessGoal["type"],
   icon: React.ReactNode,
   title: string,
@@ -73,7 +101,7 @@ export const renderGoalCard = (
   <button
     onClick={() => {
       if (type === "lose_weight" || type === "build_muscle") {
-        // For weight-related goals, we pass the existing weightGoal in the fitnessGoal payload
+        // Pass the existing weightGoal so we can edit it in Step 2.
         setFitnessGoal({ type, goal: weightGoal });
       } else {
         setFitnessGoal({ type });
@@ -92,19 +120,18 @@ export const renderGoalCard = (
     <p className="text-sm text-secondary-text text-left">{description}</p>
 
     {/**
-      Only show the two sliders if:
-        • This card is “lose_weight” or “build_muscle”
-        • AND it is currently selected (fitnessGoal.type === type)
-         Then invoke renderGoalWeightInputs(personalWeight, weightGoal, setWeightGoal).
+      Only show the weight sliders if this card is “lose_weight” or “build_muscle”
+      and it is currently selected:
     **/}
     {(type === "lose_weight" || type === "build_muscle") &&
       fitnessGoal.type === type &&
-      renderGoalWeightInputs(personalWeight, weightGoal, setWeightGoal)}
+      renderGoalWeightInputs(personalWeight, weightGoal, setWeightGoal, type)}
   </button>
 );
 
-// ────────────────────────────────────────────────────────────
-// (The rest of your helpers remain exactly the same.)
+// ─────────────────────────────────────────────────────────────────────────────
+// (The rest of your helper functions remain unchanged.)
+// ─────────────────────────────────────────────────────────────────────────────
 export const renderPreferenceButton = (
   value: string,
   label: string,

@@ -1,12 +1,10 @@
-// src/components/PersonalizationSteps/Step2.tsx
-
 import React, { useEffect } from "react";
 import { FitnessGoal, WeightGoal } from "../../types/personalization";
 import { renderGoalCard } from "./utilities";
 import { CircleGauge, BicepsFlexed, Scale, HeartPulse } from "lucide-react";
 
 interface Step2Props {
-  personalWeight: number;                   // The user’s current weight from Page 1
+  personalWeight: number; 
   fitnessGoal: FitnessGoal;
   setFitnessGoal: (goal: FitnessGoal) => void;
   weightGoal: WeightGoal;
@@ -20,11 +18,7 @@ export const Step2 = ({
   weightGoal,
   setWeightGoal,
 }: Step2Props) => {
-  //
-  // 1) Whenever personalWeight changes (i.e. step1 updated), immediately reset
-  //    weightGoal.targetWeight to that new personalWeight. This ensures the
-  //    “Target Weight” label/text always matches the slider’s max when you arrive.
-  //
+
   useEffect(() => {
     setWeightGoal((prev) => ({
       ...prev,
@@ -32,16 +26,23 @@ export const Step2 = ({
     }));
   }, [personalWeight]);
 
-  //
-  // 2) Whenever targetWeight changes under “Lose Weight,” recalc the minimum
-  //    timeframe = ceil((personalWeight – targetWeight) / 2) or 1 if no diff.
-  //    Then immediately set weightGoal.timeframe to that minimum so the label
-  //    and thumb on the Time Frame slider update in sync.
-  //
   useEffect(() => {
+    // LOSE WEIGHT branch
     if (fitnessGoal.type === "lose_weight") {
       const diff = personalWeight - weightGoal.targetWeight;
       const computedMin = diff > 0 ? Math.ceil(diff / 2) : 1;
+
+      setWeightGoal((prev) => ({
+        ...prev,
+        timeframe: computedMin,
+      }));
+    }
+
+    // BUILD MUSCLE branch
+    if (fitnessGoal.type === "build_muscle") {
+      const diff = weightGoal.targetWeight - personalWeight;
+      const computedMin = diff > 0 ? Math.ceil(diff / 2) : 1;
+
       setWeightGoal((prev) => ({
         ...prev,
         timeframe: computedMin,
@@ -54,7 +55,7 @@ export const Step2 = ({
       <h2 className="text-2xl font-bold text-dark-green mb-6">Your Goals</h2>
       <div className="grid gap-4">
         {renderGoalCard(
-          personalWeight,                   // Pass the up-to-date current weight
+          personalWeight,
           "lose_weight",
           <CircleGauge className="w-5 h-5" />,
           "Lose Weight",
