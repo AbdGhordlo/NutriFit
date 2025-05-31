@@ -9,6 +9,8 @@ import { getUserIdFromToken } from "../utils/auth";
 import { getTodaysMealsByUser } from "../api/MealPlannerAPI";
 import { getTodaysExercisesByUser } from "../api/ExercisePlannerAPI";
 import * as homeService from "../services/homeService";
+import * as progressService from "../services/progressService";
+import * as personalizationService from "../services/personalizationService";
 import { useAuth } from "../utils/useAuth";
 
 const Progress = () => {
@@ -74,7 +76,6 @@ const Progress = () => {
           today,
           token
         );
-        console.log("mealData: ", completedMealIds.length);
         setDailyMaxMeals((mealData.meals || []).length);
         setDailyCompletedMeals(completedMealIds.length);
 
@@ -87,14 +88,47 @@ const Progress = () => {
         setDailyMaxExercises((exerciseData.exercises || []).length);
         setDailyCompletedExercises(completedExerciseIds.length);
 
-        // For demo: set dailyCompletedDays, weeklyCurrent, monthlyCurrent
-        // In a real app, fetch these from backend or compute from progress logs
-        // Here, we just use the number of days this week with all meals+exercises completed
-        // and similar for weeks/months
-        // For now, set to 0 or mock values
-        setDailyCompletedDays(2); // TODO: Replace with real calculation
-        setWeeklyCurrent(2); // TODO: Replace with real calculation
-        setMonthlyCurrent(1); // TODO: Replace with real calculation
+        // Fetch completed_days_count from backend
+        const { completed_days_count } =
+          await progressService.fetchCompletedDaysCount(userId, token);
+        setDailyCompletedDays(completed_days_count % 7);
+
+        // Fetch personalization data for timeframe
+        let weeklyMaxValue = 4;
+        let monthlyMaxValue = 12;
+        try {
+          const personalization =
+            await personalizationService.fetchPersonalizationData(
+              userId,
+              token
+            );
+          const steps_data = personalization.steps_data || {};
+          const fitnessGoal = steps_data.step_2?.fitnessGoal;
+          const weightGoal = steps_data.step_2?.weightGoal;
+          // If goal is weight-related and timeframe exists, use it
+          if (
+            fitnessGoal &&
+            ["lose_weight", "build_muscle", "body_recomposition"].includes(
+              fitnessGoal.type
+            ) &&
+            weightGoal?.timeframe
+          ) {
+            weeklyMaxValue = weightGoal.timeframe;
+            if (weightGoal.timeframe < 4) {
+              monthlyMaxValue = Math.ceil(weightGoal.timeframe / 4);
+            }
+          }
+        } catch (e) {
+          // fallback to default weekly/monthly max
+        }
+        setWeeklyCurrent(
+          Math.floor((completed_days_count / 7) % weeklyMaxValue)
+        );
+        setWeeklyMax(weeklyMaxValue);
+        setMonthlyCurrent(
+          Math.floor((completed_days_count / 28) % monthlyMaxValue)
+        );
+        setMonthlyMax(monthlyMaxValue);
       } catch (e) {
         // Optionally handle error
       }

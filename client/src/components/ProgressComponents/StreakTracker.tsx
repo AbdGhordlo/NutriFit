@@ -56,9 +56,17 @@ const StreakTracker = ({
     return "bronze";
   };
 
+  // Calculate next trophy level based on streaks
+  const getNextTrophyLevel = () => {
+    if (weeklyCurrent === 3) return "gold";
+    if (weeklyCurrent >= 1 && weeklyCurrent <= 2) return "bronze";
+    return "fire";
+  };
+
   // Days of the week for display
   const daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
-  const displayMonthly = true;
+  const displayMonthly = monthlyMax === 0 ? false : true;
+
 
   return (
     <div className="streak-tracker">
@@ -166,41 +174,70 @@ const StreakTracker = ({
         </motion.div>
 
         {/* Monthly Progress */}
-        <motion.div
-          className="bg-white rounded-lg p-6 shadow-sm border border-gray-100"
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
-        >
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Monthly Progress
-          </h3>
-          <div className="flex flex-col items-center">
-            <RadialProgressBar
-              percentage={(monthlyCurrent / monthlyMax) * 100}
-              color="#FFD700" // Gold color
-              size={120}
-              thickness={12}
-              label={`${monthlyCurrent}/${monthlyMax}`}
-            />
-            <p className="mt-4 text-gray-600 text-center">
-              {monthlyCurrent} consecutive months of meeting weekly goals
-            </p>
+        {displayMonthly && (
+          <motion.div
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100"
+            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          >
+            <div className="flex items-center mb-2">
+              <h3 className="text-lg font-semibold text-gray-800 mr-2">
+                Monthly Progress
+              </h3>
+              <span
+                title="A month here is considered as 28 days (4 weeks)"
+                style={{ cursor: "pointer" }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="12" cy="12" r="10" fill="#fbbf24" />
+                  <text
+                    x="12"
+                    y="16"
+                    textAnchor="middle"
+                    fontSize="14"
+                    fill="#fff"
+                    fontFamily="Arial"
+                    fontWeight="bold"
+                  >
+                    i
+                  </text>
+                </svg>
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <RadialProgressBar
+                percentage={(monthlyCurrent / monthlyMax) * 100}
+                color="#FFD700" // Gold color
+                size={120}
+                thickness={12}
+                label={`${monthlyCurrent}/${monthlyMax}`}
+              />
+              <p className="mt-4 text-gray-600 text-center">
+                {monthlyCurrent} consecutive months of meeting weekly goals
+              </p>
 
-            {/* Gold trophies for monthly progress */}
-            <div className="mt-6 pt-4 border-t border-gray-100 w-full">
-              <p className="text-sm text-gray-500 mb-3">Monthly Trophies</p>
-              <div className="flex justify-center space-x-4">
-                {[1, 2, 3, 4, 5].map((month) => (
-                  <Trophy
-                    key={`month-${month}`}
-                    level="gold"
-                    size={32}
-                    opacity={month <= monthlyCurrent ? 1 : 0.3}
-                  />
-                ))}
+              {/* Gold trophies for monthly progress */}
+              <div className="mt-6 pt-4 border-t border-gray-100 w-full">
+                <p className="text-sm text-gray-500 mb-3">Monthly Trophies</p>
+                <div className="flex justify-center space-x-4">
+                  {[1, 2, 3, 4, 5].map((month) => (
+                    <Trophy
+                      key={`month-${month}`}
+                      level="gold"
+                      size={32}
+                      opacity={month <= monthlyCurrent ? 1 : 0.3}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
 
       <motion.div
@@ -261,10 +298,14 @@ const StreakTracker = ({
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-4">
-            <Trophy level={getTrophyLevel()} size={48} />
+            {getNextTrophyLevel() === "fire" ? (
+              <FaFire size={48} color="#f97316" />
+            ) : (
+              <Trophy level={getNextTrophyLevel()} size={48} />
+            )}
             <div className="text-sm text-gray-600">
               <p className="font-medium">Next Trophy</p>
-              <p className="capitalize">{getTrophyLevel()} Level</p>
+              <p className="capitalize">{getNextTrophyLevel()} Level</p>
             </div>
           </div>
         </div>

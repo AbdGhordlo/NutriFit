@@ -9,6 +9,7 @@ import { useAuth } from "../utils/useAuth";
 import { getTodaysMealsByUser } from "../api/MealPlannerAPI";
 import { getTodaysExercisesByUser } from "../api/ExercisePlannerAPI";
 import * as homeService from "../services/homeService";
+import * as progressService from "../services/progressService";
 
 interface Meal {
   id: number;
@@ -95,12 +96,30 @@ function Home() {
     // eslint-disable-next-line
   }, [today, token]);
 
+  // Helper to check if all meals and exercises are completed for today
+  const checkAndUpdateCompletedDaysCount = async (
+    updatedMeals: Meal[],
+    updatedExercises: Exercise[]
+  ) => {
+    if (!userId || !token) return;
+    const allMealsCompleted =
+      updatedMeals.length > 0 && updatedMeals.every((m) => m.completed);
+    const allExercisesCompleted =
+      updatedExercises.length > 0 && updatedExercises.every((e) => e.completed);
+    if (allMealsCompleted && allExercisesCompleted) {
+      // Increment completed_days_count
+      await progressService.updateCompletedDaysCount(userId, true, token);
+    } else {
+      // Decrement completed_days_count (if previously all were completed)
+      await progressService.updateCompletedDaysCount(userId, false, token);
+    }
+  };
+
   const toggleMeal = async (meal: Meal) => {
-    setMeals((prev) =>
-      prev.map((m) =>
-        m.id === meal.id ? { ...m, completed: !m.completed } : m
-      )
+    const updatedMeals = meals.map((m) =>
+      m.id === meal.id ? { ...m, completed: !m.completed } : m
     );
+    setMeals(updatedMeals);
     try {
       await homeService.upsertMealProgress(
         meal.id,
@@ -108,17 +127,17 @@ function Home() {
         !meal.completed,
         token
       );
+      await checkAndUpdateCompletedDaysCount(updatedMeals, exercises);
     } catch (e) {
       // Optionally handle error
     }
   };
 
   const toggleExercise = async (exercise: Exercise) => {
-    setExercises((prev) =>
-      prev.map((e) =>
-        e.id === exercise.id ? { ...e, completed: !e.completed } : e
-      )
+    const updatedExercises = exercises.map((e) =>
+      e.id === exercise.id ? { ...e, completed: !e.completed } : e
     );
+    setExercises(updatedExercises);
     try {
       await homeService.upsertExerciseProgress(
         exercise.id,
@@ -126,6 +145,7 @@ function Home() {
         !exercise.completed,
         token
       );
+      await checkAndUpdateCompletedDaysCount(meals, updatedExercises);
     } catch (e) {
       // Optionally handle error
     }

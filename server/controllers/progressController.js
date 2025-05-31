@@ -102,8 +102,75 @@ const updateProgressData = async (req, res) => {
   }
 };
 
+// Function to get completed_days_count for a user
+const getCompletedDaysCount = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    let result = await pool.query(
+      'SELECT completed_days_count FROM progress WHERE user_id = $1',
+      [userId]
+    );
+    if (result.rows.length === 0) {
+      // No entry, create one with default value 0
+      await pool.query(
+        'INSERT INTO progress (user_id, completed_days_count) VALUES ($1, 0)',
+        [userId]
+      );
+      result = await pool.query(
+        'SELECT completed_days_count FROM progress WHERE user_id = $1',
+        [userId]
+      );
+    }
+    res.json({ completed_days_count: result.rows[0].completed_days_count });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
+
+// Function to increment or decrement completed_days_count for a user
+const updateCompletedDaysCount = async (req, res) => {
+  const { userId } = req.params;
+  const { increment } = req.body; // expects { increment: true } or { increment: false }
+
+  try {
+    // Check if user progress exists
+    let result = await pool.query(
+      'SELECT completed_days_count FROM progress WHERE user_id = $1',
+      [userId]
+    );
+    if (result.rows.length === 0) {
+      // No entry, create one with default value 0
+      await pool.query(
+        'INSERT INTO progress (user_id, completed_days_count) VALUES ($1, 0)',
+        [userId]
+      );
+      result = await pool.query(
+        'SELECT completed_days_count FROM progress WHERE user_id = $1',
+        [userId]
+      );
+    }
+    let newCount = result.rows[0].completed_days_count;
+    if (increment) {
+      newCount += 1;
+    } else {
+      newCount = Math.max(0, newCount - 1);
+    }
+    await pool.query(
+      'UPDATE progress SET completed_days_count = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
+      [newCount, userId]
+    );
+    res.json({ completed_days_count: newCount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
+
 module.exports = {
   getProgressData,
   createOrUpdateProgressData,
-  updateProgressData
+  updateProgressData,
+  getCompletedDaysCount,
+  updateCompletedDaysCount
 };
