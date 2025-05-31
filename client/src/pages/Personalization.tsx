@@ -1,3 +1,5 @@
+// src/pages/Personalization.tsx
+
 import React, { useState, useEffect } from "react";
 import { ProgressBar } from "../components/ProgressBar";
 import { NavigationButtons } from "../components/NavigationButtons";
@@ -47,6 +49,7 @@ function Personalization() {
   const [cuisinePreferences, setCuisinePreferences] = useState<Cuisine[]>([]);
   const [dietPreference, setDietPreference] = useState<DietPreference>("none");
   const [healthIssues, setHealthIssues] = useState<HealthIssue[]>(["none"]);
+  const [specificAllergies, setSpecificAllergies] = useState<string[]>([]);
   const [mealsPerDay, setMealsPerDay] = useState(2);
   const [activityLevel, setActivityLevel] =
     useState<ActivityLevel>("very_light");
@@ -62,16 +65,14 @@ function Personalization() {
     if (id) setUserId(id);
   }, []);
 
-  // Fetch personalization data on component mount
+  // Fetch personalization data (including specificAllergies)
   useEffect(() => {
-    if (!userId) return; // Prevent running when userId is not set
-
+    if (!userId) return;
     const fetchPersonalizationData = async () => {
       if (!token) {
         setError("No token found. Please log in.");
         return;
       }
-
       setIsLoading(true);
       try {
         const response = await fetch(
@@ -84,20 +85,16 @@ function Personalization() {
             },
           }
         );
-
         if (response.status === 401) {
           localStorage.removeItem("token");
           window.location.href = "/login";
           return;
         }
-
         if (!response.ok) {
           throw new Error(`Error: ${response.status} ${response.statusText}`);
         }
-
         const data = await response.json();
         if (data.steps_data) {
-          // Populate state with fetched data
           const { steps_data } = data;
           setPersonalInfo(steps_data.step_1?.personalInfo || personalInfo);
           setFitnessGoal(steps_data.step_2?.fitnessGoal || fitnessGoal);
@@ -109,6 +106,9 @@ function Personalization() {
             steps_data.step_3?.dietPreference || dietPreference
           );
           setHealthIssues(steps_data.step_3?.healthIssues || healthIssues);
+          setSpecificAllergies(
+            steps_data.step_3?.specificAllergies || []
+          );
           setMealsPerDay(steps_data.step_3?.mealsPerDay || mealsPerDay);
           setActivityLevel(steps_data.step_4?.activityLevel || activityLevel);
           setBudget(steps_data.step_5?.budget || budget);
@@ -124,7 +124,6 @@ function Personalization() {
         setIsLoading(false);
       }
     };
-
     fetchPersonalizationData();
   }, [token, userId]);
 
@@ -134,11 +133,8 @@ function Personalization() {
       setError("No token found. Please log in.");
       return;
     }
-
     setIsLoading(true);
     try {
-      console.log(`Saving Step ${stepNumber} Data:`, stepData); // Log step data
-
       const response = await fetch(
         `http://localhost:5000/personalization/${userId}/step/${stepNumber}`,
         {
@@ -150,19 +146,16 @@ function Personalization() {
           body: JSON.stringify({ steps_data: stepData }),
         }
       );
-
       if (response.status === 401) {
         localStorage.removeItem("token");
         window.location.href = "/login";
         return;
       }
-
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
-
       const data = await response.json();
-      console.log("Backend Response:", data); // Log backend response
+      console.log("Backend Response:", data);
     } catch (err) {
       setError("Failed to save step data. Please try again.");
       setIsErrorModalOpen(true);
@@ -172,9 +165,19 @@ function Personalization() {
     }
   };
 
-  // Handle next step
+  // Handle next step with allergy validation on Step 3
   const handleNext = async () => {
-    // Save current step data before proceeding
+    // If on Step 3 and user has “allergies” but no specific selections:
+    if (
+      currentStep === 3 &&
+      healthIssues.includes("allergies") &&
+      specificAllergies.length === 0
+    ) {
+      alert("Please select at least one allergen before proceeding.");
+      return;
+    }
+
+    // Otherwise, gather all of stepData up to currentStep
     const stepData = {
       step_1: { personalInfo },
       step_2: { fitnessGoal, weightGoal },
@@ -183,18 +186,17 @@ function Personalization() {
         dietPreference,
         healthIssues,
         mealsPerDay,
+        specificAllergies, // include in payload
       },
       step_4: { activityLevel },
       step_5: { budget, hasKitchenInventory },
     };
-  
+
     if (currentStep < 5) {
       await saveStepData(currentStep, stepData[`step_${currentStep}`]);
       setCurrentStep((prev) => (prev + 1) as Step);
     } else {
-      // This is the "Finish" action
       await saveStepData(5, stepData.step_5);
-      console.log("Finish Button in Personalization pressed!");
       if (hasKitchenInventory) {
         navigate("/ingredients");
       } else {
@@ -202,28 +204,18 @@ function Personalization() {
       }
     }
   };
-  
 
-  // Handle back step
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => (prev - 1) as Step);
     }
   };
-
-  // Handle skip
-  const handleSkip = () => {
-    setIsSkipModalOpen(true);
-  };
-
-  // Handle skip confirmation
+  const handleSkip = () => setIsSkipModalOpen(true);
   const handleSkipConfirm = async () => {
     setIsSkipModalOpen(false);
-    // Save default data if skipped
     await saveStepData(currentStep, {});
   };
 
-    // If loading or error, we show the spinner or error modal.
   if (isLoading) {
     return (
       <div
@@ -238,7 +230,6 @@ function Personalization() {
       </div>
     );
   }
-
   if (error) {
     return (
       <ErrorModal
@@ -256,28 +247,21 @@ function Personalization() {
           <ProgressBar currentStep={currentStep} totalSteps={5} />
 
           <div className="bg-white p-8 rounded-xl shadow-lg">
-            {/** Step 1: Basic Information **/}
             {currentStep === 1 && (
               <Step1
                 personalInfo={personalInfo}
                 setPersonalInfo={setPersonalInfo}
               />
             )}
-
-            {/**
-             * Step 2: “Your Goals”
-             * Pass personalInfo.weight into Step2 as personalWeight.
-             */}
             {currentStep === 2 && (
               <Step2
-                personalWeight={personalInfo.weight}     // <-- NEW PROP
+                personalWeight={personalInfo.weight}
                 fitnessGoal={fitnessGoal}
                 setFitnessGoal={setFitnessGoal}
                 weightGoal={weightGoal}
                 setWeightGoal={setWeightGoal}
               />
             )}
-
             {currentStep === 3 && (
               <Step3
                 cuisinePreferences={cuisinePreferences}
@@ -286,6 +270,8 @@ function Personalization() {
                 setDietPreference={setDietPreference}
                 healthIssues={healthIssues}
                 setHealthIssues={setHealthIssues}
+                specificAllergies={specificAllergies}
+                setSpecificAllergies={setSpecificAllergies}
                 mealsPerDay={mealsPerDay}
                 setMealsPerDay={setMealsPerDay}
               />
@@ -313,7 +299,6 @@ function Personalization() {
                 isLastStep={currentStep === 5}
               />
             </div>
-
             <button
               onClick={handleSkip}
               className="w-full flex items-center justify-center mt-4 text-gray-500 hover:text-dark-green transition-colors"
