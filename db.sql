@@ -414,3 +414,10 @@ REFERENCES ingredient(id)
 ON DELETE CASCADE;
 
 ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;
+
+ALTER TABLE ingredient DROP CONSTRAINT unique_ingredient_name;
+ALTER TABLE ingredient DROP CONSTRAINT ingredient_name_key;
+
+-- Add the new composite unique constraint
+ALTER TABLE ingredient ADD CONSTRAINT ingredient_unique_nutrition 
+UNIQUE (name, category, calories, protein, carbs, fats, serving_size);
