@@ -1,4 +1,4 @@
-const pool = require('../db');
+const pool = require("../db");
 const Groq = require("groq-sdk");
 const groq = new Groq(process.env.GROQ_API_KEY);
 
@@ -32,13 +32,15 @@ const getAdoptedExercisePlanByUser = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: "No adopted exercise plan found for this user." });
+      return res
+        .status(404)
+        .json({ message: "No adopted exercise plan found for this user." });
     }
 
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send("Server error");
   }
 };
 
@@ -59,60 +61,71 @@ const getAllExercisePlansByUser = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: "No exercise plans found for this user." });
+      return res
+        .status(404)
+        .json({ message: "No exercise plans found for this user." });
     }
 
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send("Server error");
   }
 };
 
 // API: deepseek-r1-distill-llama-70b using Groq
 const generateExercisePlan = async (req, res) => {
-  try {
-    const { userId } = req.params;
+  const { userId } = req.params;
+  const MAX_RETRIES = 3; // Maximum number of retries if JSON parsing fails
+  let retryCount = 0;
 
-    // Fetch the user's personalization data
-    const personalizationData = await pool.query(
-      `SELECT steps_data FROM personalization WHERE user_id = $1`,
-      [userId]
-    );
+  while (retryCount < MAX_RETRIES) {
+    try {
+      // Fetch the user's personalization data
+      const personalizationData = await pool.query(
+        `SELECT steps_data FROM personalization WHERE user_id = $1`,
+        [userId]
+      );
 
-    if (personalizationData.rows.length === 0) {
-      return res.status(404).json({ error: "Personalization data not found" });
-    }
+      if (personalizationData.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Personalization data not found" });
+      }
 
-    const { steps_data } = personalizationData.rows[0];
-    
-    // Extract relevant personalization data for exercise planning
-    const personalInfo = steps_data.step_1?.personalInfo || {};
-    const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
-    const weightGoal = steps_data.step_2?.weightGoal || {};
-    const healthIssues = steps_data.step_3?.healthIssues || ["none"];
-    const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+      const { steps_data } = personalizationData.rows[0];
 
-    // Create a detailed user profile for the prompt
-    const userProfile = `
+      // Extract relevant personalization data for exercise planning
+      const personalInfo = steps_data.step_1?.personalInfo || {};
+      const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
+      const weightGoal = steps_data.step_2?.weightGoal || {};
+      const healthIssues = steps_data.step_3?.healthIssues || ["none"];
+      const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+
+      // Create a detailed user profile for the prompt
+      const userProfile = `
       User Profile:
       - Age: ${personalInfo.age}
       - Gender: ${personalInfo.gender}
       - Height: ${personalInfo.height} inches
       - Weight: ${personalInfo.weight} lbs
       - Fitness Goal: ${fitnessGoal.type}
-      - Weight Goal: ${weightGoal.targetWeight} lbs in ${weightGoal.timeframe} weeks
+      - Weight Goal: ${weightGoal.targetWeight} lbs in ${
+        weightGoal.timeframe
+      } weeks
       - Health Issues: ${healthIssues.join(", ")}
       - Current Activity Level: ${activityLevel}
     `;
 
-    // Define the system prompt with personalization
-    const SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate a personalized 7-day exercise plan in valid JSON format based on the user's profile. The plan should include multiple exercises for each day, tailored to the user's fitness level, goals, and available equipment.
+      // Define the system prompt with personalization
+      const SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate a personalized 7-day exercise plan in valid JSON format based on the user's profile. The plan should include multiple exercises for each day, tailored to the user's fitness level, goals, and available equipment.
 
     Requirements:
     - Focus on exercises that help achieve: ${fitnessGoal.type}
     - Consider the user's current activity level: ${activityLevel}
-    - Avoid exercises that might affect these health issues: ${healthIssues.join(", ")}
+    - Avoid exercises that might affect these health issues: ${healthIssues.join(
+      ", "
+    )}
     - Gradually increase intensity based on user's current fitness level
 
     The JSON structure should match this format:
@@ -150,46 +163,65 @@ const generateExercisePlan = async (req, res) => {
       ]
     }
     Include these exercise types each week:
-    - Strength training (${fitnessGoal.type === 'build_muscle' ? '4-5 days' : '2-3 days'})
-    - Cardiovascular (${fitnessGoal.type === 'lose_weight' ? '4-5 days' : '2-3 days'})
+    - Strength training (${
+      fitnessGoal.type === "build_muscle" ? "4-5 days" : "2-3 days"
+    })
+    - Cardiovascular (${
+      fitnessGoal.type === "lose_weight" ? "4-5 days" : "2-3 days"
+    })
     - Flexibility/mobility (2-3 days)
     Make sure the response is valid JSON and does not include any additional text or explanations.`;
 
-    // Make the request to Groq with both system prompt and user profile
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userProfile },
-      ],
-      model: "llama3-70b-8192",
-      temperature: 0.6,
-      max_tokens: 4096,
-      top_p: 0.95,
-      stream: false,
-    });
+      // Make the request to Groq with both system prompt and user profile
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userProfile },
+        ],
+        model: "llama3-70b-8192",
+        temperature: 0.6,
+        max_tokens: 4096,
+        top_p: 0.95,
+        response_format: { type: "json_object" }, // Request JSON mode
+        stream: false,
+      });
 
-    // Extract and validate JSON response
-    const jsonMatch = chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("No valid JSON found in AI response");
+      // Extract and validate JSON response
+      const jsonMatch =
+        chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("No valid JSON found in AI response");
+      }
+
+      let generatedPlan;
+      try {
+        generatedPlan = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        console.error("Failed to parse AI response as JSON:", parseError);
+        throw new Error("AI response is not valid JSON");
+      }
+
+      if (
+        !generatedPlan.exercise_plan ||
+        !generatedPlan.exercises ||
+        !Array.isArray(generatedPlan.exercises)
+      ) {
+        throw new Error("AI response does not match the expected structure");
+      }
+
+      return res.status(200).json(generatedPlan);
+    } catch (error) {
+      retryCount++;
+      console.error(`Attempt ${retryCount} failed:`, error.message);
+
+      if (retryCount >= MAX_RETRIES) {
+        console.error("Max retries reached, giving up");
+        return res.status(500).json({
+          error: "Failed to generate meal plan",
+          details: error.message,
+        });
+      }
     }
-
-    let generatedPlan;
-    try {
-      generatedPlan = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
-      console.error("Failed to parse AI response as JSON:", parseError);
-      throw new Error("AI response is not valid JSON");
-    }
-
-    if (!generatedPlan.exercise_plan || !generatedPlan.exercises || !Array.isArray(generatedPlan.exercises)) {
-      throw new Error("AI response does not match the expected structure");
-    }
-
-    res.status(200).json(generatedPlan);
-  } catch (error) {
-    console.error("Error generating exercise plan:", error);
-    res.status(500).json({ error: "Failed to generate exercise plan" });
   }
 };
 
@@ -209,21 +241,37 @@ const saveExercisePlan = async (req, res) => {
     for (const exercise of plan.exercises) {
       const exerciseResult = await pool.query(
         `INSERT INTO exercise (name, description, calories_burned, has_reps_sets, has_duration) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [exercise.name, exercise.description, exercise.calories_burned, exercise.has_reps_sets, exercise.has_duration]
+        [
+          exercise.name,
+          exercise.description,
+          exercise.calories_burned,
+          exercise.has_reps_sets,
+          exercise.has_duration,
+        ]
       );
 
       const exerciseId = exerciseResult.rows[0].id;
 
       await pool.query(
         `INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, time, reps, sets, duration) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [exercisePlanId, exerciseId, exercise.day_number, exercise.time, exercise.reps, exercise.sets, exercise.duration]
+        [
+          exercisePlanId,
+          exerciseId,
+          exercise.day_number,
+          exercise.time,
+          exercise.reps,
+          exercise.sets,
+          exercise.duration,
+        ]
       );
     }
 
-    res.status(200).json({ message: "Exercise plan saved successfully!", exercisePlanId });
+    res
+      .status(200)
+      .json({ message: "Exercise plan saved successfully!", exercisePlanId });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send("Server error");
   }
 };
 
@@ -243,14 +291,28 @@ const saveAndAdoptExercisePlan = async (req, res) => {
     for (const exercise of plan.exercises) {
       const exerciseResult = await pool.query(
         `INSERT INTO exercise (name, description, calories_burned, has_reps_sets, has_duration) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [exercise.name, exercise.description, exercise.calories_burned, exercise.has_reps_sets, exercise.has_duration]
+        [
+          exercise.name,
+          exercise.description,
+          exercise.calories_burned,
+          exercise.has_reps_sets,
+          exercise.has_duration,
+        ]
       );
 
       const exerciseId = exerciseResult.rows[0].id;
 
       await pool.query(
         `INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, time, reps, sets, duration) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [exercisePlanId, exerciseId, exercise.day_number, exercise.time, exercise.reps, exercise.sets, exercise.duration]
+        [
+          exercisePlanId,
+          exerciseId,
+          exercise.day_number,
+          exercise.time,
+          exercise.reps,
+          exercise.sets,
+          exercise.duration,
+        ]
       );
     }
 
@@ -266,10 +328,64 @@ const saveAndAdoptExercisePlan = async (req, res) => {
       [exercisePlanId]
     );
 
-    res.status(200).json({ message: "Exercise plan saved and adopted successfully!" });
+    res
+      .status(200)
+      .json({ message: "Exercise plan saved and adopted successfully!" });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send("Server error");
+  }
+};
+
+// Remove a saved exercise plan
+const removeSavedPlan = async (req, res) => {
+  const { userId, planId } = req.body;
+
+  try {
+    // First check if the plan exists and belongs to the user
+    const planCheck = await pool.query(
+      `SELECT id FROM exercise_plan 
+       WHERE id = $1 AND user_id = $2`,
+      [planId, userId]
+    );
+
+    if (planCheck.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Exercise plan not found or doesn't belong to user" });
+    }
+
+    // Check if this is the adopted plan
+    const adoptedCheck = await pool.query(
+      `SELECT is_adopted_plan FROM exercise_plan 
+       WHERE id = $1`,
+      [planId]
+    );
+
+    if (adoptedCheck.rows[0].is_adopted_plan) {
+      return res
+        .status(400)
+        .json({ message: "Cannot remove currently adopted plan" });
+    }
+
+    // Delete the exercise plan (cascade will handle exercise_plan_exercise entries)
+    const result = await pool.query(
+      `DELETE FROM exercise_plan 
+       WHERE id = $1 
+       RETURNING id, name`,
+      [planId]
+    );
+
+    res.json({
+      message: "Exercise plan removed successfully",
+      removedPlan: result.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Server error",
+      details: err.message,
+    });
   }
 };
 
@@ -292,7 +408,7 @@ const adoptExercisePlan = async (req, res) => {
     res.status(200).json({ message: "Exercise plan adopted successfully!" });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send("Server error");
   }
 };
 
@@ -303,4 +419,5 @@ module.exports = {
   saveExercisePlan,
   saveAndAdoptExercisePlan,
   adoptExercisePlan,
+  removeSavedPlan,
 };

@@ -6,6 +6,7 @@ const {
   saveAndAdoptExercisePlan,
   adoptExercisePlan,
   getAllExercisePlansByUser,
+  removeSavedPlan,
 } = require('../controllers/exercisePlannerController');
 
 const router = express.Router();
@@ -27,5 +28,7 @@ router.post('/adopt-exercise-plan', adoptExercisePlan);
 
 // Generate an exercise plan using AI
 router.post('/:userId/generate-exercise-plan', generateExercisePlan);
+
+router.delete('/remove-exercise-plan', removeSavedPlan);
 
 module.exports = router;

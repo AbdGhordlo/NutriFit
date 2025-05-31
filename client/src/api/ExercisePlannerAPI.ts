@@ -140,3 +140,26 @@ export const getAllExercisePlansByUser = async (
     throw error;
   }
 };
+
+export const removeSavedPlan = async (userId: number, planId: number, token: string) => {
+  try {
+    const response = await fetch("http://localhost:5000/exercise-planner/remove-exercise-plan", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId, planId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error removing meal plan:", error);
+    throw error;
+  }
+};

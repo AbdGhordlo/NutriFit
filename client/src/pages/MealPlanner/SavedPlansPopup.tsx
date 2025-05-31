@@ -1,10 +1,8 @@
-import React from "react";
-
 export default function SavedPlansPopup({
   savedPlans,
   handleAdoptPlan,
   closePopup,
-  handleRemovePlan
+  handleRemovePlan,
 }: any) {
   return (
     <div className="popup-overlay">
@@ -23,16 +21,18 @@ export default function SavedPlansPopup({
                 </button>
               ) : (
                 <>
-                <button
-                  className="adopt-button"
-                  onClick={() => handleAdoptPlan(plan.meal_plan_id)}
-                >
-                  Adopt
-                </button>
-                <button
-                  className="remove-button"
-                  onClick={() => handleRemovePlan(plan.meal_plan_id)}
-                >Remove</button>
+                  <button
+                    className="adopt-button"
+                    onClick={() => handleAdoptPlan(plan.meal_plan_id)}
+                  >
+                    Adopt
+                  </button>
+                  <button
+                    className="remove-button"
+                    onClick={() => handleRemovePlan(plan.meal_plan_id)}
+                  >
+                    Remove
+                  </button>
                 </>
               )}
             </div>

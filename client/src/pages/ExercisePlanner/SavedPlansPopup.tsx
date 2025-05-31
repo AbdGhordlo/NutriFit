@@ -4,6 +4,7 @@ export default function SavedPlansPopup({
   savedPlans,
   handleAdoptPlan,
   closePopup,
+  handleRemovePlan,
 }: any) {
   return (
     <div className="popup-overlay">
@@ -21,20 +22,25 @@ export default function SavedPlansPopup({
                   Adopted
                 </button>
               ) : (
-                <button
-                  className="adopt-button"
-                  onClick={() => handleAdoptPlan(plan.exercise_plan_id)}
-                >
-                  Adopt
-                </button>
+                <>
+                  <button
+                    className="adopt-button"
+                    onClick={() => handleAdoptPlan(plan.exercise_plan_id)}
+                  >
+                    Adopt
+                  </button>
+                  <button
+                    className="remove-button"
+                    onClick={() => handleRemovePlan(plan.exercise_plan_id)}
+                  >
+                    Remove
+                  </button>
+                </>
               )}
             </div>
           ))}
         </div>
-        <button
-          className="close-button"
-          onClick={closePopup}
-        >
+        <button className="close-button" onClick={closePopup}>
           Close
         </button>
       </div>

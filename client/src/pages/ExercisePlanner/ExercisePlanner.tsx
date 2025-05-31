@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +15,7 @@ import {
   saveAndAdoptExercisePlan,
   adoptExercisePlan,
   getAllExercisePlansByUser,
+  removeSavedPlan,
 } from "../../api/ExercisePlannerAPI";
 import { getUserIdFromToken } from "../../utils/auth";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -187,6 +188,48 @@ export default function ExercisePlanner() {
     return day === date.getDay() ? true : false;
   };
 
+  const handleRemoveSavedPlan = async (planId: number) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete this meal plan?")) {
+      await removeSavedPlan(Number(userId), planId, token);
+      
+      // Refresh the saved plans list
+      const updatedPlans = await getAllExercisePlansByUser(Number(userId), token);
+      setSavedPlans(updatedPlans);
+      
+      alert("Meal plan removed successfully!");
+    }
+  } catch (error) {
+    console.error("Error removing meal plan:", error);
+    alert(error.message || "Failed to remove meal plan");
+  }
+};
+
+const handleRegeneratePlan = async () => {
+  setIsGenerating(true);
+  
+  if (!token) {
+    console.error("No token found, redirecting to login...");
+    window.location.href = "/login";
+    return;
+  }
+
+  try {
+    const plan = await generateExercisePlan(Number(userId), token);
+    setGeneratedPlan(plan);
+  } catch (error) {
+    console.error("Error regenerating exercise plan:", error);
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
   const handleSavePlan = async () => {
     if (!generatedPlan) return;
 
@@ -338,6 +381,7 @@ export default function ExercisePlanner() {
           savedPlans={savedPlans}
           handleAdoptPlan={handleAdoptPlan}
           closePopup={() => setShowSavedPlansPopup(false)}
+          handleRemovePlan={handleRemoveSavedPlan}
         />
       )}
 
@@ -347,6 +391,7 @@ export default function ExercisePlanner() {
           isGenerating={isGenerating}
           handleSavePlan={handleSavePlan}
           handleSaveAndAdoptPlan={handleSaveAndAdoptPlan}
+          handleRegeneratePlan={handleRegeneratePlan}
           handleClosePopup={handleClosePopup}
         />
       )}

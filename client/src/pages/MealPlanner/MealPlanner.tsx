@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -72,7 +72,9 @@ export default function MealPlanner() {
 
       // Group meals by day
       // Find unique sorted day_numbers
-      const dayNumbers = ([...new Set(data.map(meal => meal.day_number))] as number[]).sort((a, b) => a - b);
+      const dayNumbers = (
+        [...new Set(data.map((meal) => meal.day_number))] as number[]
+      ).sort((a, b) => a - b);
 
       // Map real day_number to 0-based index
       const dayNumberToIndex: { [key: number]: number } = {};
@@ -86,7 +88,7 @@ export default function MealPlanner() {
         }
         acc[index].meals.push({
           id: meal.meal_plan_meal_id,
-          mealPlanMealId:meal.meal_plan_meal_id,
+          mealPlanMealId: meal.meal_plan_meal_id,
           meal_id: meal.meal_id,
           name: meal.meal_name,
           description: meal.meal_description,
@@ -98,7 +100,7 @@ export default function MealPlanner() {
         });
         return acc;
       }, []);
-      console.log("groupedData: ",groupedData);
+      console.log("groupedData: ", groupedData);
       setWeeklyPlan(groupedData);
     } catch (error) {
       console.error("Error fetching meal plan:", error);
@@ -106,7 +108,7 @@ export default function MealPlanner() {
       setLoading(false); // Set loading to false after fetching
     }
   };
-  
+
   const handleFetchSavedPlans = async () => {
     try {
       if (!token) {
@@ -163,150 +165,177 @@ export default function MealPlanner() {
     }
   };
 
+  const handleRegeneratePlan = async () => {
+    setIsGenerating(true);
 
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
 
+    try {
+      const plan = await generateMealPlan(Number(userId), token);
+      setGeneratedPlan(plan);
+    } catch (error) {
+      console.error("Error regenerating meal plan:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // ------------------------------------------- Edit Plan functions ------------------------------------
   const fetchFavoriteMeals = async () => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await getFavoriteMeals(Number(userId), token);
+      setFavoriteMeals(data);
+    } catch (error) {
+      console.error("Error fetching favorite meals:", error);
     }
-    
-    const data = await getFavoriteMeals(Number(userId), token);
-    setFavoriteMeals(data);
-  } catch (error) {
-    console.error("Error fetching favorite meals:", error);
-  }
-};
+  };
 
-const handleRegenerateDay = async (dayNumber: number) => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
+  const handleRegenerateDay = async (dayNumber: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const regeneratedDay = await regenerateDay(
+        Number(userId),
+        dayNumber,
+        token
+      );
+
+      await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
+
+      alert("Day regenerated successfully!");
+    } catch (error) {
+      console.error("Error regenerating day:", error);
+      alert("Failed to regenerate day");
     }
+  };
 
-    const regeneratedDay = await regenerateDay(Number(userId), dayNumber, token);
-    
-    await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
-    
-    alert("Day regenerated successfully!");
-  } catch (error) {
-    console.error("Error regenerating day:", error);
-    alert("Failed to regenerate day");
-  }
-};
+  const handleRegenerateMeal = async (mealPlanMealId: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
 
-const handleRegenerateMeal = async (mealPlanMealId: number) => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
+      const regeneratedMeal = await regenerateMeal(
+        Number(userId),
+        mealPlanMealId,
+        token
+      );
+      await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
+
+      alert("Meal regenerated successfully!");
+    } catch (error) {
+      console.error("Error regenerating meal:", error);
+      alert("Failed to regenerate meal");
     }
+  };
 
-    const regeneratedMeal = await regenerateMeal(Number(userId), mealPlanMealId, token);
-    await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
-    
-    alert("Meal regenerated successfully!");
-  } catch (error) {
-    console.error("Error regenerating meal:", error);
-    alert("Failed to regenerate meal");
-  }
-};
+  const handleAddToFavorites = async (meal: Meal) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
 
-const handleAddToFavorites = async (meal: Meal) => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
+      await addFavoriteMeal(Number(userId), meal.id, token);
+
+      // Refresh favorites list
+      const updatedFavorites = await getFavoriteMeals(Number(userId), token);
+      setFavoriteMeals(updatedFavorites);
+
+      alert("Meal added to favorites!");
+    } catch (error) {
+      console.error("Error adding meal to favorites:", error);
+      alert("Failed to add meal to favorites");
     }
+  };
 
-    await addFavoriteMeal(Number(userId), meal.id, token);
-    
-    // Refresh favorites list
-    const updatedFavorites = await getFavoriteMeals(Number(userId), token);
-    setFavoriteMeals(updatedFavorites);
-    
-    alert("Meal added to favorites!");
-  } catch (error) {
-    console.error("Error adding meal to favorites:", error);
-    alert("Failed to add meal to favorites");
-  }
-};
+  const handleRemoveSavedPlan = async (planId: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
 
-const handleRemoveSavedPlan = async (planId: number) => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
+      if (window.confirm("Are you sure you want to delete this meal plan?")) {
+        await removeSavedPlan(Number(userId), planId, token);
+
+        // Refresh the saved plans list
+        const updatedPlans = await getAllMealPlansByUser(Number(userId), token);
+        setSavedPlans(updatedPlans);
+
+        alert("Meal plan removed successfully!");
+      }
+    } catch (error) {
+      console.error("Error removing meal plan:", error);
+      alert(error.message || "Failed to remove meal plan");
     }
+  };
 
-    if (window.confirm("Are you sure you want to delete this meal plan?")) {
-      await removeSavedPlan(Number(userId), planId, token);
-      
-      // Refresh the saved plans list
-      const updatedPlans = await getAllMealPlansByUser(Number(userId), token);
-      setSavedPlans(updatedPlans);
-      
-      alert("Meal plan removed successfully!");
+  const handleRemoveFromFavorites = async (mealId: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      await removeFavoriteMeal(Number(userId), mealId, token);
+
+      // Refresh favorites list
+      const updatedFavorites = await getFavoriteMeals(Number(userId), token);
+      setFavoriteMeals(updatedFavorites);
+
+      alert("Meal removed from favorites!");
+    } catch (error) {
+      console.error("Error removing meal from favorites:", error);
+      alert("Failed to remove meal from favorites");
     }
-  } catch (error) {
-    console.error("Error removing meal plan:", error);
-    alert(error.message || "Failed to remove meal plan");
-  }
-};
+  };
 
-const handleRemoveFromFavorites = async (mealId: number) => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
+  const handleReplaceWithFavorite = async (
+    mealId: number,
+    favoriteMeal: Meal
+  ) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const updatedMeal = await replaceMealWithFavorite(
+        Number(userId),
+        mealId,
+        favoriteMeal.id,
+        token
+      );
+
+      await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
+
+      alert("Meal replaced with favorite successfully!");
+    } catch (error) {
+      console.error("Error replacing meal with favorite:", error);
+      alert("Failed to replace meal with favorite");
     }
-
-    await removeFavoriteMeal(Number(userId), mealId, token);
-    
-    // Refresh favorites list
-    const updatedFavorites = await getFavoriteMeals(Number(userId), token);
-    setFavoriteMeals(updatedFavorites);
-    
-    alert("Meal removed from favorites!");
-  } catch (error) {
-    console.error("Error removing meal from favorites:", error);
-    alert("Failed to remove meal from favorites");
-  }
-};
-
-const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
-    }
-
-    const updatedMeal = await replaceMealWithFavorite(
-      Number(userId),
-      mealId,
-      favoriteMeal.id,
-      token
-    );
-    
-    await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
-
-    alert("Meal replaced with favorite successfully!");
-  } catch (error) {
-    console.error("Error replacing meal with favorite:", error);
-    alert("Failed to replace meal with favorite");
-  }
-};
+  };
 
   // ----------------------------------------------------------------
 
@@ -453,7 +482,9 @@ const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => 
           <button
             onClick={handleNextDay}
             disabled={currentDay >= weeklyPlan.length - 1}
-            className={`nav-button ${currentDay >= weeklyPlan.length - 1 ? "disabled" : ""}`}
+            className={`nav-button ${
+              currentDay >= weeklyPlan.length - 1 ? "disabled" : ""
+            }`}
           >
             <ChevronRight className="nav-icon" />
           </button>
@@ -466,8 +497,8 @@ const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => 
           <span>Generate Plan</span>
         </button>
 
-        <button 
-          className="edit-button" 
+        <button
+          className="edit-button"
           onClick={() => {
             setShowEditPlanPopup(true);
             fetchFavoriteMeals();
@@ -498,6 +529,7 @@ const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => 
           isGenerating={isGenerating}
           handleSavePlan={handleSavePlan}
           handleSaveAndAdoptPlan={handleSaveAndAdoptPlan}
+          handleRegeneratePlan={handleRegeneratePlan}
           handleClosePopup={handleClosePopup}
         />
       )}
