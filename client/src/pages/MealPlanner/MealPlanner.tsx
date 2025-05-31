@@ -22,6 +22,7 @@ import {
   removeFavoriteMeal,
   replaceMealWithFavorite,
   getAdoptedMealPlan,
+  removeSavedPlan,
 } from "../../api/MealPlannerAPI";
 import { getUserIdFromToken } from "../../utils/auth";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -236,6 +237,29 @@ const handleAddToFavorites = async (meal: Meal) => {
   } catch (error) {
     console.error("Error adding meal to favorites:", error);
     alert("Failed to add meal to favorites");
+  }
+};
+
+const handleRemoveSavedPlan = async (planId: number) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete this meal plan?")) {
+      await removeSavedPlan(Number(userId), planId, token);
+      
+      // Refresh the saved plans list
+      const updatedPlans = await getAllMealPlansByUser(Number(userId), token);
+      setSavedPlans(updatedPlans);
+      
+      alert("Meal plan removed successfully!");
+    }
+  } catch (error) {
+    console.error("Error removing meal plan:", error);
+    alert(error.message || "Failed to remove meal plan");
   }
 };
 
@@ -463,6 +487,7 @@ const handleReplaceWithFavorite = async (mealId: number, favoriteMeal: Meal) => 
         <SavedPlansPopup
           savedPlans={savedPlans}
           handleAdoptPlan={handleAdoptPlan}
+          handleRemovePlan={handleRemoveSavedPlan}
           closePopup={() => setShowSavedPlansPopup(false)}
         />
       )}

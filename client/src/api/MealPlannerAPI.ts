@@ -71,6 +71,29 @@ export const saveMealPlan = async (userId: number, plan: any, token: string) => 
   }
 };
 
+export const removeSavedPlan = async (userId: number, planId: number, token: string) => {
+  try {
+    const response = await fetch("http://localhost:5000/meal-planner/remove-meal-plan", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId, planId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error removing meal plan:", error);
+    throw error;
+  }
+};
+
 export const saveAndAdoptMealPlan = async (userId: number, plan: any, token: string) => {
   try {
     const response = await fetch("http://localhost:5000/meal-planner/save-and-adopt-meal-plan", {
@@ -195,10 +218,11 @@ export const removeFavoriteMeal = async (userId: number, mealId: number, token: 
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to remove favorite meal");
     }
   } catch (error) {
-    console.error("Error removing meal from favorites:", error);
+    console.error("Error removing favorite meal:", error);
     throw error;
   }
 };

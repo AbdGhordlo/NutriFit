@@ -57,19 +57,18 @@ CREATE TABLE exercise (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ingredient Table
 CREATE TABLE ingredient (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     category VARCHAR(50),
     calories INT,
-    protein INT,
-    carbs INT,
-    fats INT,
+    protein NUMERIC,
+    carbs NUMERIC,
+    fats NUMERIC,
+    serving_size TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 -- Notification Table
 CREATE TABLE notification (
     id SERIAL PRIMARY KEY,
@@ -103,23 +102,23 @@ CREATE TABLE exercise_plan_exercise (
     exercise_order INT NOT NULL DEFAULT 1
 );
 
--- User Ingredients Table
 CREATE TABLE user_ingredients (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    ingredient_id INT REFERENCES ingredient(id) ON DELETE CASCADE,
     in_stock BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- User Ingredient Ingredient Table
-CREATE TABLE user_ingredient_ingredient (
-    id SERIAL PRIMARY KEY,
-    user_ingredients_id INT REFERENCES user_ingredients(id) ON DELETE CASCADE,
-    ingredient_id INT REFERENCES ingredient(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_ingredients_id, ingredient_id)
-);
+-- -- User Ingredient Ingredient Table
+-- CREATE TABLE user_ingredient_ingredient (
+--     id SERIAL PRIMARY KEY,
+--     user_ingredients_id INT REFERENCES user_ingredients(id) ON DELETE CASCADE,
+--     ingredient_id INT REFERENCES ingredient(id) ON DELETE CASCADE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     UNIQUE (user_ingredients_id, ingredient_id)
+-- );
 
 -- User Notification Table
 CREATE TABLE user_notification (
@@ -157,6 +156,14 @@ CREATE TABLE personalization (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id)
+);
+
+CREATE TABLE user_favorite_meals (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    meal_id INT REFERENCES meal(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, meal_id) -- Ensure a user can't favorite the same meal multiple times
 );
 
 -- Data
@@ -331,68 +338,60 @@ VALUES
 -- ON CONFLICT (user_id) 
 -- DO NOTHING; -- Skip if the user already has settings
 
---Insert Ingredients
-INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
-VALUES 
-  ('Spinach', 'Vegetables', 23, 2.9, 3.6, 0.4),
-  ('Chicken Breast', 'Meat & Poultry', 165, 31, 0, 3.6),
-  ('Brown Rice', 'Grains & Cereals', 111, 2.6, 23, 0.9);
+-- --Insert Ingredients
+-- INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
+-- VALUES 
+--   ('Spinach', 'Vegetables', 23, 2.9, 3.6, 0.4),
+--   ('Chicken Breast', 'Meat & Poultry', 165, 31, 0, 3.6),
+--   ('Brown Rice', 'Grains & Cereals', 111, 2.6, 23, 0.9);
 
-INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
-VALUES ('Salmon', 'Seafood', 208, 20, 0, 13)
-RETURNING id;
+-- INSERT INTO ingredient (name, category, calories, protein, carbs, fats)
+-- VALUES ('Salmon', 'Seafood', 208, 20, 0, 13)
+-- RETURNING id;
 
--- Ardından kullanıcıya bu malzemeyi ekleyin
-INSERT INTO user_ingredients (user_id)
-VALUES (1)
-RETURNING id;
+-- -- Ardından kullanıcıya bu malzemeyi ekleyin
+-- INSERT INTO user_ingredients (user_id)
+-- VALUES (1)
+-- RETURNING id;
 
--- Son olarak ilişkiyi ekleyin
-INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
-VALUES (1, 2);
+-- -- Son olarak ilişkiyi ekleyin
+-- INSERT INTO user_ingredient_ingredient (user_ingredients_id, ingredient_id)
+-- VALUES (1, 2);
 
-WITH duplicates AS (
-  SELECT
-    	id,
-    ROW_NUMBER() OVER (
-      PARTITION BY name
-      ORDER BY id
-    ) AS rn
-  FROM ingredient
-)
-DELETE FROM ingredient
-WHERE id IN (
-  SELECT id FROM duplicates WHERE rn > 1
-);
+-- WITH duplicates AS (
+--   SELECT
+--     	id,
+--     ROW_NUMBER() OVER (
+--       PARTITION BY name
+--       ORDER BY id
+--     ) AS rn
+--   FROM ingredient
+-- )
+-- DELETE FROM ingredient
+-- WHERE id IN (
+--   SELECT id FROM duplicates WHERE rn > 1
+-- );
 
-ALTER TABLE ingredient
-ADD CONSTRAINT unique_ingredient_name UNIQUE (name);
+-- ALTER TABLE ingredient
+-- ADD CONSTRAINT unique_ingredient_name UNIQUE (name);
 
--- protein, carbs and fats changed to NUMERIC instead of integers
-ALTER TABLE ingredients
-ALTER COLUMN protein TYPE NUMERIC USING protein::NUMERIC,
-ALTER COLUMN carbs TYPE NUMERIC USING carbs::NUMERIC,
-ALTER COLUMN fats TYPE NUMERIC USING fats::NUMERIC;
-ALTER TABLE ingredient
-ADD COLUMN serving_size TEXT;
+-- -- protein, carbs and fats changed to NUMERIC instead of integers
+-- ALTER TABLE ingredients
+-- ALTER COLUMN protein TYPE NUMERIC USING protein::NUMERIC,
+-- ALTER COLUMN carbs TYPE NUMERIC USING carbs::NUMERIC,
+-- ALTER COLUMN fats TYPE NUMERIC USING fats::NUMERIC;
+-- ALTER TABLE ingredient
+-- ADD COLUMN serving_size TEXT;
 
 
----
-ALTER TABLE user_ingredients
-ADD COLUMN ingredient_id INTEGER;
+-- ---
+-- ALTER TABLE user_ingredients
+-- ADD COLUMN ingredient_id INTEGER;
 
-UPDATE user_ingredients
-SET ingredient_id = 1
-WHERE id = 1;
+-- ALTER TABLE user_ingredients
+-- ADD CONSTRAINT fk_ingredient
+-- FOREIGN KEY (ingredient_id)
+-- REFERENCES ingredient(id)
+-- ON DELETE CASCADE;
 
-UPDATE user_ingredients
-SET ingredient_id = 2
-WHERE id = 2;
-
-ALTER TABLE user_ingredients
-ADD CONSTRAINT fk_ingredient
-FOREIGN KEY (ingredient_id)
-REFERENCES ingredient(id)
-ON DELETE CASCADE;
-
-ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;
+-- ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;

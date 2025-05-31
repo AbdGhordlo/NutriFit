@@ -12,6 +12,7 @@ const {
   regenerateDay,
   regenerateMeal,
   replaceMealWithFavorite,
+  removeSavedPlan,
 } = require('../controllers/mealPlannerController');
 
 const router = express.Router();
@@ -34,6 +35,7 @@ router.post('/adopt-meal-plan', adoptMealPlan);
 // Generate a meal plan using AI
 router.post('/:userId/generate-meal-plan', getMealPlan);
 
+router.delete('/remove-meal-plan', removeSavedPlan);
 
 // ------------------- Edit Plan
 

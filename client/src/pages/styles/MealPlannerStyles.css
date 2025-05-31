@@ -181,3 +181,20 @@
   color: #6b7280;
   font-size: 14px;
 }
+
+.remove-button {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  margin-left: 5px;
+}
+
+.remove-button:hover {
+  background-color: #ff5252;
+}

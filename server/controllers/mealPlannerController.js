@@ -93,94 +93,142 @@ const getAllMealPlansByUser = async (req, res) => {
 };
 
 const getMealPlan = async (req, res) => {
-  try {
     const { userId } = req.params;
+    const MAX_RETRIES = 3; // Maximum number of retries if JSON parsing fails
+    let retryCount = 0;
 
-    // Fetch both personalization data and ingredients in parallel
-    const [personalizationData, ingredients] = await Promise.all([
-      pool.query(`SELECT steps_data FROM personalization WHERE user_id = $1`, [userId]),
-      getInStockUserIngredients(userId) // Use the new function
-    ]);
+  while (retryCount < MAX_RETRIES) {
+    try {
+      // Fetch both personalization data and ingredients in parallel
+      const [personalizationData, ingredients] = await Promise.all([
+        pool.query(`SELECT steps_data FROM personalization WHERE user_id = $1`, [userId]),
+        getInStockUserIngredients(userId)
+      ]);
+      console.log("ingredients given to AI: ",ingredients);
 
-    if (personalizationData.rows.length === 0) {
-      return res.status(404).json({ error: "Personalization data not found" });
-    }
+      if (personalizationData.rows.length === 0) {
+        return res.status(404).json({ error: "Personalization data not found" });
+      }
 
-    const { steps_data } = personalizationData.rows[0];
-    
-    // Extract relevant personalization data
-    const personalInfo = steps_data.step_1?.personalInfo || {};
-    const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
-    const weightGoal = steps_data.step_2?.weightGoal || {};
-    const cuisinePreferences = steps_data.step_3?.cuisinePreferences || [];
-    const dietPreference = steps_data.step_3?.dietPreference || "none";
-    const healthIssues = steps_data.step_3?.healthIssues || ["none"];
-    const mealsPerDay = steps_data.step_3?.mealsPerDay || 3;
-    const activityLevel = steps_data.step_4?.activityLevel || "moderate";
-    const budget = steps_data.step_5?.budget || "basic";
+      const { steps_data } = personalizationData.rows[0];
+      
+      // Extract relevant personalization data
+      const personalInfo = steps_data.step_1?.personalInfo || {};
+      const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
+      const weightGoal = steps_data.step_2?.weightGoal || {};
+      const cuisinePreferences = steps_data.step_3?.cuisinePreferences || [];
+      const dietPreference = steps_data.step_3?.dietPreference || "none";
+      const healthIssues = steps_data.step_3?.healthIssues || ["none"];
+      const mealsPerDay = steps_data.step_3?.mealsPerDay || 3;
+      const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+      const budget = steps_data.step_5?.budget || "basic";
 
-    // Format ingredients for the prompt
-    const ingredientsList = ingredients.map(ing => 
-      `${ing.ingredient_name} (${ing.ingredient_category})`
-    ).join(", ");
+      // Format ingredients for the prompt
+      const ingredientsList = ingredients.map(ing => 
+        `${ing.ingredient_name} (${ing.ingredient_category})`
+      ).join(", ");
 
     // Create a detailed user profile for the prompt
     const userProfile = `
       User Profile:
       - Age: ${personalInfo.age}
       - Gender: ${personalInfo.gender}
-      - Height: ${personalInfo.height} inches
-      - Weight: ${personalInfo.weight} lbs
+      - Height: ${personalInfo.height} cm
+      - Weight: ${personalInfo.weight} kgs
       - Fitness Goal: ${fitnessGoal.type}
-      - Weight Goal: ${weightGoal.targetWeight} lbs in ${weightGoal.timeframe} weeks
+      - Weight Goal: ${weightGoal.targetWeight} kgs in ${weightGoal.timeframe} weeks
       - Cuisine Preferences: ${cuisinePreferences.join(", ")}
       - Diet Preference: ${dietPreference}
       - Health Issues: ${healthIssues.join(", ")}
-      - Meals Per Day: ${mealsPerDay}
       - Activity Level: ${activityLevel}
       - Budget: ${budget}
       - Available Ingredients: ${ingredientsList}
-    `;
-
+      `;
+      // - Meals Per Day: ${mealsPerDay} I removed this temporarily
+      
     // Define the system prompt with personalization
-        const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a personalized 7-day meal plan in valid JSON format based on the user's 
-        profile and available ingredients. The plan should include meals for breakfast, lunch, and dinner each day, or more meals if specified. 
-        Each meal should have a name, description, calories, protein, carbs, fats, and time. Consider the user's dietary restrictions, preferences, 
-        goals, and available ingredients.
+    //     const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a personalized 7-day meal plan in valid JSON format based on the user's 
+    //     profile and available ingredients. The plan should include meals for breakfast, lunch, and dinner each day, or more meals if specified. 
+    //     Each meal should have a name, description, calories, protein, carbs, fats, and time. Consider the user's dietary restrictions, preferences, 
+    //     goals, and available ingredients.
 
-    Requirements:
-    - Generate exactly ${mealsPerDay} meals for this day
-    - Strictly follow dietary restrictions: ${dietPreference}
-    - Avoid ingredients that might affect these health issues: ${healthIssues.join(", ")}
-    - Prioritize these cuisines: ${cuisinePreferences.join(", ")}
-    - Budget level: ${budget}
-    - Target calories based on user's weight goal and activity level
-    - Make sure the total calories in a single day meet the Target Calories
-    - Prioritize using these available ingredients: ${ingredientsList}
-    - Only include meals that can be made with available ingredients or common pantry staples (salt, pepper, basic spices)
-    - If no suitable meals can be made with available ingredients, suggest simple meals that require minimal additional ingredients
+    // Requirements:
+    // - Generate exactly ${mealsPerDay} meals for this day
+    // - Strictly follow dietary restrictions: ${dietPreference}
+    // - Avoid ingredients that might affect these health issues: ${healthIssues.join(", ")}
+    // - Prioritize these cuisines: ${cuisinePreferences.join(", ")}
+    // - Budget level: ${budget}
+    // - Target calories based on user's weight goal and activity level
+    // - Make sure the total calories in a single day meet the Target Calories
+    // - Prioritize using these available ingredients: ${ingredientsList}
+    // - Only include meals that can be made with available ingredients or common pantry staples (salt, pepper, basic spices)
+    // - If no suitable meals can be made with available ingredients, suggest simple meals that require minimal additional ingredients
 
-    The JSON structure should match this format:
-    {
-      "meal_plan": {
-        "name": "7-Day Personalized Meal Plan",
-        "description": "A balanced meal plan tailored to the user's needs."
-      },
-      "meals": [
-        {
-          "name": "Meal Name",
-          "description": "Meal Description",
-          "calories": 500,
-          "protein": 30,
-          "carbs": 50,
-          "fats": 20,
-          "time": "08:00",
-          "day_number": 1,
-          "meal_order": 1
-        }
-      ]
-    }
-    Make sure the response is valid JSON and does not include any additional text or explanations.
+    // The JSON structure should match this format:
+    // {
+    //   "meal_plan": {
+    //     "name": "7-Day Personalized Meal Plan",
+    //     "description": "A balanced meal plan tailored to the user's needs."
+    //   },
+    //   "meals": [
+    //     {
+    //       "name": "Meal Name",
+    //       "description": "Meal Description",
+    //       "calories": 500,
+    //       "protein": 30,
+    //       "carbs": 50,
+    //       "fats": 20,
+    //       "time": "08:00",
+    //       "day_number": 1,
+    //       "meal_order": 1
+    //     }
+    //   ]
+    // }
+    // Make sure the response is valid JSON and does not include any additional text or explanations.
+    // And make sure you generate the full plan, not just one day.`;
+   // Enhanced prompt with strict JSON formatting requirements
+      const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a personalized 7-day meal plan in valid JSON format based on the user's profile and available ingredients. 
+
+      IMPORTANT INSTRUCTIONS:
+      1. Return ONLY valid JSON with no additional text before or after
+      2. Ensure all strings are properly quoted with double quotes
+      3. Ensure all brackets and braces are properly closed
+      4. Include all required fields for each meal
+      5. Maintain consistent structure throughout
+
+      Requirements:
+      - Generate exactly ${mealsPerDay} meals per day for 7 days (total ${mealsPerDay * 7} meals)
+      - Ensure each meal has: name, description, calories, protein, carbs, fats, time, day_number, and meal_order
+      - Strictly follow dietary restrictions: ${dietPreference}
+      - Avoid ingredients that might affect these health issues: ${healthIssues.join(", ")}
+      - Prioritize these cuisines: ${cuisinePreferences.join(", ")}
+      - Budget level: ${budget}
+      - Target calories based on user's weight goal and activity level
+      - Prioritize using these available ingredients: ${ingredientsList}
+      - Ensure good variety between days (don't repeat the same meals every day)
+      - For meal_order: 1=breakfast, 2=lunch, 3=dinner, 4+=snacks
+
+      Example of proper JSON structure:
+      {
+        "meal_plan": {
+          "name": "7-Day Personalized Meal Plan",
+          "description": "A balanced meal plan..."
+        },
+        "meals": [
+          {
+            "name": "Meal Name",
+            "description": "Meal description...",
+            "calories": 500,
+            "protein": 30,
+            "carbs": 50,
+            "fats": 20,
+            "time": "08:00",
+            "day_number": 1,
+            "meal_order": 1
+          }
+        ]
+      }
+        Make sure the response is valid JSON and does not include any additional text or explanations.
     And make sure you generate the full plan, not just one day.`;
 
     // Make the request to Groq with both system prompt and user profile
@@ -195,6 +243,7 @@ const getMealPlan = async (req, res) => {
       temperature: 0.4, // Adjust for creativity
       max_tokens: 5000, // Adjust based on your needs
       top_p: 0.95, // Adjust for diversity
+      response_format: { type: "json_object" }, // Request JSON mode
       stream: false, // Disable streaming for a single response
     });
 
@@ -226,11 +275,20 @@ const getMealPlan = async (req, res) => {
     }
 
     // Send the generated plan back to the frontend
-    res.status(200).json(generatedPlan);
+    return res.status(200).json(generatedPlan);
   } catch (error) {
-    console.error("Error generating meal plan:", error);
-    res.status(500).json({ error: "Failed to generate meal plan" });
+    retryCount++;
+      console.error(`Attempt ${retryCount} failed:`, error.message);
+      
+      if (retryCount >= MAX_RETRIES) {
+        console.error("Max retries reached, giving up");
+        return res.status(500).json({ 
+          error: "Failed to generate meal plan",
+          details: error.message 
+        });
+      }
   }
+}
 };
 
 const saveMealPlan = async (req, res) => {
@@ -337,7 +395,53 @@ const adoptMealPlan = async (req, res) => {
 };
 
 
+// Remove a saved meal plan
+const removeSavedPlan = async (req, res) => {
+  const { userId, planId } = req.body;
 
+  try {
+    // First check if the plan exists and belongs to the user
+    const planCheck = await pool.query(
+      `SELECT id FROM meal_plan 
+       WHERE id = $1 AND user_id = $2`,
+      [planId, userId]
+    );
+
+    if (planCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Meal plan not found or doesn't belong to user" });
+    }
+
+    // Check if this is the adopted plan
+    const adoptedCheck = await pool.query(
+      `SELECT is_adopted_plan FROM meal_plan 
+       WHERE id = $1`,
+      [planId]
+    );
+
+    if (adoptedCheck.rows[0].is_adopted_plan) {
+      return res.status(400).json({ message: "Cannot remove currently adopted plan" });
+    }
+
+    // Delete the meal plan (cascade will handle meal_plan_meal entries)
+    const result = await pool.query(
+      `DELETE FROM meal_plan 
+       WHERE id = $1 
+       RETURNING id, name`,
+      [planId]
+    );
+
+    res.json({ 
+      message: "Meal plan removed successfully",
+      removedPlan: result.rows[0]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ 
+      error: "Server error",
+      details: err.message 
+    });
+  }
+};
 
 
 
@@ -415,19 +519,35 @@ const removeFavoriteMeal = async (req, res) => {
   const { userId, mealId } = req.params;
 
   try {
-    const result = await pool.query(
-      `DELETE FROM user_favorite_meals WHERE user_id = $1 AND meal_id = $2 RETURNING *`,
+    // First verify the favorite exists
+    const favoriteCheck = await pool.query(
+      `SELECT * FROM user_favorite_meals 
+       WHERE user_id = $1 AND meal_id = $2`,
       [userId, mealId]
     );
 
-    if (result.rows.length === 0) {
+    if (favoriteCheck.rows.length === 0) {
       return res.status(404).json({ message: "Favorite meal not found" });
     }
 
-    res.json({ message: "Meal removed from favorites" });
+    // Delete the favorite
+    const result = await pool.query(
+      `DELETE FROM user_favorite_meals 
+       WHERE user_id = $1 AND meal_id = $2 
+       RETURNING *`,
+      [userId, mealId]
+    );
+
+    res.json({ 
+      message: "Meal removed from favorites",
+      removedMeal: result.rows[0]
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).json({ 
+      error: "Server error",
+      details: err.message 
+    });
   }
 };
 
@@ -789,5 +909,6 @@ module.exports = {
   removeFavoriteMeal,
   regenerateDay,
   regenerateMeal,
-  replaceMealWithFavorite
+  replaceMealWithFavorite,
+  removeSavedPlan
 };
