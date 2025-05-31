@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Clock, Dumbbell, Loader } from "lucide-react";
 import { styles } from "./styles/DailyExercisesStyles";
-import { getUserIdFromToken } from "../utils/auth";
-import { getTodaysExercisesByUser } from "../api/ExercisePlannerAPI";
-import * as homeService from "../services/homeService";
-import { useAuth } from "../utils/useAuth";
 
 interface Exercise {
   id: number;
@@ -18,69 +14,21 @@ interface Exercise {
   sets?: number;
 }
 
-export default function DailyExercises() {
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentDay, setCurrentDay] = useState<number>(1);
+interface DailyExercisesProps {
+  exercises: Exercise[];
+  loading: boolean;
+  error: string | null;
+  currentDay: number;
+  onToggle: (exercise: Exercise) => void;
+}
 
-  const userId = getUserIdFromToken();
-  const { getAuthToken } = useAuth();
-  const token = getAuthToken()!;
-  const today = new Date().toISOString().slice(0, 10);
-
-  useEffect(() => {
-    const fetchExercisesAndProgress = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (!userId || !token) {
-          setError("User not authenticated");
-          setLoading(false);
-          return;
-        }
-        // Fetch exercises
-        const data = await getTodaysExercisesByUser(userId, token);
-        setCurrentDay(data.currentDay || 1);
-        // Fetch completed exercise IDs
-        const completedIds = await homeService.fetchExerciseProgress(
-          today,
-          token
-        );
-        // Merge completion state
-        setExercises(
-          (data.exercises || []).map((exercise: Exercise) => ({
-            ...exercise,
-            completed: completedIds.includes(exercise.id),
-          }))
-        );
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch today's exercises");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchExercisesAndProgress();
-    // eslint-disable-next-line
-  }, [today, token]);
-
-  const toggle = async (ex: Exercise) => {
-    const updated = exercises.map((e) =>
-      e.id === ex.id ? { ...e, completed: !e.completed } : e
-    );
-    setExercises(updated);
-    try {
-      await homeService.upsertExerciseProgress(
-        ex.id,
-        today,
-        !ex.completed,
-        token
-      );
-    } catch (e) {
-      console.error("Save exercise progress failed", e);
-    }
-  };
-
+const DailyExercises: React.FC<DailyExercisesProps> = ({
+  exercises,
+  loading,
+  error,
+  currentDay,
+  onToggle,
+}) => {
   if (loading) {
     return (
       <div style={styles.container}>
@@ -104,7 +52,13 @@ export default function DailyExercises() {
     return (
       <div style={styles.container}>
         <h2 style={styles.title}>Today's Exercise Plan</h2>
-        <div style={{ padding: "1rem", textAlign: "center", color: "#ef4444" }}>
+        <div
+          style={{
+            padding: "1rem",
+            textAlign: "center",
+            color: "#ef4444",
+          }}
+        >
           {error}
         </div>
       </div>
@@ -150,7 +104,7 @@ export default function DailyExercises() {
               <input
                 type="checkbox"
                 checked={exercise.completed}
-                onChange={() => toggle(exercise)}
+                onChange={() => onToggle(exercise)}
                 style={styles.checkboxInput}
               />
               <div
@@ -182,11 +136,19 @@ export default function DailyExercises() {
         ))}
       </div>
       {exercises.length === 0 && (
-        <div style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "2rem",
+            color: "#6b7280",
+          }}
+        >
           No exercises planned for today. Consider adding some exercises to your
           plan!
         </div>
       )}
     </div>
   );
-}
+};
+
+export default DailyExercises;
