@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   getAdoptedExercisePlanByUser,
+  getTodaysExercisesByUser,
   generateExercisePlan,
   saveExercisePlan,
   saveAndAdoptExercisePlan,
@@ -15,6 +16,9 @@ router.get('/:userId/adopted', getAdoptedExercisePlanByUser);
 
 // Fetch all exercise plans for a user (only plan info, no exercises)
 router.get('/:userId/all', getAllExercisePlansByUser);
+
+// Fetch today's exercises for a user from their adopted exercise plan
+router.get('/users/:userId/exercises/today', getTodaysExercisesByUser);
 
 // Save an exercise plan
 router.post('/save-exercise-plan', saveExercisePlan);

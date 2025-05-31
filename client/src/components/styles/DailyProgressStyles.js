@@ -65,7 +65,7 @@ export const styles = {
   },
   milestoneLabel: {
     fontSize: '12px',
+    textAlign: 'center',
     color: '#6b7280',
-    whiteSpace: 'nowrap'
   }
 };
