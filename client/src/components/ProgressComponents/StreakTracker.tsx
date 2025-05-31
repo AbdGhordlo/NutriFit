@@ -29,21 +29,44 @@ const Fire = ({ active, size = 24 }) => {
   );
 };
 
-const StreakTracker = (data: any) => {
-  const streakData = data.streakData;
-
+const StreakTracker = ({
+  dailyCompletedMeals,
+  dailyMaxMeals,
+  dailyCompletedExercises,
+  dailyMaxExercises,
+  dailyCompletedDays,
+  weeklyCurrent,
+  weeklyMax,
+  monthlyCurrent,
+  monthlyMax,
+}: {
+  dailyCompletedMeals: number;
+  dailyMaxMeals: number;
+  dailyCompletedExercises: number;
+  dailyMaxExercises: number;
+  dailyCompletedDays: number;
+  weeklyCurrent: number;
+  weeklyMax: number;
+  monthlyCurrent: number;
+  monthlyMax: number;
+}) => {
   // Calculate trophy levels based on streaks
   const getTrophyLevel = () => {
-    if (streakData.weekly.current == 4) return "gold";
+    if (weeklyCurrent === 4) return "gold";
     return "bronze";
   };
 
   // Days of the week for display
-  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
+  const displayMonthly = true;
 
   return (
     <div className="streak-tracker">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div
+        className={`grid grid-cols-1 gap-6 ${
+          displayMonthly ? "md:grid-cols-3" : "md:grid-cols-2"
+        }`}
+      >
         {/* Daily Progress */}
         <motion.div
           className="bg-white rounded-lg p-6 shadow-sm border border-gray-100"
@@ -52,53 +75,52 @@ const StreakTracker = (data: any) => {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Daily Progress
           </h3>
-          <div className="flex flex-col space-y-4 pt-3 justify-between h-[80%]">
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Meals</span>
-                <span className="font-medium text-gray-800">
-                  {streakData.daily.meals}/{streakData.daily.maxMeals} meals
-                </span>
+          <div className="flex flex-col space-y-4 pt-3 justify-between h-[86%]">
+            <div className="flex flex-col justify-between h-full py-4">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Meals</span>
+                  <span className="font-medium text-gray-800">
+                    {dailyCompletedMeals}/{dailyMaxMeals} meals
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${(dailyCompletedMeals / dailyMaxMeals) * 100}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${
-                      (streakData.daily.meals / streakData.daily.maxMeals) * 100
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
 
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Exercise</span>
-                <span className="font-medium text-gray-800">1/2 workouts</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${
-                      (streakData.daily.exercises / streakData.daily.maxExercises) * 100
-                    }%`,
-                  }}
-                />
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Exercise</span>
+                  <span className="font-medium text-gray-800">
+                    {dailyCompletedExercises}/{dailyMaxExercises} workouts
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${
+                        (dailyCompletedExercises / dailyMaxExercises) * 100
+                      }%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Days of the week with fire icons */}
-            <div className="mt-4 pt-2 border-t border-gray-100">
+            <div className="pt-2 border-t border-gray-100">
+              <div className="text-sm text-gray-500 mb-3">Daily Streaks</div>
               <div className="flex justify-between">
                 {daysOfWeek.map((day, index) => (
                   <div key={day} className="flex flex-col items-center">
-                    <span className="text-xs text-gray-500 mb-1">{day}</span>
-                    <Fire
-                    // complete days is a number which represents the number of days completed
-                      active={streakData.daily.completedDays > index}
-                    />
+                    <Fire active={dailyCompletedDays > index} />
                   </div>
                 ))}
               </div>
@@ -116,17 +138,14 @@ const StreakTracker = (data: any) => {
           </h3>
           <div className="flex flex-col items-center">
             <RadialProgressBar
-              percentage={
-                (streakData.weekly.current / streakData.weekly.max) * 100
-              }
+              percentage={(weeklyCurrent / weeklyMax) * 100}
               color="#b87333" // Bronze color
               size={120}
               thickness={12}
-              label={`${streakData.weekly.current}/${streakData.weekly.max}`}
+              label={`${weeklyCurrent}/${weeklyMax}`}
             />
             <p className="mt-4 text-gray-600 text-center">
-              {streakData.weekly.current} consecutive weeks of meeting daily
-              goals
+              {weeklyCurrent} consecutive weeks of meeting daily goals
             </p>
 
             {/* Bronze trophies for weekly progress */}
@@ -138,7 +157,7 @@ const StreakTracker = (data: any) => {
                     key={`week-${week}`}
                     level="bronze"
                     size={32}
-                    opacity={week <= streakData.weekly.current ? 1 : 0.3}
+                    opacity={week <= weeklyCurrent ? 1 : 0.3}
                   />
                 ))}
               </div>
@@ -156,17 +175,14 @@ const StreakTracker = (data: any) => {
           </h3>
           <div className="flex flex-col items-center">
             <RadialProgressBar
-              percentage={
-                (streakData.monthly.current / streakData.monthly.max) * 100
-              }
+              percentage={(monthlyCurrent / monthlyMax) * 100}
               color="#FFD700" // Gold color
               size={120}
               thickness={12}
-              label={`${streakData.monthly.current}/${streakData.monthly.max}`}
+              label={`${monthlyCurrent}/${monthlyMax}`}
             />
             <p className="mt-4 text-gray-600 text-center">
-              {streakData.monthly.current} consecutive months of meeting weekly
-              goals
+              {monthlyCurrent} consecutive months of meeting weekly goals
             </p>
 
             {/* Gold trophies for monthly progress */}
@@ -178,7 +194,7 @@ const StreakTracker = (data: any) => {
                     key={`month-${month}`}
                     level="gold"
                     size={32}
-                    opacity={month <= streakData.monthly.current ? 1 : 0.3}
+                    opacity={month <= monthlyCurrent ? 1 : 0.3}
                   />
                 ))}
               </div>
@@ -202,13 +218,13 @@ const StreakTracker = (data: any) => {
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Daily</span>
                 <span className="text-base font-medium text-gray-800">
-                  {streakData.daily.completedDays}/7 days complete
+                  {dailyCompletedDays}/7 days complete
                 </span>
                 <p className="text-xs text-gray-600 mt-1">
-                  {streakData.daily.completedDays.length >= 5
+                  {dailyCompletedDays >= 5
                     ? "Amazing daily streak!"
                     : `${
-                        7 - streakData.daily.completedDays
+                        7 - dailyCompletedDays
                       } more days to complete this week`}
                 </p>
               </div>
@@ -217,14 +233,13 @@ const StreakTracker = (data: any) => {
                   Weekly
                 </span>
                 <span className="text-base font-medium text-gray-800">
-                  {streakData.weekly.current}/{streakData.weekly.max} weeks
-                  complete
+                  {weeklyCurrent}/{weeklyMax} weeks complete
                 </span>
                 <p className="text-xs text-gray-600 mt-1">
-                  {streakData.weekly.current >= streakData.weekly.max
+                  {weeklyCurrent >= weeklyMax
                     ? "Monthly goal achieved!"
                     : `${
-                        streakData.weekly.max - streakData.weekly.current
+                        weeklyMax - weeklyCurrent
                       } more weeks to reach monthly goal`}
                 </p>
               </div>
@@ -233,14 +248,13 @@ const StreakTracker = (data: any) => {
                   Monthly
                 </span>
                 <span className="text-base font-medium text-gray-800">
-                  {streakData.monthly.current}/{streakData.monthly.max} months
-                  complete
+                  {monthlyCurrent}/{monthlyMax} months complete
                 </span>
                 <p className="text-xs text-gray-600 mt-1">
-                  {streakData.monthly.current >= streakData.monthly.max
+                  {monthlyCurrent >= monthlyMax
                     ? "Yearly goal achieved!"
                     : `${
-                        streakData.monthly.max - streakData.monthly.current
+                        monthlyMax - monthlyCurrent
                       } more months to reach yearly goal`}
                 </p>
               </div>

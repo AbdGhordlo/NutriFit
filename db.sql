@@ -177,6 +177,15 @@ CREATE TABLE exercise_progress (
   UNIQUE(user_id, date, exercise_plan_exercise_id)
 );
 
+CREATE TABLE progress (
+  id SERIAL PRIMARY KEY,
+  user_id INT UNIQUE REFERENCES "user"(id) ON DELETE CASCADE,
+  completed_days_count INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- Data
 
 -- Insert Meal Plan
