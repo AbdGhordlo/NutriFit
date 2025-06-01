@@ -177,6 +177,17 @@ CREATE TABLE exercise_progress (
   UNIQUE(user_id, date, exercise_plan_exercise_id)
 );
 
+CREATE TABLE progress_photo (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL
+                REFERENCES "user"(id)
+                ON DELETE CASCADE,
+  file_path   TEXT    NOT NULL,
+  file_name   TEXT    NOT NULL,
+  file_type   TEXT    NOT NULL, 
+  uploaded_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Data
 
 -- Insert Meal Plan
