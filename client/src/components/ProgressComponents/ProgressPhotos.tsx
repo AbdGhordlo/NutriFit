@@ -1,52 +1,80 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { FaCamera, FaTrash, FaCloudUploadAlt } from "react-icons/fa";
+import {
+  uploadProgressPhoto,
+  listProgressPhotos,
+  deleteProgressPhoto,
+} from "../../services/progressService";
+import { useAuth } from "../../utils/useAuth";
 
 interface ProgressPhoto {
-  id: string;
+  id: number;
   url: string;
-  date: Date;
+  uploaded_at: string;
 }
 
-interface ProgressPhotosProps {
-  photos: ProgressPhoto[];
-  setPhotos: (prev) => void;
-}
-
-const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) => {
+const ProgressPhotos: React.FC = () => {
+  const { getAuthToken, getAuthUserId } = useAuth();
+  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
   const [uploadCountThisMonth, setUploadCountThisMonth] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [isDragging, setIsDragging] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handlePhotoUpload = (file: File) => {
-    const currentDate = new Date();
-    const currentMonthNow = currentDate.getMonth();
+  // Fetch progress photos on mount
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const token = getAuthToken();
+      const userId = getAuthUserId();
+      if (!token || !userId) return;
+      setLoading(true);
+      try {
+        const data = await listProgressPhotos(userId, token);
+        setPhotos(data);
+        // Count uploads for this month
+        const now = new Date();
+        const monthUploads = data.filter((p: ProgressPhoto) => {
+          const d = parseISO(p.uploaded_at);
+          return (
+            d.getMonth() === now.getMonth() &&
+            d.getFullYear() === now.getFullYear()
+          );
+        });
+        setUploadCountThisMonth(monthUploads.length);
+        setCurrentMonth(now.getMonth());
+      } catch (e) {
+        setPhotos([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPhotos();
+    // eslint-disable-next-line
+  }, []);
 
-    // Reset counter if month changed
+  const handlePhotoUpload = async (file: File) => {
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+    const now = new Date();
+    const currentMonthNow = now.getMonth();
     if (currentMonthNow !== currentMonth) {
       setUploadCountThisMonth(0);
       setCurrentMonth(currentMonthNow);
     }
-
-    // Check if user has already uploaded 2 photos this month
     if (uploadCountThisMonth >= 2) {
       alert("You can only upload two progress photos per month.");
       return;
     }
-
-    // Create object URL for preview
-    const imageUrl = URL.createObjectURL(file);
-
-    // Add new photo
-    const newPhoto: ProgressPhoto = {
-      id: Date.now().toString(),
-      url: imageUrl,
-      date: currentDate,
-    };
-
-    setPhotos((prev) => [...prev, newPhoto]);
-    setUploadCountThisMonth((prev) => prev + 1);
+    try {
+      const res = await uploadProgressPhoto(userId, token, file);
+      setPhotos((prev) => [res, ...prev]);
+      setUploadCountThisMonth((prev) => prev + 1);
+    } catch (e) {
+      alert("Failed to upload photo.");
+    }
   };
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +98,6 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith("image/")) {
         handlePhotoUpload(file);
@@ -81,18 +108,18 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
     [uploadCountThisMonth, currentMonth]
   );
 
-  const handleDeletePhoto = (photoId: string) => {
-    const photoToDelete = photos.find((photo) => photo.id === photoId);
-    if (!photoToDelete) return;
-
-    const currentMonthNow = new Date().getMonth();
-    const photoMonth = photoToDelete.date.getMonth();
-
-    setPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
-
-    // If we're deleting a photo from the current month, decrement the counter
-    if (currentMonthNow === photoMonth) {
+  const handleDeletePhoto = async (photoId: number) => {
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+    try {
+      await deleteProgressPhoto(userId, photoId, token);
+      setPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
+      // Optionally update upload count
+      const now = new Date();
       setUploadCountThisMonth((prev) => Math.max(0, prev - 1));
+    } catch (e) {
+      alert("Failed to delete photo.");
     }
   };
 
@@ -115,7 +142,6 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
           />
         </motion.label>
       </div>
-
       <div
         className={`min-h-[200px] rounded-lg border-2 border-dashed transition-colors ${
           isDragging ? "border-primary-green bg-teal-50" : "border-gray-300"
@@ -124,7 +150,9 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {photos.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-gray-500">Loading...</div>
+        ) : photos.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <FaCloudUploadAlt className="mx-auto text-5xl mb-4 text-gray-400" />
             <p className="font-medium">Drag & drop your progress photo here</p>
@@ -146,7 +174,7 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
                     <img
                       src={photo.url}
                       alt={`Progress from ${format(
-                        photo.date,
+                        parseISO(photo.uploaded_at),
                         "MMM d, yyyy"
                       )}`}
                       className="w-full h-48 object-cover rounded-lg"
@@ -162,7 +190,7 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 mt-2">
-                    {format(photo.date, "MMM d, yyyy")}
+                    {format(parseISO(photo.uploaded_at), "MMM d, yyyy")}
                   </p>
                 </motion.div>
               ))}
@@ -170,7 +198,6 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
           </div>
         )}
       </div>
-
       <div className="mt-4 text-sm text-gray-500">
         <p>
           * You can upload two progress photos per month to track your fitness
