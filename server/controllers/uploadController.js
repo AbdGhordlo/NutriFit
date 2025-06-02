@@ -42,57 +42,149 @@ const upload = multer({
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const uploadProfilePicture = (req, res) => {
+const uploadProfilePicture = async (req, res) => {
   const { userId } = req.params;
 
-  // Verify that the authenticated user is uploading their own picture
-  if (req.user.id !== parseInt(userId)) {
-    return res.status(403).json({ message: 'Access denied' });
+  if (req.user.id !== parseInt(userId, 10)) {
+    return res.status(403).json({ message: "Access denied" });
   }
 
-  upload(req, res, async function(err) {
+  // Step A: fetch the old URL before multer runs
+  let oldFileUrl = null;
+  try {
+    const { rows } = await pool.query(
+      `SELECT profile_picture FROM "user" WHERE id = $1`,
+      [userId]
+    );
+    if (rows.length > 0) {
+      oldFileUrl = rows[0].profile_picture;
+    }
+  } catch (dbErr) {
+    console.error("Error fetching old profile picture URL:", dbErr);
+  }
+
+  upload(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
-      // A Multer error occurred when uploading
       return res.status(400).json({ message: `Upload error: ${err.message}` });
     } else if (err) {
-      // An unknown error occurred
       return res.status(500).json({ message: `Error: ${err.message}` });
     }
 
-    // File uploaded successfully
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Generate the full URL to the uploaded file
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const fileUrl = `${baseUrl}/${req.file.path.replace(/\\/g, '/')}`;
+    // Build new URL
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const newFileUrl = `${baseUrl}/${req.file.path.replace(/\\/g, "/")}`;
 
+    // Step B: delete old file from disk (if it exists)
+    if (oldFileUrl) {
+      try {
+        // Derive the file path from the oldFileUrl, e.g.
+        // oldFileUrl = "http://localhost:5000/uploads/profile-pictures/…"
+        const urlPath = oldFileUrl.split(req.get("host"))[1]; 
+        // urlPath might be "/uploads/profile-pictures/profile-12345.png"
+        const oldFilePath = path.join(__dirname, "..", urlPath);
+
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      } catch (unlinkErr) {
+        console.error("Failed to delete old profile picture:", unlinkErr);
+      }
+    }
+
+    // Step C: update the “user” and “settings” tables with new URL
     try {
-      // Update user profile picture in the user table
       await pool.query(
-        `UPDATE "user" SET profile_picture = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        [fileUrl, userId]
+        `UPDATE "user" 
+         SET profile_picture = $1, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $2`,
+        [newFileUrl, userId]
       );
-
-      // Also update in settings table if it exists
       await pool.query(
-        `UPDATE settings SET profile_picture = $1, updated_at = CURRENT_TIMESTAMP 
+        `UPDATE settings 
+         SET profile_picture = $1, updated_at = CURRENT_TIMESTAMP 
          WHERE user_id = $2`,
-        [fileUrl, userId]
+        [newFileUrl, userId]
       );
-
-      res.json({ 
-        message: 'Profile picture uploaded successfully',
-        url: fileUrl
-      });
-    } catch (error) {
-      console.error('Error updating profile picture:', error);
-      res.status(500).json({ message: 'Server error' });
+    } catch (updateErr) {
+      console.error("Error updating profile picture in DB:", updateErr);
+      return res.status(500).json({ message: "Server error" });
     }
+
+    return res.json({
+      message: "Profile picture uploaded successfully",
+      url: newFileUrl,
+    });
   });
 };
 
+/**
+ * DELETE /upload/:userId/profile-picture
+ * Remove the current profile picture (delete file + clear DB fields).
+ */
+const deleteProfilePicture = async (req, res) => {
+  const { userId } = req.params;
+
+  if (req.user.id !== parseInt(userId, 10)) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  // Step 1: fetch the existing URL
+  let oldFileUrl = null;
+  try {
+    const { rows } = await pool.query(
+      `SELECT profile_picture FROM "user" WHERE id = $1`,
+      [userId]
+    );
+    if (rows.length > 0) {
+      oldFileUrl = rows[0].profile_picture;
+    }
+  } catch (dbErr) {
+    console.error("Error fetching existing profile picture:", dbErr);
+    return res.status(500).json({ message: "Server error" });
+  }
+
+  // Step 2: delete the file from disk, if we have a URL
+  if (oldFileUrl) {
+    try {
+      const urlPath = oldFileUrl.split(req.get("host"))[1];
+      const oldFilePath = path.join(__dirname, "..", urlPath);
+
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    } catch (unlinkErr) {
+      console.error("Failed to delete old profile picture:", unlinkErr);
+      // (We can continue even if unlink fails; maybe it was already deleted.)
+    }
+  }
+
+  // Step 3: clear the DB columns
+  try {
+    await pool.query(
+      `UPDATE "user" 
+       SET profile_picture = NULL, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $1`,
+      [userId]
+    );
+    await pool.query(
+      `UPDATE settings 
+       SET profile_picture = NULL, updated_at = CURRENT_TIMESTAMP 
+       WHERE user_id = $1`,
+      [userId]
+    );
+  } catch (updateErr) {
+    console.error("Error clearing profile picture in DB:", updateErr);
+    return res.status(500).json({ message: "Server error" });
+  }
+
+  return res.json({ message: "Profile picture removed successfully" });
+};
+
 module.exports = {
-  uploadProfilePicture
+  uploadProfilePicture,
+  deleteProfilePicture,
 };
