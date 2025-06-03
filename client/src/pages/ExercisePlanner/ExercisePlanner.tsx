@@ -5,6 +5,7 @@ import {
   Wand2,
   Edit3,
   Bookmark,
+  Heart,
 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import "../../assets/commonStyles.css";
@@ -34,6 +35,7 @@ import {
 import SavedPlansPopup from "./SavedPlansPopup";
 import GeneratedPlanPopup from "./GeneratedPlanPopup";
 import { EditExercisePopup } from "./EditExercisePlanPopup";
+import FavoriteExercisesPopup from "./FavoriteExercisesPopup";
 
 export default function ExercisePlanner() {
   const [currentDay, setCurrentDay] = useState(0);
@@ -48,6 +50,8 @@ export default function ExercisePlanner() {
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
   const [showEditExercisePopup, setShowEditExercisePopup] = useState(false);
   const [favoriteExercises, setFavoriteExercises] = useState<Exercise[]>([]);
+  const [showFavoriteExercisesPopup, setShowFavoriteExercisesPopup] =
+    useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -70,7 +74,7 @@ export default function ExercisePlanner() {
     }
     try {
       const data = await getAdoptedExercisePlan(Number(userId), token);
-      
+
       const groupedData = data.reduce((acc: any, exercise: any) => {
         const day = exercise.day_number - 1;
         if (!acc[day]) {
@@ -283,7 +287,7 @@ export default function ExercisePlanner() {
     }
   };
 
-    const handleAddToFavorites = async (exercise: Exercise) => {
+  const handleAddToFavorites = async (exercise: Exercise) => {
     try {
       if (!token) {
         console.error("No token found, redirecting to login...");
@@ -292,16 +296,19 @@ export default function ExercisePlanner() {
       }
       console.log("adding exercise: ", exercise);
       await addFavoriteExercise(
-      Number(userId), 
-      exercise.id, 
-      token,
-      exercise.reps,
-      exercise.sets,
-      exercise.duration,
-    );
+        Number(userId),
+        exercise.id,
+        token,
+        exercise.reps,
+        exercise.sets,
+        exercise.duration
+      );
 
       // Refresh favorites list
-      const updatedFavorites = await getFavoriteExercises(Number(userId), token);
+      const updatedFavorites = await getFavoriteExercises(
+        Number(userId),
+        token
+      );
       setFavoriteExercises(updatedFavorites);
 
       alert("Exercise added to favorites!");
@@ -378,36 +385,41 @@ export default function ExercisePlanner() {
   };
 
   const handleReplaceWithFavorite = async (
-  exercisePlanExerciseId: number,
-  favoriteExercise: Exercise & {
-    reps?: number;
-    sets?: number;
-    duration?: string;
-  }
-) => {
-  try {
-    if (!token) {
-      console.error("No token found, redirecting to login...");
-      window.location.href = "/login";
-      return;
+    exercisePlanExerciseId: number,
+    favoriteExercise: Exercise & {
+      reps?: number;
+      sets?: number;
+      duration?: string;
     }
-    console.log("exercise to replace: ",userId, exercisePlanExerciseId, favoriteExercise);
-    const response = await replaceWithFavoriteExercise(
-      Number(userId),
-      exercisePlanExerciseId,
-      favoriteExercise.exercise_id,
-      token
-    );
+  ) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+      console.log(
+        "exercise to replace: ",
+        userId,
+        exercisePlanExerciseId,
+        favoriteExercise
+      );
+      const response = await replaceWithFavoriteExercise(
+        Number(userId),
+        exercisePlanExerciseId,
+        favoriteExercise.exercise_id,
+        token
+      );
 
-    await fetchExercisePlan();
+      await fetchExercisePlan();
 
-    alert(`Exercise replaced with ${favoriteExercise.name} successfully!`);
-    console.log("New exercise details:", response.newExercise);
-  } catch (error) {
-    console.error("Error replacing exercise with favorite:", error);
-    alert("Failed to replace exercise with favorite");
-  }
-};
+      alert(`Exercise replaced with ${favoriteExercise.name} successfully!`);
+      console.log("New exercise details:", response.newExercise);
+    } catch (error) {
+      console.error("Error replacing exercise with favorite:", error);
+      alert("Failed to replace exercise with favorite");
+    }
+  };
 
   // -------------------------------------------------------------------------------
 
@@ -441,7 +453,10 @@ export default function ExercisePlanner() {
 
           <div className="items-list">
             {weeklyPlan[currentDay].exercises.map((exercise) => (
-              <div key={exercise.exercise_plan_exercise_id} className="list-item">
+              <div
+                key={exercise.exercise_plan_exercise_id}
+                className="list-item"
+              >
                 <div className="item-info">
                   <h3 className="item-name">{exercise.name}</h3>
                   <div className="item-time-info">
@@ -518,6 +533,17 @@ export default function ExercisePlanner() {
           <Bookmark className="button-icon" />
           <span>Saved Plans</span>
         </button>
+
+        <button
+          className="favorite-list-button"
+          onClick={() => {
+            setShowFavoriteExercisesPopup(true);
+            fetchFavoriteExercises();
+          }}
+        >
+          <Heart className="button-icon" />
+          <span>Favorite Exercises</span>
+        </button>
       </div>
 
       {showSavedPlansPopup && (
@@ -541,17 +567,25 @@ export default function ExercisePlanner() {
       )}
 
       {showEditExercisePopup && (
-              <EditExercisePopup
-                weeklyPlan={weeklyPlan}
-                currentDay={currentDay}
-                onRegenerateDay={handleRegenerateDay}
-                onRegenerateExercise={handleRegenerateExercise}
-                onAddToFavorites={handleAddToFavorites}
-                onReplaceWithFavorite={handleReplaceWithFavorite}
-                onClose={() => setShowEditExercisePopup(false)}
-                favoriteExercises={favoriteExercises}
-              />
-            )}
+        <EditExercisePopup
+          weeklyPlan={weeklyPlan}
+          currentDay={currentDay}
+          onRegenerateDay={handleRegenerateDay}
+          onRegenerateExercise={handleRegenerateExercise}
+          onAddToFavorites={handleAddToFavorites}
+          onReplaceWithFavorite={handleReplaceWithFavorite}
+          onClose={() => setShowEditExercisePopup(false)}
+          favoriteExercises={favoriteExercises}
+        />
+      )}
+
+      {showFavoriteExercisesPopup && (
+        <FavoriteExercisesPopup
+          favoriteExercises={favoriteExercises}
+          onRemoveFavorite={handleRemoveExerciseFromFavorites}
+          closePopup={() => setShowFavoriteExercisesPopup(false)}
+        />
+      )}
     </div>
   );
 }

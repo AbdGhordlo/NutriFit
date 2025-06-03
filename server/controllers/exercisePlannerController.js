@@ -207,7 +207,7 @@ const generateExercisePlan = async (req, res) => {
         response_format: { type: "json_object" }, // Request JSON mode
         stream: false,
       });
-      console.log("AI Response:", chatCompletion.choices[0].message.content);
+      // console.log("AI Response:", chatCompletion.choices[0].message.content);
 
       // Extract and validate JSON response
       const jsonMatch =
@@ -705,7 +705,7 @@ const regenerateDay = async (req, res) => {
         stream: false,
       });
 
-      console.log("AI Response:", chatCompletion.choices[0].message.content);
+      // console.log("AI Response:", chatCompletion.choices[0].message.content);
 
       const jsonMatch =
         chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
@@ -874,7 +874,7 @@ const regenerateExercise = async (req, res) => {
         stream: false,
       });
 
-      console.log("AI Response:", chatCompletion.choices[0].message.content);
+      // console.log("AI Response:", chatCompletion.choices[0].message.content);
 
       const jsonMatch = chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("No valid JSON found in AI response");

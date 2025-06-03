@@ -512,14 +512,13 @@ export default function MealPlanner() {
         </button>
 
         <button
-          className="favorite-meals-button"
+          className="favorite-list-button"
           onClick={() => {
             setShowFavoriteMealsPopup(true);
             fetchFavoriteMeals();
           }}
         >
           <Heart className="button-icon" />{" "}
-          {/* You'll need to import Heart from lucide-react */}
           <span>Favorite Meals</span>
         </button>
       </div>
