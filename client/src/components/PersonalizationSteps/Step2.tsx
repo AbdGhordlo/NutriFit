@@ -21,16 +21,17 @@ export const Step2 = ({
   setWeightGoal,
 }: Step2Props) => {
   //
-  // 1) Whenever personalWeight changes, immediately reset weightGoal.targetWeight
-  //    to that new personalWeight. This ensures the “Target Weight” label/text
-  //    always matches the slider’s max/min when you arrive.
+  // 1) Whenever personalWeight _or_ fitnessGoal.type changes,
+  //    immediately reset weightGoal.targetWeight → personalWeight.
+  //    This way, as soon as we switch from “Lose Weight” to “Build Muscle”
+  //    (or vice versa), the Target‐Weight label/text will snap back to personalWeight.
   //
   useEffect(() => {
     setWeightGoal((prev) => ({
       ...prev,
       targetWeight: personalWeight,
     }));
-  }, [personalWeight]);
+  }, [personalWeight, fitnessGoal.type]);
 
   //
   // 2) Whenever targetWeight changes (or personalWeight changes) under
@@ -61,7 +62,8 @@ export const Step2 = ({
 
     // ── BODY RECOMPOSITION ─────────────────────────
     if (fitnessGoal.type === "body_recomposition") {
-      // Combined pace: 1 kg/week (lose+gain). If no diff (diff=0), force 4 weeks.
+      // Combined pace: 1 kg/week (lose+gain). If no difference (diff = 0),
+      // force at least 4 weeks so that the user has a realistic recomposition window.
       const diff = Math.abs(personalWeight - weightGoal.targetWeight);
       const computedMin = diff > 0 ? Math.ceil(diff / 1) : 4;
       setWeightGoal((prev) => ({
