@@ -200,7 +200,7 @@ export default function ExercisePlanner() {
         );
         setSavedPlans(updatedPlans);
 
-        alert("Meal plan removed successfully!");
+        alert("Exercise plan removed successfully!");
       }
     } catch (error) {
       console.error("Error removing meal plan:", error);
