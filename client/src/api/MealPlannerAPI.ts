@@ -2,7 +2,7 @@ import { DayPlan, Meal } from "../types/mealPlannerTypes";
 
 export const getAdoptedMealPlan = async (userId: number, token: string) => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/${userId}/adopted`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/adopted/${userId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -50,7 +50,7 @@ export const getTodaysMealsByUser = async (userId: number, token: string): Promi
 
 export const generateMealPlan = async (userId: number, token: string): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/${userId}/generate-meal-plan`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/generate-meal-plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -89,6 +89,29 @@ export const saveMealPlan = async (userId: number, plan: any, token: string) => 
     return data;
   } catch (error) {
     console.error("Error saving meal plan:", error);
+    throw error;
+  }
+};
+
+export const removeSavedPlan = async (userId: number, planId: number, token: string) => {
+  try {
+    const response = await fetch("http://localhost:5000/meal-planner/remove-meal-plan", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId, planId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error removing meal plan:", error);
     throw error;
   }
 };
@@ -141,7 +164,7 @@ export const adoptMealPlan = async (userId: number, mealPlanId: number, token: s
 
 export const getAllMealPlansByUser = async (userId: number, token: string) => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/${userId}/all`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/all/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -188,13 +211,13 @@ export const getFavoriteMeals = async (userId: number, token: string): Promise<M
 
 export const addFavoriteMeal = async (userId: number, mealId: number, token: string): Promise<void> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/favorites/${userId}`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ mealId }),
+      body: JSON.stringify({ mealId, userId }),
     });
 
     if (!response.ok) {
@@ -208,19 +231,21 @@ export const addFavoriteMeal = async (userId: number, mealId: number, token: str
 
 export const removeFavoriteMeal = async (userId: number, mealId: number, token: string): Promise<void> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/favorites/${userId}/${mealId}`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/favorites`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ userId, mealId }),
     });
-
+console.log("meal id to remove: ", mealId);
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to remove favorite meal");
     }
   } catch (error) {
-    console.error("Error removing meal from favorites:", error);
+    console.error("Error removing favorite meal:", error);
     throw error;
   }
 };
@@ -228,12 +253,13 @@ export const removeFavoriteMeal = async (userId: number, mealId: number, token: 
 // Meal Plan Editing Functions
 export const regenerateDay = async (userId: number, dayNumber: number, token: string): Promise<DayPlan> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/regenerate-day/${userId}/${dayNumber}`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/regenerate-day`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ userId, dayNumber }),
     });
 
     if (!response.ok) {
@@ -250,12 +276,13 @@ export const regenerateDay = async (userId: number, dayNumber: number, token: st
 
 export const regenerateMeal = async (userId: number, mealPlanMealId: number, token: string): Promise<Meal> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/regenerate-meal/${userId}/${mealPlanMealId}`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/regenerate-meal`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ userId, mealPlanMealId }),
     });
 
     if (!response.ok) {
@@ -277,13 +304,13 @@ export const replaceMealWithFavorite = async (
   token: string
 ): Promise<Meal> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/replace-with-favorite/${userId}`, {
+    const response = await fetch(`http://localhost:5000/meal-planner/replace-with-favorite`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ mealPlanMealId, favoriteMealId }),
+      body: JSON.stringify({ mealPlanMealId, favoriteMealId, userId }),
     });
 
     if (!response.ok) {

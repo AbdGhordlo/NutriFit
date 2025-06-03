@@ -1,5 +1,6 @@
 export interface Meal {
   id: number;
+  meal_id;
   name: string;
   description: string;
   calories: number;
