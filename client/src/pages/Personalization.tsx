@@ -285,7 +285,30 @@ function Personalization() {
   const handleSkip = () => setIsSkipModalOpen(true);
   const handleSkipConfirm = async () => {
     setIsSkipModalOpen(false);
-    await saveStepData(currentStep, {});
+    // Save all steps' data before skipping
+    const stepData = {
+      step_1: { personalInfo },
+      step_2: { fitnessGoal, weightGoal },
+      step_3: {
+        cuisinePreferences,
+        dietPreference,
+        healthIssues,
+        mealsPerDay,
+        specificAllergies,
+      },
+      step_4: {
+        activityLevel,
+        activityTypes,
+        equipmentAccess,
+      },
+      step_5: { budget, hasKitchenInventory },
+    };
+    try {
+      await saveStepData(currentStep, stepData[`step_${currentStep}`]);
+      navigate("/home");
+    } catch (e) {
+      // Optionally handle error
+    }
   };
 
   // ─── Show loader if fetching or saving ───────────────────────────────
