@@ -95,7 +95,7 @@ CREATE TABLE exercise_plan_exercise (
     exercise_id INT REFERENCES exercise(id) ON DELETE CASCADE,
     reps INT,
     sets INT,
-    time TIME NOT NULL DEFAULT '08:00',
+    time TIME,
     duration VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     day_number INT NOT NULL DEFAULT 1,
@@ -164,6 +164,18 @@ CREATE TABLE user_favorite_meals (
     meal_id INT REFERENCES meal(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, meal_id) -- Ensure a user can't favorite the same meal multiple times
+);
+
+-- User Favorite Exercises Table
+CREATE TABLE user_favorite_exercises (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    exercise_id INT REFERENCES exercise(id) ON DELETE CASCADE,
+    reps INT,
+    sets INT,
+    duration VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, exercise_id) -- Ensure a user can't favorite the same exercise multiple times
 );
 
 -- Data

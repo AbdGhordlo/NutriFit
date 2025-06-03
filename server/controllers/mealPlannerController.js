@@ -97,7 +97,7 @@ const getAllMealPlansByUser = async (req, res) => {
 };
 
 const getMealPlan = async (req, res) => {
-  const { userId } = req.params;
+  const { userId } = req.body;
   const MAX_RETRIES = 3; // Maximum number of retries if JSON parsing fails
   let retryCount = 0;
 
@@ -155,7 +155,7 @@ const getMealPlan = async (req, res) => {
       - Budget: ${budget}
       - Available Ingredients: ${ingredientsList}
       `;
-      // - Meals Per Day: ${mealsPerDay} I removed this temporarily
+      // - Meals Per Day: ${mealsPerDay} I removed this for now
 
       // Define the system prompt with personalization
       //     const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate a personalized 7-day meal plan in valid JSON format based on the user's
@@ -460,7 +460,8 @@ const getFavoriteMeals = async (req, res) => {
         m.calories,
         m.protein,
         m.carbs,
-        m.fats
+        m.fats,
+        ufm.meal_id
       FROM user_favorite_meals ufm
       JOIN meal m ON ufm.meal_id = m.id
       WHERE ufm.user_id = $1
@@ -477,8 +478,7 @@ const getFavoriteMeals = async (req, res) => {
 
 // Add meal to favorites
 const addFavoriteMeal = async (req, res) => {
-  const { userId } = req.params;
-  const { mealId } = req.body;
+  const { mealId, userId } = req.body;
 
   try {
     // First check if the meal exists
@@ -515,7 +515,8 @@ const addFavoriteMeal = async (req, res) => {
 
 // Remove meal from favorites
 const removeFavoriteMeal = async (req, res) => {
-  const { userId, mealId } = req.params;
+  const { userId, mealId } = req.body;
+  console.log("removing: ", mealId, "-", userId);
 
   try {
     // First verify the favorite exists
@@ -552,52 +553,58 @@ const removeFavoriteMeal = async (req, res) => {
 
 // Regenerate a specific day's meals
 const regenerateDay = async (req, res) => {
-  const { userId, dayNumber } = req.params;
+  const { userId, dayNumber } = req.body;
+  const MAX_RETRIES = 3;
+  let retryCount = 0;
 
-  try {
-    const mealPlanId = await getAdoptedMealPlanIdByUser(userId);
+  while (retryCount < MAX_RETRIES) {
+    try {
+      const mealPlanId = await getAdoptedMealPlanIdByUser(userId);
 
-    // Get user's personalization data and ingredients
-    const [personalizationData, ingredients] = await Promise.all([
-      pool.query(`SELECT steps_data FROM personalization WHERE user_id = $1`, [
-        userId,
-      ]),
-      getInStockUserIngredients(userId),
-    ]);
+      // Get user's personalization data and ingredients
+      const [personalizationData, ingredients] = await Promise.all([
+        pool.query(
+          `SELECT steps_data FROM personalization WHERE user_id = $1`,
+          [userId]
+        ),
+        getInStockUserIngredients(userId),
+      ]);
 
-    if (personalizationData.rows.length === 0) {
-      return res.status(404).json({ error: "Personalization data not found" });
-    }
+      if (personalizationData.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Personalization data not found" });
+      }
 
-    const { steps_data } = personalizationData.rows[0];
+      const { steps_data } = personalizationData.rows[0];
 
-    // Extract relevant personalization data (same as in getMealPlan)
-    const personalInfo = steps_data.step_1?.personalInfo || {};
-    const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
-    const weightGoal = steps_data.step_2?.weightGoal || {};
-    const cuisinePreferences = steps_data.step_3?.cuisinePreferences || [];
-    const dietPreference = steps_data.step_3?.dietPreference || "none";
-    const healthIssues = steps_data.step_3?.healthIssues || ["none"];
-    const mealsPerDay = steps_data.step_3?.mealsPerDay || 3;
-    const activityLevel = steps_data.step_4?.activityLevel || "moderate";
-    const budget = steps_data.step_5?.budget || "basic";
+      // Extract relevant personalization data (same as in getMealPlan)
+      const personalInfo = steps_data.step_1?.personalInfo || {};
+      const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
+      const weightGoal = steps_data.step_2?.weightGoal || {};
+      const cuisinePreferences = steps_data.step_3?.cuisinePreferences || [];
+      const dietPreference = steps_data.step_3?.dietPreference || "none";
+      const healthIssues = steps_data.step_3?.healthIssues || ["none"];
+      const mealsPerDay = steps_data.step_3?.mealsPerDay || 3;
+      const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+      const budget = steps_data.step_5?.budget || "basic";
 
-    // Format ingredients for the prompt
-    const ingredientsList = ingredients
-      .map((ing) => `${ing.ingredient_name} (${ing.ingredient_category})`)
-      .join(", ");
+      // Format ingredients for the prompt
+      const ingredientsList = ingredients
+        .map((ing) => `${ing.ingredient_name} (${ing.ingredient_category})`)
+        .join(", ");
 
-    // Create a detailed user profile for the prompt
-    const userProfile = `
+      // Create a detailed user profile for the prompt
+      const userProfile = `
       User Profile:
       - Age: ${personalInfo.age}
       - Gender: ${personalInfo.gender}
-      - Height: ${personalInfo.height} inches
-      - Weight: ${personalInfo.weight} lbs
+      - Height: ${personalInfo.height} cm
+      - Weight: ${personalInfo.weight} kg
       - Fitness Goal: ${fitnessGoal.type}
-      - Weight Goal: ${weightGoal.targetWeight} lbs in ${
-      weightGoal.timeframe
-    } weeks
+      - Weight Goal: ${weightGoal.targetWeight} kg in ${
+        weightGoal.timeframe
+      } weeks
       - Cuisine Preferences: ${cuisinePreferences.join(", ")}
       - Diet Preference: ${dietPreference}
       - Health Issues: ${healthIssues.join(", ")}
@@ -607,8 +614,8 @@ const regenerateDay = async (req, res) => {
       - Available Ingredients: ${ingredientsList}
     `;
 
-    // Create prompt specifically for regenerating one day
-    const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate meals for a single day (day ${dayNumber}) of a meal plan in valid JSON format based on the user's
+      // Create prompt specifically for regenerating one day
+      const SYSTEM_PROMPT = `You are a helpful nutritionist. Generate meals for a single day (day ${dayNumber}) of a meal plan in valid JSON format based on the user's
     profile and available ingredients. The plan should include meals for breakfast, lunch, and dinner each day, or more meals if specified. 
     Each meal should have a name, description, calories, protein, carbs, fats, and time. Consider the user's dietary restrictions, preferences, 
     goals, and available ingredients.
@@ -645,81 +652,86 @@ const regenerateDay = async (req, res) => {
     }
     Make sure the response is valid JSON and does not include any additional text or explanations.`;
 
-    // Call Groq API (similar to getMealPlan)
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userProfile },
-      ],
-      model: "llama3-70b-8192",
-      temperature: 0.4,
-      max_tokens: 5000,
-      top_p: 0.95,
-      stream: false,
-    });
+      // Call Groq API
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userProfile },
+        ],
+        model: "llama3-70b-8192",
+        temperature: 0.4,
+        max_tokens: 5000,
+        top_p: 0.95,
+        response_format: { type: "json_object" },
+        stream: false,
+      });
 
-    console.log("AI Response:", chatCompletion.choices[0].message.content);
+      console.log("AI Response:", chatCompletion.choices[0].message.content);
 
-    // Process response (similar to getMealPlan)
-    const jsonMatch =
-      chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No valid JSON found in AI response");
+      // Process response (similar to getMealPlan)
+      const jsonMatch =
+        chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No valid JSON found in AI response");
 
-    const generatedDay = JSON.parse(jsonMatch[0]);
-    if (!generatedDay.meals || !Array.isArray(generatedDay.meals)) {
-      throw new Error("AI response does not match the expected structure");
-    }
+      const generatedDay = JSON.parse(jsonMatch[0]);
+      if (!generatedDay.meals || !Array.isArray(generatedDay.meals)) {
+        throw new Error("AI response does not match the expected structure");
+      }
 
-    // Delete existing meals for this day
-    await pool.query(
-      `DELETE FROM meal_plan_meal 
+      // Delete existing meals for this day
+      await pool.query(
+        `DELETE FROM meal_plan_meal 
        WHERE meal_plan_id = $1 AND day_number = $2
        RETURNING meal_id`,
-      [mealPlanId, dayNumber]
-    );
+        [mealPlanId, dayNumber]
+      );
 
-    // Save new meals
-    for (const meal of generatedDay.meals) {
-      const mealResult = await pool.query(
-        `INSERT INTO meal (name, description, calories, protein, carbs, fats) 
+      // Save new meals
+      for (const meal of generatedDay.meals) {
+        const mealResult = await pool.query(
+          `INSERT INTO meal (name, description, calories, protein, carbs, fats) 
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        [
-          meal.name,
-          meal.description,
-          meal.calories,
-          meal.protein,
-          meal.carbs,
-          meal.fats,
-        ]
-      );
+          [
+            meal.name,
+            meal.description,
+            meal.calories,
+            meal.protein,
+            meal.carbs,
+            meal.fats,
+          ]
+        );
 
-      await pool.query(
-        `INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES ($1, $2, $3, $4, $5)`,
-        [
-          mealPlanId,
-          mealResult.rows[0].id,
-          dayNumber,
-          meal.meal_order,
-          meal.time,
-        ]
-      );
+        await pool.query(
+          `INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES ($1, $2, $3, $4, $5)`,
+          [
+            mealPlanId,
+            mealResult.rows[0].id,
+            dayNumber,
+            meal.meal_order,
+            meal.time,
+          ]
+        );
+      }
+
+      return res.status(200).json(generatedPlan);
+    } catch (error) {
+      retryCount++;
+      console.error(`Attempt ${retryCount} failed:`, error.message);
+
+      if (retryCount >= MAX_RETRIES) {
+        console.error("Max retries reached, giving up");
+        return res.status(500).json({
+          error: "Failed to generate day meal plan",
+          details: error.message,
+        });
+      }
     }
-
-    res
-      .status(200)
-      .json({
-        message: "Day regenerated successfully",
-        meals: generatedDay.meals,
-      });
-  } catch (error) {
-    console.error("Error regenerating day:", error);
-    res.status(500).json({ error: "Failed to regenerate day" });
   }
 };
 
 // Replace a meal with a favorite
 const replaceMealWithFavorite = async (req, res) => {
-  const { userId } = req.params;
+  const { userId } = req.body;
   const { mealPlanMealId, favoriteMealId } = req.body;
   console.log(
     "userId: ",
@@ -773,8 +785,11 @@ const replaceMealWithFavorite = async (req, res) => {
 
 // Regenerate a specific meal
 const regenerateMeal = async (req, res) => {
-  const { userId, mealPlanMealId } = req.params;
+  const { userId, mealPlanMealId } = req.body;
+const MAX_RETRIES = 3;
+  let retryCount = 0;
 
+  while (retryCount < MAX_RETRIES) {
   try {
     // Get the meal plan meal to regenerate
     const mealPlanMeal = await pool.query(
@@ -804,8 +819,6 @@ const regenerateMeal = async (req, res) => {
     }
 
     const { steps_data } = personalizationData.rows[0];
-
-    // Extract relevant personalization data (same as in getMealPlan)
     const personalInfo = steps_data.step_1?.personalInfo || {};
     const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
     const weightGoal = steps_data.step_2?.weightGoal || {};
@@ -816,20 +829,18 @@ const regenerateMeal = async (req, res) => {
     const activityLevel = steps_data.step_4?.activityLevel || "moderate";
     const budget = steps_data.step_5?.budget || "basic";
 
-    // Format ingredients for the prompt
     const ingredientsList = ingredients
       .map((ing) => `${ing.ingredient_name} (${ing.ingredient_category})`)
       .join(", ");
 
-    // Create a detailed user profile for the prompt
     const userProfile = `
       User Profile:
       - Age: ${personalInfo.age}
       - Gender: ${personalInfo.gender}
-      - Height: ${personalInfo.height} inches
-      - Weight: ${personalInfo.weight} lbs
+      - Height: ${personalInfo.height} cm
+      - Weight: ${personalInfo.weight} kg
       - Fitness Goal: ${fitnessGoal.type}
-      - Weight Goal: ${weightGoal.targetWeight} lbs in ${
+      - Weight Goal: ${weightGoal.targetWeight} kg in ${
       weightGoal.timeframe
     } weeks
       - Cuisine Preferences: ${cuisinePreferences.join(", ")}
@@ -934,13 +945,19 @@ const regenerateMeal = async (req, res) => {
       mealPlanMealId,
     ]);
 
-    res.status(200).json({
-      message: "Meal regenerated successfully",
-      meal: generatedMeal.meal,
-    });
-  } catch (error) {
-    console.error("Error regenerating meal:", error);
-    res.status(500).json({ error: "Failed to regenerate meal" });
+          return res.status(200).json(generatedPlan);
+    } catch (error) {
+      retryCount++;
+      console.error(`Attempt ${retryCount} failed:`, error.message);
+
+      if (retryCount >= MAX_RETRIES) {
+        console.error("Max retries reached, giving up");
+        return res.status(500).json({
+          error: "Failed to generate meal plan",
+          details: error.message,
+        });
+      }
+    }
   }
 };
 

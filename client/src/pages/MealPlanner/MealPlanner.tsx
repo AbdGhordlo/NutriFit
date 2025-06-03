@@ -5,6 +5,7 @@ import {
   Wand2,
   Edit3,
   Bookmark,
+  Heart,
 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import "../styles/MealPlannerStyles.css";
@@ -30,6 +31,7 @@ import SavedPlansPopup from "./SavedPlansPopup";
 import GeneratedPlanPopup from "./GeneratedPlanPopup";
 import { DayPlan, GeneratedMealPlan, Meal } from "../../types/mealPlannerTypes";
 import { EditPlanPopup } from "./EditPlanPopup";
+import FavoriteMealsPopup from "./FavoriteMealsPopup";
 
 export default function MealPlanner() {
   const [currentDay, setCurrentDay] = useState(0);
@@ -45,6 +47,7 @@ export default function MealPlanner() {
   const [savedPlans, setSavedPlans] = useState<any[]>([]); // State to store saved plans
   const [showEditPlanPopup, setShowEditPlanPopup] = useState(false);
   const [favoriteMeals, setFavoriteMeals] = useState<Meal[]>([]);
+  const [showFavoriteMealsPopup, setShowFavoriteMealsPopup] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -184,6 +187,29 @@ export default function MealPlanner() {
     }
   };
 
+  const handleRemoveSavedPlan = async (planId: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      if (window.confirm("Are you sure you want to delete this meal plan?")) {
+        await removeSavedPlan(Number(userId), planId, token);
+
+        // Refresh the saved plans list
+        const updatedPlans = await getAllMealPlansByUser(Number(userId), token);
+        setSavedPlans(updatedPlans);
+
+        alert("Meal plan removed successfully!");
+      }
+    } catch (error) {
+      console.error("Error removing meal plan:", error);
+      alert(error.message || "Failed to remove meal plan");
+    }
+  };
+
   // ------------------------------------------- Edit Plan functions ------------------------------------
   const fetchFavoriteMeals = async () => {
     try {
@@ -253,7 +279,7 @@ export default function MealPlanner() {
         return;
       }
 
-      await addFavoriteMeal(Number(userId), meal.id, token);
+      await addFavoriteMeal(Number(userId), meal.meal_id, token);
 
       // Refresh favorites list
       const updatedFavorites = await getFavoriteMeals(Number(userId), token);
@@ -263,29 +289,6 @@ export default function MealPlanner() {
     } catch (error) {
       console.error("Error adding meal to favorites:", error);
       alert("Failed to add meal to favorites");
-    }
-  };
-
-  const handleRemoveSavedPlan = async (planId: number) => {
-    try {
-      if (!token) {
-        console.error("No token found, redirecting to login...");
-        window.location.href = "/login";
-        return;
-      }
-
-      if (window.confirm("Are you sure you want to delete this meal plan?")) {
-        await removeSavedPlan(Number(userId), planId, token);
-
-        // Refresh the saved plans list
-        const updatedPlans = await getAllMealPlansByUser(Number(userId), token);
-        setSavedPlans(updatedPlans);
-
-        alert("Meal plan removed successfully!");
-      }
-    } catch (error) {
-      console.error("Error removing meal plan:", error);
-      alert(error.message || "Failed to remove meal plan");
     }
   };
 
@@ -321,14 +324,9 @@ export default function MealPlanner() {
         return;
       }
 
-      const updatedMeal = await replaceMealWithFavorite(
-        Number(userId),
-        mealId,
-        favoriteMeal.id,
-        token
-      );
+      await replaceMealWithFavorite(Number(userId), mealId, favoriteMeal.id, token);
 
-      await fetchMealPlan(); // Re-fetch the whole plan to ensure consistency
+      await fetchMealPlan();
 
       alert("Meal replaced with favorite successfully!");
     } catch (error) {
@@ -512,6 +510,18 @@ export default function MealPlanner() {
           <Bookmark className="button-icon" />
           <span>Saved Plans</span>
         </button>
+
+        <button
+          className="favorite-meals-button"
+          onClick={() => {
+            setShowFavoriteMealsPopup(true);
+            fetchFavoriteMeals();
+          }}
+        >
+          <Heart className="button-icon" />{" "}
+          {/* You'll need to import Heart from lucide-react */}
+          <span>Favorite Meals</span>
+        </button>
       </div>
 
       {showSavedPlansPopup && (
@@ -544,6 +554,14 @@ export default function MealPlanner() {
           onReplaceWithFavorite={handleReplaceWithFavorite}
           onClose={() => setShowEditPlanPopup(false)}
           favoriteMeals={favoriteMeals}
+        />
+      )}
+
+      {showFavoriteMealsPopup && (
+        <FavoriteMealsPopup
+          favoriteMeals={favoriteMeals}
+          onRemoveFavorite={handleRemoveFromFavorites}
+          closePopup={() => setShowFavoriteMealsPopup(false)}
         />
       )}
     </div>

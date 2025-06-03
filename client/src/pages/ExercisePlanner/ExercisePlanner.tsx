@@ -16,15 +16,24 @@ import {
   adoptExercisePlan,
   getAllExercisePlansByUser,
   removeSavedPlan,
+  getFavoriteExercises,
+  regenerateExerciseDay,
+  regenerateSingleExercise,
+  addFavoriteExercise,
+  removeFavoriteExercise,
+  replaceWithFavoriteExercise,
+  getAdoptedExercisePlan,
 } from "../../api/ExercisePlannerAPI";
 import { getUserIdFromToken } from "../../utils/auth";
 import ErrorMessage from "../../components/ErrorMessage";
 import {
   DayPlan,
+  Exercise,
   GeneratedExercisePlan,
 } from "../../types/exercisePlannerTypes";
 import SavedPlansPopup from "./SavedPlansPopup";
 import GeneratedPlanPopup from "./GeneratedPlanPopup";
+import { EditExercisePopup } from "./EditExercisePlanPopup";
 
 export default function ExercisePlanner() {
   const [currentDay, setCurrentDay] = useState(0);
@@ -37,6 +46,8 @@ export default function ExercisePlanner() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [userId, setUserId] = useState("");
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
+  const [showEditExercisePopup, setShowEditExercisePopup] = useState(false);
+  const [favoriteExercises, setFavoriteExercises] = useState<Exercise[]>([]);
 
   const token = localStorage.getItem("token");
 
@@ -48,67 +59,46 @@ export default function ExercisePlanner() {
   useEffect(() => {
     if (!userId) return;
 
-    const fetchExercisePlan = async () => {
-      if (!token) {
-        console.error("No token found, redirecting to login...");
-        window.location.href = "/login";
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `http://localhost:5000/exercise-planner/${userId}/adopted`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.status === 401) {
-          console.error("Unauthorized, removing token and redirecting...");
-          localStorage.removeItem("token");
-          window.location.href = "/login";
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const groupedData = data.reduce((acc: any, exercise: any) => {
-          const day = exercise.day_number - 1;
-          if (!acc[day]) {
-            acc[day] = { day_number: exercise.day_number, exercises: [] };
-          }
-          acc[day].exercises.push({
-            id: exercise.exercise_id,
-            name: exercise.exercise_name,
-            description: exercise.exercise_description,
-            calories_burned: exercise.calories_burned,
-            has_reps_sets: exercise.has_reps_sets,
-            has_duration: exercise.has_duration,
-            reps: exercise.reps,
-            sets: exercise.sets,
-            duration: exercise.duration,
-            time: exercise.time,
-          });
-          return acc;
-        }, []);
-
-        setWeeklyPlan(groupedData);
-      } catch (error) {
-        console.error("Error fetching exercise plan:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchExercisePlan();
   }, [userId]);
+
+  const fetchExercisePlan = async () => {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+    try {
+      const data = await getAdoptedExercisePlan(Number(userId), token);
+      
+      const groupedData = data.reduce((acc: any, exercise: any) => {
+        const day = exercise.day_number - 1;
+        if (!acc[day]) {
+          acc[day] = { day_number: exercise.day_number, exercises: [] };
+        }
+        acc[day].exercises.push({
+          id: exercise.exercise_id,
+          name: exercise.exercise_name,
+          description: exercise.exercise_description,
+          calories_burned: exercise.calories_burned,
+          has_reps_sets: exercise.has_reps_sets,
+          has_duration: exercise.has_duration,
+          exercise_plan_exercise_id: exercise.exercise_plan_exercise_id,
+          reps: exercise.reps,
+          sets: exercise.sets,
+          duration: exercise.duration,
+          time: exercise.time,
+        });
+        return acc;
+      }, []);
+
+      setWeeklyPlan(groupedData);
+    } catch (error) {
+      console.error("Error fetching exercise plan:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFetchSavedPlans = async () => {
     try {
@@ -189,46 +179,49 @@ export default function ExercisePlanner() {
   };
 
   const handleRemoveSavedPlan = async (planId: number) => {
-  try {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      if (window.confirm("Are you sure you want to delete this meal plan?")) {
+        await removeSavedPlan(Number(userId), planId, token);
+
+        // Refresh the saved plans list
+        const updatedPlans = await getAllExercisePlansByUser(
+          Number(userId),
+          token
+        );
+        setSavedPlans(updatedPlans);
+
+        alert("Meal plan removed successfully!");
+      }
+    } catch (error) {
+      console.error("Error removing meal plan:", error);
+      alert(error.message || "Failed to remove meal plan");
+    }
+  };
+
+  const handleRegeneratePlan = async () => {
+    setIsGenerating(true);
+
     if (!token) {
       console.error("No token found, redirecting to login...");
       window.location.href = "/login";
       return;
     }
 
-    if (window.confirm("Are you sure you want to delete this meal plan?")) {
-      await removeSavedPlan(Number(userId), planId, token);
-      
-      // Refresh the saved plans list
-      const updatedPlans = await getAllExercisePlansByUser(Number(userId), token);
-      setSavedPlans(updatedPlans);
-      
-      alert("Meal plan removed successfully!");
+    try {
+      const plan = await generateExercisePlan(Number(userId), token);
+      setGeneratedPlan(plan);
+    } catch (error) {
+      console.error("Error regenerating exercise plan:", error);
+    } finally {
+      setIsGenerating(false);
     }
-  } catch (error) {
-    console.error("Error removing meal plan:", error);
-    alert(error.message || "Failed to remove meal plan");
-  }
-};
-
-const handleRegeneratePlan = async () => {
-  setIsGenerating(true);
-  
-  if (!token) {
-    console.error("No token found, redirecting to login...");
-    window.location.href = "/login";
-    return;
-  }
-
-  try {
-    const plan = await generateExercisePlan(Number(userId), token);
-    setGeneratedPlan(plan);
-  } catch (error) {
-    console.error("Error regenerating exercise plan:", error);
-  } finally {
-    setIsGenerating(false);
-  }
-};
+  };
 
   const handleSavePlan = async () => {
     if (!generatedPlan) return;
@@ -273,6 +266,151 @@ const handleRegeneratePlan = async () => {
     }
   };
 
+  // ------------------------------------------- Edit Plan functions ------------------------------------
+  const fetchFavoriteExercises = async () => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await getFavoriteExercises(Number(userId), token);
+      setFavoriteExercises(data);
+      console.log("fav exercises: ", data);
+    } catch (error) {
+      console.error("Error fetching favorite exercises:", error);
+    }
+  };
+
+    const handleAddToFavorites = async (exercise: Exercise) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+      console.log("adding exercise: ", exercise);
+      await addFavoriteExercise(
+      Number(userId), 
+      exercise.id, 
+      token,
+      exercise.reps,
+      exercise.sets,
+      exercise.duration,
+    );
+
+      // Refresh favorites list
+      const updatedFavorites = await getFavoriteExercises(Number(userId), token);
+      setFavoriteExercises(updatedFavorites);
+
+      alert("Exercise added to favorites!");
+    } catch (error) {
+      console.error("Error adding exercise to favorites:", error);
+      alert("Failed to add exercise to favorites");
+    }
+  };
+
+  const handleRegenerateDay = async (dayNumber: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+      const data = await regenerateExerciseDay(
+        Number(userId),
+        dayNumber,
+        token
+      );
+      fetchExercisePlan();
+
+      alert("Day regenerated successfully!");
+    } catch (error) {
+      console.error("Error regenerating day:", error);
+      alert("Failed to regenerate day");
+    }
+  };
+
+  const handleRegenerateExercise = async (exercisePlanExerciseId: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+      const data = await regenerateSingleExercise(
+        Number(userId),
+        exercisePlanExerciseId,
+        token
+      );
+      fetchExercisePlan();
+
+      alert("Exercise regenerated successfully!");
+    } catch (error) {
+      console.error("Error regenerating exercise:", error);
+      alert("Failed to regenerate exercise");
+    }
+  };
+
+  const handleRemoveExerciseFromFavorites = async (exerciseId: number) => {
+    try {
+      if (!token) {
+        console.error("No token found, redirecting to login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      await removeFavoriteExercise(Number(userId), exerciseId, token);
+
+      // Refresh favorites list
+      const updatedFavorites = await getFavoriteExercises(
+        Number(userId),
+        token
+      );
+      setFavoriteExercises(updatedFavorites);
+
+      alert("Exercise removed from favorites!");
+    } catch (error) {
+      console.error("Error removing exercise from favorites:", error);
+      alert("Failed to remove exercise from favorites");
+    }
+  };
+
+  const handleReplaceWithFavorite = async (
+  exercisePlanExerciseId: number,
+  favoriteExercise: Exercise & {
+    reps?: number;
+    sets?: number;
+    duration?: string;
+  }
+) => {
+  try {
+    if (!token) {
+      console.error("No token found, redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+    console.log("exercise to replace: ",userId, exercisePlanExerciseId, favoriteExercise);
+    const response = await replaceWithFavoriteExercise(
+      Number(userId),
+      exercisePlanExerciseId,
+      favoriteExercise.exercise_id,
+      token
+    );
+
+    await fetchExercisePlan();
+
+    alert(`Exercise replaced with ${favoriteExercise.name} successfully!`);
+    console.log("New exercise details:", response.newExercise);
+  } catch (error) {
+    console.error("Error replacing exercise with favorite:", error);
+    alert("Failed to replace exercise with favorite");
+  }
+};
+
+  // -------------------------------------------------------------------------------
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -303,7 +441,7 @@ const handleRegeneratePlan = async () => {
 
           <div className="items-list">
             {weeklyPlan[currentDay].exercises.map((exercise) => (
-              <div key={exercise.id} className="list-item">
+              <div key={exercise.exercise_plan_exercise_id} className="list-item">
                 <div className="item-info">
                   <h3 className="item-name">{exercise.name}</h3>
                   <div className="item-time-info">
@@ -365,7 +503,13 @@ const handleRegeneratePlan = async () => {
           <span>Generate Plan</span>
         </button>
 
-        <button className="edit-button">
+        <button
+          className="edit-button"
+          onClick={() => {
+            setShowEditExercisePopup(true);
+            fetchFavoriteExercises();
+          }}
+        >
           <Edit3 className="button-icon" />
           <span>Edit Plan</span>
         </button>
@@ -395,6 +539,19 @@ const handleRegeneratePlan = async () => {
           handleClosePopup={handleClosePopup}
         />
       )}
+
+      {showEditExercisePopup && (
+              <EditExercisePopup
+                weeklyPlan={weeklyPlan}
+                currentDay={currentDay}
+                onRegenerateDay={handleRegenerateDay}
+                onRegenerateExercise={handleRegenerateExercise}
+                onAddToFavorites={handleAddToFavorites}
+                onReplaceWithFavorite={handleReplaceWithFavorite}
+                onClose={() => setShowEditExercisePopup(false)}
+                favoriteExercises={favoriteExercises}
+              />
+            )}
     </div>
   );
 }
