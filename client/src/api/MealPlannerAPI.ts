@@ -26,6 +26,28 @@ export const getAdoptedMealPlan = async (userId: number, token: string) => {
   }
 };
 
+export const getTodaysMealsByUser = async (userId: number, token: string): Promise<any> => {
+  try {
+    const response = await fetch(`http://localhost:5000/meal-planner/users/${userId}/meals/today`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching today's meals:", error);
+    throw error;
+  }
+};
+
 export const generateMealPlan = async (userId: number, token: string): Promise<any> => {
   try {
     const response = await fetch(`http://localhost:5000/meal-planner/generate-meal-plan`, {

@@ -931,6 +931,87 @@ const regenerateExercise = async (req, res) => {
   }
 };
 
+// Get today's exercises for a user from their adopted exercise plan
+const getTodaysExercisesByUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // First, get the adopted exercise plan and its adoption date
+    const exercisePlanResult = await pool.query(
+      `SELECT id, updated_at
+       FROM exercise_plan 
+       WHERE user_id = $1 AND is_adopted_plan = TRUE
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (exercisePlanResult.rows.length === 0) {
+      return res.status(404).json({ message: "No adopted exercise plan found for this user." });
+    }
+
+    const exercisePlan = exercisePlanResult.rows[0];
+    const adoptionDate = new Date(exercisePlan.updated_at);
+    const currentDate = new Date();
+
+    // Calculate days since adoption (starting from day 1)
+    const timeDifference = currentDate.getTime() - adoptionDate.getTime();
+    const daysSinceAdoption = Math.floor(timeDifference / (1000 * 3600 * 24));
+    const currentDayNumber = (daysSinceAdoption % 7) + 1;
+
+    const result = await pool.query(
+      `SELECT 
+        epe.id AS exercise_plan_exercise_id,
+        e.id AS exercise_id,
+        e.name AS exercise_name,
+        e.description AS exercise_description,
+        e.calories_burned,
+        e.has_reps_sets,
+        e.has_duration,
+        epe.reps,
+        epe.sets,
+        epe.duration,
+        epe.exercise_order,
+        TO_CHAR(epe.time, 'HH24:MI') AS time
+      FROM exercise_plan ep
+      JOIN exercise_plan_exercise epe ON ep.id = epe.exercise_plan_id
+      JOIN exercise e ON epe.exercise_id = e.id
+      WHERE ep.user_id = $1 AND ep.is_adopted_plan = TRUE AND epe.day_number = $2
+      ORDER BY epe.exercise_order`,
+      [userId, currentDayNumber]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No exercises found for today in the adopted plan." });
+    }
+
+    const exercises = result.rows.map(ex => ({
+      id: ex.exercise_plan_exercise_id,
+      exerciseId: ex.exercise_id,
+      name: ex.exercise_name,
+      description: ex.exercise_description,
+      time: ex.time,
+      calories_burned: ex.calories_burned,
+      has_reps_sets: ex.has_reps_sets,
+      has_duration: ex.has_duration,
+      reps: ex.reps,
+      sets: ex.sets,
+      duration: ex.duration,
+      exerciseOrder: ex.exercise_order,
+      completed: false
+    }));
+
+    res.json({
+      exercises,
+      currentDay: currentDayNumber,
+      daysSinceAdoption: daysSinceAdoption,
+      adoptionDate: adoptionDate.toISOString().split('T')[0]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
+
 module.exports = {
   getAdoptedExercisePlanByUser,
   getAllExercisePlansByUser,
@@ -944,5 +1025,6 @@ module.exports = {
   regenerateDay,
   regenerateExercise,
   removeFavoriteExercise,
-  replaceExerciseWithFavorite
+  replaceExerciseWithFavorite,
+  getTodaysExercisesByUser
 };

@@ -2,6 +2,7 @@ const express = require('express');
 const {
   getAdoptedMealPlanByUser,
   getAllMealPlansByUser,
+  getTodaysMealsByUser,
   saveMealPlan,
   saveAndAdoptMealPlan,
   adoptMealPlan,
@@ -22,6 +23,9 @@ router.get('/adopted/:userId', getAdoptedMealPlanByUser);
 
 // Fetch all meal plans for a user (only plan info, no meals)
 router.get('/all/:userId', getAllMealPlansByUser);
+
+// Fetch today's meals for a user from their adopted meal plan
+router.get('/users/:userId/meals/today', getTodaysMealsByUser);
 
 // Save a meal plan
 router.post('/save-meal-plan', saveMealPlan);

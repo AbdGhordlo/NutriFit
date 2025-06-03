@@ -178,6 +178,35 @@ CREATE TABLE user_favorite_exercises (
     UNIQUE (user_id, exercise_id) -- Ensure a user can't favorite the same exercise multiple times
 );
 
+CREATE TABLE meal_progress (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  meal_plan_meal_id INT REFERENCES meal_plan_meal(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date, meal_plan_meal_id)
+);
+
+CREATE TABLE exercise_progress (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  exercise_plan_exercise_id INT REFERENCES exercise_plan_exercise(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date, exercise_plan_exercise_id)
+);
+
+CREATE TABLE progress_photo (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL
+                REFERENCES "user"(id)
+                ON DELETE CASCADE,
+  file_path   TEXT    NOT NULL,
+  file_name   TEXT    NOT NULL,
+  file_type   TEXT    NOT NULL, 
+  uploaded_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Data
 
 -- Insert Meal Plan
@@ -407,3 +436,21 @@ VALUES
 -- ON DELETE CASCADE;
 
 -- ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;
+UPDATE user_ingredients
+SET ingredient_id = 2
+WHERE id = 2;
+
+ALTER TABLE user_ingredients
+ADD CONSTRAINT fk_ingredient
+FOREIGN KEY (ingredient_id)
+REFERENCES ingredient(id)
+ON DELETE CASCADE;
+
+ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;
+
+ALTER TABLE ingredient DROP CONSTRAINT unique_ingredient_name;
+ALTER TABLE ingredient DROP CONSTRAINT ingredient_name_key;
+
+-- Add the new composite unique constraint
+ALTER TABLE ingredient ADD CONSTRAINT ingredient_unique_nutrition 
+UNIQUE (name, category, calories, protein, carbs, fats, serving_size);
