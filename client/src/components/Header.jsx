@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   Bell,
@@ -105,7 +105,7 @@ export default function Header({ toggleSidebar }) {
     localStorage.removeItem("userEmail"); // Remove stored email
     setIsLoggedIn(false);
     setUserEmail("");
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   const handleLogin = () => {
