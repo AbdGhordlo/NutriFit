@@ -26,26 +26,30 @@ export default function Header({ toggleSidebar }) {
   const accountRef = useRef(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedEmail = localStorage.getItem("userEmail"); 
-    
-    if (token) {
-      setIsLoggedIn(true);
-      if (storedEmail) {
-        setUserEmail(storedEmail);
-      } else {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          setUserEmail(payload.email || "user@example.com");
-        } catch {
-          setUserEmail("user@example.com");
-        }
-      }
+  const token = localStorage.getItem("token");
+  const storedEmail = localStorage.getItem("userEmail");
+
+  if (token) {
+    setIsLoggedIn(true);
+
+    if (storedEmail) {
+      setUserEmail(storedEmail);
     } else {
-      setIsLoggedIn(false);
-      setUserEmail("");
+      try {
+        const base64Payload = token.split(".")[1];
+        const decodedPayload = atob(base64Payload);
+        const payload = JSON.parse(decodedPayload);
+
+        setUserEmail(payload.email || "user@example.com");
+      } catch {
+        setUserEmail("user@example.com");
+      }
     }
-  }, []);
+  } else {
+    setIsLoggedIn(false);
+    setUserEmail("");
+  }
+}, []);
 
   const notifications = [
     {
