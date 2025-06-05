@@ -1,0 +1,9 @@
+
+{
+"include": ["src", "src/types"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {},
+    "typeRoots": ["./src/types", "./node_modules/@types"]
+  }
+}
