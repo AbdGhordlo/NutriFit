@@ -26,7 +26,7 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-      console.log("userdata: ",data);
+      console.log("userdata: ", data);
       if (response.ok) {
         localStorage.setItem("token", data.token); // Store JWT in localStorage
         window.location.href = "/home"; // Redirect to home page
@@ -45,7 +45,7 @@ export default function Login() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      
+
       const googleResponse = await fetch("http://localhost:5000/auth/google", {
         method: "POST",
         headers: {
@@ -53,11 +53,24 @@ export default function Login() {
         },
         body: JSON.stringify({ credential: response.credential }),
       });
-      
+
       const data = await googleResponse.json();
-      
+
       if (googleResponse.ok) {
         localStorage.setItem("token", data.token);
+
+        // ✅ BURASI: token'dan email al ve sakla
+        try {
+          const payload = JSON.parse(atob(data.token.split(".")[1]));
+          localStorage.setItem(
+            "userEmail",
+            payload.email || "user@example.com"
+          );
+        } catch (error) {
+          console.error("Token parse hatası:", error);
+          localStorage.setItem("userEmail", "user@example.com");
+        }
+
         window.location.href = "/home";
       } else {
         setErrorMessage(data.message || "Google login failed");

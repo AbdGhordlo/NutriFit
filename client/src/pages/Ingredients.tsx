@@ -202,7 +202,6 @@ export default function Ingredients() {
       }
 
       const data = await response.json();
-      console.log("API response:", data);
 
       // Group ingredients by category
       const groupedData = data.reduce((acc: any, ingredient: any) => {
