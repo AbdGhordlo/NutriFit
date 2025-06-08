@@ -200,6 +200,28 @@ const googleAuth = async (req, res) => {
         [name, email, hashedPassword, googleId, picture]
       );
       userId = newUser.rows[0].id;
+
+       // Create default plans for new users
+      try {
+        await createDefaultMealPlan(userId);
+        await createDefaultExercisePlan(userId);
+        
+        // Adopt the default plans
+        await pool.query(
+          `UPDATE meal_plan SET is_adopted_plan = TRUE 
+           WHERE user_id = $1 AND name = 'Healthy Starter Meal Plan'`,
+          [userId]
+        );
+        
+        await pool.query(
+          `UPDATE exercise_plan SET is_adopted_plan = TRUE 
+           WHERE user_id = $1 AND name = 'Starter Fitness Plan'`,
+          [userId]
+        );
+      } catch (planError) {
+        console.error("Error creating default plans:", planError);
+        // Don't fail auth if plans fail - just log the error
+      }
     } else {
       userId = existingUser.rows[0].id;
 
