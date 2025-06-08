@@ -125,6 +125,8 @@ export default function MealPlanner() {
       setShowSavedPlansPopup(true);
     } catch (error) {
       console.error("Error fetching saved plans:", error);
+      setSavedPlans([]);
+      setShowSavedPlansPopup(true);
     }
   };
 
@@ -324,7 +326,12 @@ export default function MealPlanner() {
         return;
       }
 
-      await replaceMealWithFavorite(Number(userId), mealId, favoriteMeal.id, token);
+      await replaceMealWithFavorite(
+        Number(userId),
+        mealId,
+        favoriteMeal.id,
+        token
+      );
 
       await fetchMealPlan();
 
@@ -370,14 +377,6 @@ export default function MealPlanner() {
         }}
       >
         <ClipLoader color="#7ec987" size={50} /> {/* Display the spinner */}
-      </div>
-    );
-  }
-
-  if (weeklyPlan.length === 0) {
-    return (
-      <div className="no-plan-error-container">
-        <ErrorMessage message={"No meal plan data found."} />
       </div>
     );
   }
@@ -428,65 +427,77 @@ export default function MealPlanner() {
   return (
     <div className="outer-container">
       <div className="main-container">
-        <h1 className="title">Weekly Plan</h1>
+        <h1 className="title">Weekly Meal Plan</h1>
 
-        <div className={`day-container ${isToday(currentDay) ? "today" : ""}`}>
-          <div className="day-header">
-            <h2 className="day-name">
-              Day {weeklyPlan[currentDay].day_number}
-            </h2>
-          </div>
-
-          <div className="items-list">
-            {weeklyPlan[currentDay].meals.map((meal) => (
-              <div key={meal.id} className="list-item">
-                {/* Use meal_plan_meal.id as the key */}
-                <div className="item-info">
-                  <h3 className="item-name">{meal.name}</h3>
-                  <div className="item-time-info">
-                    <span className="item-time">{meal.time}</span>
-                    <span className="dot">•</span>
-                    <span className="item-time">{meal.calories} kcal</span>
-                  </div>
-                </div>
-                <div className="macros-container">
-                  <div className="macro-item">
-                    <span className="macro-value">{meal.protein}g</span>
-                    <span className="macro-label">Protein</span>
-                  </div>
-                  <div className="macro-item">
-                    <span className="macro-value">{meal.carbs}g</span>
-                    <span className="macro-label">Carbs</span>
-                  </div>
-                  <div className="macro-item">
-                    <span className="macro-value">{meal.fats}g</span>
-                    <span className="macro-label">Fats</span>
-                  </div>
-                </div>
+        {weeklyPlan.length > 0 ? (
+          <>
+            <div
+              className={`day-container ${isToday(currentDay) ? "today" : ""}`}
+            >
+              <div className="day-header">
+                <h2 className="day-name">
+                  Day {weeklyPlan[currentDay].day_number}
+                </h2>
               </div>
-            ))}
+
+              <div className="items-list">
+                {weeklyPlan[currentDay].meals.map((meal) => (
+                  <div key={meal.id} className="list-item">
+                    {/* Use meal_plan_meal.id as the key */}
+                    <div className="item-info">
+                      <h3 className="item-name">{meal.name}</h3>
+                      <div className="item-time-info">
+                        <span className="item-time">{meal.time}</span>
+                        <span className="dot">•</span>
+                        <span className="item-time">{meal.calories} kcal</span>
+                      </div>
+                    </div>
+                    <div className="macros-container">
+                      <div className="macro-item">
+                        <span className="macro-value">{meal.protein}g</span>
+                        <span className="macro-label">Protein</span>
+                      </div>
+                      <div className="macro-item">
+                        <span className="macro-value">{meal.carbs}g</span>
+                        <span className="macro-label">Carbs</span>
+                      </div>
+                      <div className="macro-item">
+                        <span className="macro-value">{meal.fats}g</span>
+                        <span className="macro-label">Fats</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="navigation-container">
+              <button
+                onClick={handlePrevDay}
+                disabled={currentDay === 0}
+                className={`nav-button ${currentDay === 0 ? "disabled" : ""}`}
+              >
+                <ChevronLeft className="nav-icon" />
+              </button>
+
+              <button
+                onClick={handleNextDay}
+                disabled={currentDay >= weeklyPlan.length - 1}
+                className={`nav-button ${
+                  currentDay >= weeklyPlan.length - 1 ? "disabled" : ""
+                }`}
+              >
+                <ChevronRight className="nav-icon" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="no-plan-error-container">
+            <ErrorMessage
+              message={"No exercise plan data found. Generate a new plan!"}
+            />
           </div>
-        </div>
-
-        <div className="navigation-container">
-          <button
-            onClick={handlePrevDay}
-            disabled={currentDay === 0}
-            className={`nav-button ${currentDay === 0 ? "disabled" : ""}`}
-          >
-            <ChevronLeft className="nav-icon" />
-          </button>
-
-          <button
-            onClick={handleNextDay}
-            disabled={currentDay >= weeklyPlan.length - 1}
-            className={`nav-button ${
-              currentDay >= weeklyPlan.length - 1 ? "disabled" : ""
-            }`}
-          >
-            <ChevronRight className="nav-icon" />
-          </button>
-        </div>
+        )}
       </div>
 
       <div className="buttons-container">
@@ -518,8 +529,7 @@ export default function MealPlanner() {
             fetchFavoriteMeals();
           }}
         >
-          <Heart className="button-icon" />{" "}
-          <span>Favorite Meals</span>
+          <Heart className="button-icon" /> <span>Favorite Meals</span>
         </button>
       </div>
 

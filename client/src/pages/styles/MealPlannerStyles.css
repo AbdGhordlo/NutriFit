@@ -47,6 +47,12 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.popup-container h2 {
+  font-size: 1.35rem;
+  margin-bottom: 0.6rem;
+  text-align: center;
+}
+
 /* Loading Container */
 .loading-container {
   display: flex;
@@ -270,4 +276,29 @@
   text-align: center;
   padding: 20px;
   color: #6c757d;
+}
+
+.no-plans-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 16px;
+}
+
+.no-exercises-message {
+  text-align: center;
+  padding: 20px;
+}
+
+.no-exercises-message p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.no-favorites-message {
+  text-align: center;
+  padding: 10px;
+  color: #666;
+  font-size: 14px;
 }

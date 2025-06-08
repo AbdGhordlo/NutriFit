@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function SavedPlansPopup({
   savedPlans,
   handleAdoptPlan,
@@ -11,34 +9,38 @@ export default function SavedPlansPopup({
       <div className="popup-container">
         <h2>Saved Plans</h2>
         <div className="saved-plans-list">
-          {savedPlans.map((plan) => (
-            <div key={plan.exercise_plan_id} className="saved-plan-item">
-              <div className="plan-info">
-                <h3>{plan.exercise_plan_name}</h3>
-                <p>{plan.exercise_plan_description}</p>
+          {savedPlans.length === 0 ? (
+            <p className="no-plans-message">No saved plans yet</p>
+          ) : (
+            savedPlans.map((plan) => (
+              <div key={plan.exercise_plan_id} className="saved-plan-item">
+                <div className="plan-info">
+                  <h3>{plan.exercise_plan_name}</h3>
+                  <p>{plan.exercise_plan_description}</p>
+                </div>
+                {plan.is_adopted_plan ? (
+                  <button className="adopt-button adopted" disabled>
+                    Adopted
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="adopt-button"
+                      onClick={() => handleAdoptPlan(plan.exercise_plan_id)}
+                    >
+                      Adopt
+                    </button>
+                    <button
+                      className="remove-button"
+                      onClick={() => handleRemovePlan(plan.exercise_plan_id)}
+                    >
+                      Remove
+                    </button>
+                  </>
+                )}
               </div>
-              {plan.is_adopted_plan ? (
-                <button className="adopt-button adopted" disabled>
-                  Adopted
-                </button>
-              ) : (
-                <>
-                  <button
-                    className="adopt-button"
-                    onClick={() => handleAdoptPlan(plan.exercise_plan_id)}
-                  >
-                    Adopt
-                  </button>
-                  <button
-                    className="remove-button"
-                    onClick={() => handleRemovePlan(plan.exercise_plan_id)}
-                  >
-                    Remove
-                  </button>
-                </>
-              )}
-            </div>
-          ))}
+            ))
+          )}
         </div>
         <button className="close-button" onClick={closePopup}>
           Close

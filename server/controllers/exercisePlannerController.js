@@ -103,53 +103,27 @@ const generateExercisePlan = async (req, res) => {
 
   while (retryCount < MAX_RETRIES) {
     try {
-      // Fetch the user's personalization data
-      const personalizationData = await pool.query(
-        `SELECT steps_data FROM personalization WHERE user_id = $1`,
-        [userId]
-      );
+      // Try to fetch the user's personalization data
+      let personalizationData;
+      let useDefaultPlan = false;
 
-      if (personalizationData.rows.length === 0) {
-        return res
-          .status(404)
-          .json({ error: "Personalization data not found" });
+      try {
+        personalizationData = await pool.query(
+          `SELECT steps_data FROM personalization WHERE user_id = $1`,
+          [userId]
+        );
+
+        if (personalizationData.rows.length === 0) {
+          useDefaultPlan = true;
+        }
+      } catch (dbError) {
+        console.error("Error fetching personalization data:", dbError);
+        useDefaultPlan = true;
       }
-
-      const { steps_data } = personalizationData.rows[0];
-
-      // Extract relevant personalization data for exercise planning
-      const personalInfo = steps_data.step_1?.personalInfo || {};
-      const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
-      const weightGoal = steps_data.step_2?.weightGoal || {};
-      const healthIssues = steps_data.step_3?.healthIssues || ["none"];
-      const activityLevel = steps_data.step_4?.activityLevel || "moderate";
-
-      // Create a detailed user profile for the prompt
-      const userProfile = `
-      User Profile:
-      - Age: ${personalInfo.age}
-      - Gender: ${personalInfo.gender}
-      - Height: ${personalInfo.height} cm
-      - Weight: ${personalInfo.weight} kg
-      - Fitness Goal: ${fitnessGoal.type}
-      - Weight Goal: ${weightGoal.targetWeight} kg in ${
-        weightGoal.timeframe
-      } weeks
-      - Health Issues: ${healthIssues.join(", ")}
-      - Current Activity Level: ${activityLevel}
-    `;
-
-      // Define the system prompt with personalization
-      const SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate a personalized 7-day exercise plan in valid JSON format based on the user's profile. The plan should include multiple exercises for each day, tailored to the user's fitness level, goals, and available equipment.
-
-    Requirements:
-    - Focus on exercises that help achieve: ${fitnessGoal.type}
-    - Consider the user's current activity level: ${activityLevel}
-    - Avoid exercises that might affect these health issues: ${healthIssues.join(
-      ", "
-    )}
-
-    The JSON structure should match this format:
+      // Define the system prompt based on whether we have personalization data
+      let SYSTEM_PROMPT;
+      let userProfile;
+      let JSON_structure = `The JSON structure should match this format:
     {
       "exercise_plan": {
         "name": "7-Day Personalized Exercise Plan",
@@ -183,7 +157,60 @@ const generateExercisePlan = async (req, res) => {
           "exercise_order": 1
         }
       ]
-    }
+    }`;
+
+      if (useDefaultPlan) {
+        SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate a typical healthy 7-day exercise plan in valid JSON format. 
+        The plan should be balanced and suitable for an average adult with no specific health concerns.
+        
+        ${JSON_structure}
+
+        Include these exercise types each week:
+        - Strength training (3 days)
+        - Cardiovascular (3 days)
+        - Flexibility/mobility (2 days)
+        
+        Make sure the response is valid JSON and does not include any additional text or explanations.`;
+
+        userProfile =
+          "User has no personalization data. Generate a default healthy exercise plan.";
+      } else {
+        const { steps_data } = personalizationData.rows[0];
+        // Extract relevant personalization data for exercise planning
+        const personalInfo = steps_data.step_1?.personalInfo || {};
+        const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
+        const weightGoal = steps_data.step_2?.weightGoal || {};
+        const healthIssues = steps_data.step_3?.healthIssues || ["none"];
+        const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+
+        // Create a detailed user profile for the prompt
+        userProfile = `
+      User Profile:
+      - Age: ${personalInfo.age}
+      - Gender: ${personalInfo.gender}
+      - Height: ${personalInfo.height} cm
+      - Weight: ${personalInfo.weight} kg
+      - Fitness Goal: ${fitnessGoal.type}
+      - Weight Goal: ${weightGoal.targetWeight} kg in ${
+          weightGoal.timeframe
+        } weeks
+      - Health Issues: ${healthIssues.join(", ")}
+      - Current Activity Level: ${activityLevel}
+    `;
+
+        // Define the system prompt with personalization
+        SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate a personalized 7-day exercise plan in valid JSON format based on the user's profile. The plan should include multiple exercises for each day, tailored to the user's fitness level, goals, and available equipment.
+
+    Requirements:
+    - Focus on exercises that help achieve: ${fitnessGoal.type}
+    - Consider the user's current activity level: ${activityLevel}
+    - Avoid exercises that might affect these health issues: ${healthIssues.join(
+      ", "
+    )}
+
+    ${JSON_structure}
+
+    
     Include these exercise types each week:
     - Strength training (${
       fitnessGoal.type === "build_muscle" ? "4-5 days" : "2-3 days"
@@ -193,7 +220,7 @@ const generateExercisePlan = async (req, res) => {
     })
     - Flexibility/mobility (2-3 days)
     Make sure the response is valid JSON and does not include any additional text or explanations.`;
-
+      }
       // Make the request to Groq with both system prompt and user profile
       const chatCompletion = await groq.chat.completions.create({
         messages: [
@@ -201,7 +228,7 @@ const generateExercisePlan = async (req, res) => {
           { role: "user", content: userProfile },
         ],
         model: "llama3-70b-8192",
-        temperature: 0.6,
+        temperature: 0.4,
         max_tokens: 5000,
         top_p: 0.95,
         response_format: { type: "json_object" }, // Request JSON mode
@@ -460,7 +487,15 @@ const getFavoriteExercises = async (req, res) => {
 
 // Add exercise to favorites
 const addFavoriteExercise = async (req, res) => {
-  const { exerciseId, userId, reps, sets, duration, has_duration, has_reps_sets} = req.body;
+  const {
+    exerciseId,
+    userId,
+    reps,
+    sets,
+    duration,
+    has_duration,
+    has_reps_sets,
+  } = req.body;
 
   try {
     // Check if exercise exists
@@ -564,7 +599,9 @@ const replaceExerciseWithFavorite = async (req, res) => {
     );
 
     if (exercisePlanExercise.rows.length === 0) {
-      return res.status(404).json({ message: "Exercise plan exercise not found" });
+      return res
+        .status(404)
+        .json({ message: "Exercise plan exercise not found" });
     }
 
     // Update the exercise_plan_exercise with the favorite's data
@@ -580,7 +617,7 @@ const replaceExerciseWithFavorite = async (req, res) => {
         favoriteData.favorite_reps,
         favoriteData.favorite_sets,
         favoriteData.favorite_duration,
-        exercisePlanExerciseId
+        exercisePlanExerciseId,
       ]
     );
 
@@ -615,51 +652,26 @@ const regenerateDay = async (req, res) => {
   while (retryCount < MAX_RETRIES) {
     try {
       const exercisePlanId = await getAdoptedExercisePlanIdByUser(userId);
+      let personalizationData;
+      let useDefaultPlan = false;
 
-      // Get user's personalization data
-      const personalizationData = await pool.query(
-        `SELECT steps_data FROM personalization WHERE user_id = $1`,
-        [userId]
-      );
+      try {
+        personalizationData = await pool.query(
+          `SELECT steps_data FROM personalization WHERE user_id = $1`,
+          [userId]
+        );
 
-      if (personalizationData.rows.length === 0) {
-        return res
-          .status(404)
-          .json({ error: "Personalization data not found" });
+        if (personalizationData.rows.length === 0) {
+          useDefaultPlan = true;
+        }
+      } catch (dbError) {
+        console.error("Error fetching personalization data:", dbError);
+        useDefaultPlan = true;
       }
 
-      const { steps_data } = personalizationData.rows[0];
-      const personalInfo = steps_data.step_1?.personalInfo || {};
-      const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
-      const weightGoal = steps_data.step_2?.weightGoal || {};
-      const healthIssues = steps_data.step_3?.healthIssues || ["none"];
-      const activityLevel = steps_data.step_4?.activityLevel || "moderate";
-
-      const userProfile = `
-      User Profile:
-      - Age: ${personalInfo.age}
-      - Gender: ${personalInfo.gender}
-      - Height: ${personalInfo.height} cm
-      - Weight: ${personalInfo.weight} kg
-      - Fitness Goal: ${fitnessGoal.type}
-      - Weight Goal: ${weightGoal.targetWeight} kg in ${
-        weightGoal.timeframe
-      } weeks
-      - Health Issues: ${healthIssues.join(", ")}
-      - Current Activity Level: ${activityLevel}
-    `;
-
-      const SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate exercises for a single day (day ${dayNumber}) of 
-    a meal plan in valid JSON format based on the user's profile.
-
-    Requirements:
-    - Focus on exercises that help achieve: ${fitnessGoal.type}
-    - Consider the user's current activity level: ${activityLevel}
-    - Avoid exercises that might affect these health issues: ${healthIssues.join(
-      ", "
-    )}
-
-    The JSON structure should match this format:
+      let SYSTEM_PROMPT;
+      let userProfile;
+      let JSON_structure = `The JSON structure should match this format:
     {
       "exercises": [
         {
@@ -689,8 +701,59 @@ const regenerateDay = async (req, res) => {
           "exercise_order": 1
         }
       ]
-    }
+    }`;
+
+      if (useDefaultPlan) {
+        SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate a typical healthy 1-day exercise plan in valid JSON format. 
+        The plan should be balanced and suitable for an average adult with no specific health concerns.
+        
+        ${JSON_structure}
+
+        Include these exercise:
+        - Strength training
+        - Cardiovascular
+        - Flexibility/mobility
+        
+        Make sure the response is valid JSON and does not include any additional text or explanations.`;
+
+        userProfile =
+          "User has no personalization data. Generate a default healthy exercise plan.";
+      } else {
+        const { steps_data } = personalizationData.rows[0];
+        const personalInfo = steps_data.step_1?.personalInfo || {};
+        const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
+        const weightGoal = steps_data.step_2?.weightGoal || {};
+        const healthIssues = steps_data.step_3?.healthIssues || ["none"];
+        const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+
+        userProfile = `
+      User Profile:
+      - Age: ${personalInfo.age}
+      - Gender: ${personalInfo.gender}
+      - Height: ${personalInfo.height} cm
+      - Weight: ${personalInfo.weight} kg
+      - Fitness Goal: ${fitnessGoal.type}
+      - Weight Goal: ${weightGoal.targetWeight} kg in ${
+          weightGoal.timeframe
+        } weeks
+      - Health Issues: ${healthIssues.join(", ")}
+      - Current Activity Level: ${activityLevel}
+    `;
+
+        SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate exercises for a single day (day ${dayNumber}) of 
+    a meal plan in valid JSON format based on the user's profile.
+
+    Requirements:
+    - Focus on exercises that help achieve: ${fitnessGoal.type}
+    - Consider the user's current activity level: ${activityLevel}
+    - Avoid exercises that might affect these health issues: ${healthIssues.join(
+      ", "
+    )}
+
+        ${JSON_structure}
+    
       Make sure the response is valid JSON and does not include any additional text or explanations.`;
+      }
 
       const chatCompletion = await groq.chat.completions.create({
         messages: [
@@ -760,7 +823,7 @@ const regenerateDay = async (req, res) => {
         );
       }
 
-      console.log("Day Regenerated successfully!")
+      console.log("Day Regenerated successfully!");
       return res.status(200).json(generatedDay);
     } catch (error) {
       retryCount++;
@@ -797,56 +860,33 @@ const regenerateExercise = async (req, res) => {
       );
 
       if (existingExercise.rows.length === 0) {
-        return res.status(404).json({ error: "Exercise not found or doesn't belong to user" });
+        return res
+          .status(404)
+          .json({ error: "Exercise not found or doesn't belong to user" });
       }
 
       const currentExercise = existingExercise.rows[0];
 
-      // Get user's personalization data
-      const personalizationData = await pool.query(
-        `SELECT steps_data FROM personalization WHERE user_id = $1`,
-        [userId]
-      );
+       let personalizationData;
+      let useDefaultPlan = false;
 
-      if (personalizationData.rows.length === 0) {
-        return res.status(404).json({ error: "Personalization data not found" });
+      try {
+        personalizationData = await pool.query(
+          `SELECT steps_data FROM personalization WHERE user_id = $1`,
+          [userId]
+        );
+
+        if (personalizationData.rows.length === 0) {
+          useDefaultPlan = true;
+        }
+      } catch (dbError) {
+        console.error("Error fetching personalization data:", dbError);
+        useDefaultPlan = true;
       }
-
-      const { steps_data } = personalizationData.rows[0];
-      const personalInfo = steps_data.step_1?.personalInfo || {};
-      const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
-      const weightGoal = steps_data.step_2?.weightGoal || {};
-      const healthIssues = steps_data.step_3?.healthIssues || ["none"];
-      const activityLevel = steps_data.step_4?.activityLevel || "moderate";
-
-      const userProfile = `
-        User Profile:
-        - Age: ${personalInfo.age}
-        - Gender: ${personalInfo.gender}
-        - Height: ${personalInfo.height} cm
-        - Weight: ${personalInfo.weight} kg
-        - Fitness Goal: ${fitnessGoal.type}
-        - Weight Goal: ${weightGoal.targetWeight} kg in ${weightGoal.timeframe} weeks
-        - Health Issues: ${healthIssues.join(", ")}
-        - Current Activity Level: ${activityLevel}
-      `;
-
-      const SYSTEM_PROMPT = `You are a helpful fitness trainer. Regenerate a single exercise to replace an existing one in a workout plan.
-      
-      Current Exercise:
-      - Name: ${currentExercise.name}
-      - Description: ${currentExercise.description}
-      - Reps: ${currentExercise.reps || 'N/A'}
-      - Sets: ${currentExercise.sets || 'N/A'}
-      - Duration: ${currentExercise.duration || 'N/A'}
-
-      Requirements:
-      - Should be a different exercise than the current one
-      - Focus on exercises that help achieve: ${fitnessGoal.type}
-      - Consider the user's current activity level: ${activityLevel}
-      - Avoid exercises that might affect these health issues: ${healthIssues.join(", ")}
-
-      The JSON structure should match this format:
+      // Define the system prompt based on whether we have personalization data
+      let SYSTEM_PROMPT;
+      let userProfile;
+      let JSON_structure = `The JSON structure should match this format:
       {
         "exercise": {
           "name": "Exercise Name",
@@ -858,9 +898,61 @@ const regenerateExercise = async (req, res) => {
           "sets": null,
           "duration": "10m"
         }
-      }
-      Make sure the response is valid JSON and does not include any additional text or explanations.`;
+      }`;
 
+      if (useDefaultPlan) {
+        SYSTEM_PROMPT = `You are a helpful fitness trainer. Regenerate a single exercise to replace an existing one in a workout plan.
+        
+        Current Exercise:
+        - Name: ${currentExercise.name}
+        - Description: ${currentExercise.description}
+        - Reps: ${currentExercise.reps || "N/A"}
+        - Sets: ${currentExercise.sets || "N/A"}
+        - Duration: ${currentExercise.duration || "N/A"}
+
+        ${JSON_structure}
+
+        Make sure the response is valid JSON and does not include any additional text or explanations.`;
+
+        userProfile =
+          "User has no personalization data. Generate a default healthy exercise plan.";
+      } else {
+        const { steps_data } = personalizationData.rows[0];
+      const personalInfo = steps_data.step_1?.personalInfo || {};
+      const fitnessGoal = steps_data.step_2?.fitnessGoal || {};
+      const weightGoal = steps_data.step_2?.weightGoal || {};
+      const healthIssues = steps_data.step_3?.healthIssues || ["none"];
+      const activityLevel = steps_data.step_4?.activityLevel || "moderate";
+
+      userProfile = `
+        User Profile:
+        - Age: ${personalInfo.age}
+        - Gender: ${personalInfo.gender}
+        - Height: ${personalInfo.height} cm
+        - Weight: ${personalInfo.weight} kg
+        - Fitness Goal: ${fitnessGoal.type}
+        - Weight Goal: ${weightGoal.targetWeight} kg in ${
+        weightGoal.timeframe
+      } weeks
+        - Health Issues: ${healthIssues.join(", ")}
+        - Current Activity Level: ${activityLevel}
+      `;
+
+        // Define the system prompt with personalization
+        SYSTEM_PROMPT = `You are a helpful fitness trainer. Generate a personalized 7-day exercise plan in valid JSON format based on the user's profile. The plan should include multiple exercises for each day, tailored to the user's fitness level, goals, and available equipment.
+
+    Requirements:
+    - Focus on exercises that help achieve: ${fitnessGoal.type}
+    - Consider the user's current activity level: ${activityLevel}
+    - Avoid exercises that might affect these health issues: ${healthIssues.join(
+      ", "
+    )}
+
+    ${JSON_structure}
+
+    Make sure the response is valid JSON and does not include any additional text or explanations.`;
+      }
+      
       const chatCompletion = await groq.chat.completions.create({
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
@@ -876,7 +968,8 @@ const regenerateExercise = async (req, res) => {
 
       // console.log("AI Response:", chatCompletion.choices[0].message.content);
 
-      const jsonMatch = chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
+      const jsonMatch =
+        chatCompletion.choices[0].message.content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("No valid JSON found in AI response");
 
       const generatedExercise = JSON.parse(jsonMatch[0]);
@@ -910,11 +1003,11 @@ const regenerateExercise = async (req, res) => {
           generatedExercise.exercise.reps || null,
           generatedExercise.exercise.sets || null,
           generatedExercise.exercise.duration || null,
-          exercisePlanExerciseId
+          exercisePlanExerciseId,
         ]
       );
 
-      console.log("Exercise Regenerated successfully!")
+      console.log("Exercise Regenerated successfully!");
       return res.status(200).json(generatedExercise.exercise);
     } catch (error) {
       retryCount++;
@@ -946,7 +1039,9 @@ const getTodaysExercisesByUser = async (req, res) => {
     );
 
     if (exercisePlanResult.rows.length === 0) {
-      return res.status(404).json({ message: "No adopted exercise plan found for this user." });
+      return res
+        .status(404)
+        .json({ message: "No adopted exercise plan found for this user." });
     }
 
     const exercisePlan = exercisePlanResult.rows[0];
@@ -981,10 +1076,12 @@ const getTodaysExercisesByUser = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: "No exercises found for today in the adopted plan." });
+      return res
+        .status(404)
+        .json({ message: "No exercises found for today in the adopted plan." });
     }
 
-    const exercises = result.rows.map(ex => ({
+    const exercises = result.rows.map((ex) => ({
       id: ex.exercise_plan_exercise_id,
       exerciseId: ex.exercise_id,
       name: ex.exercise_name,
@@ -997,19 +1094,66 @@ const getTodaysExercisesByUser = async (req, res) => {
       sets: ex.sets,
       duration: ex.duration,
       exerciseOrder: ex.exercise_order,
-      completed: false
+      completed: false,
     }));
 
     res.json({
       exercises,
       currentDay: currentDayNumber,
       daysSinceAdoption: daysSinceAdoption,
-      adoptionDate: adoptionDate.toISOString().split('T')[0]
+      adoptionDate: adoptionDate.toISOString().split("T")[0],
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send("Server error");
   }
+};
+
+const createDefaultExercisePlan = async (userId) => {
+  const defaultExercisePlan = {
+    exercise_plan: {
+      name: "Starter Fitness Plan",
+      description: "A balanced weekly exercise routine for general fitness"
+    },
+    exercises: [
+      // Monday
+      { name: "Morning Jog", description: "30-minute moderate pace jog", calories_burned: 300, has_reps_sets: false, has_duration: true, duration: "30m", time: "07:00", day_number: 1 },
+      { name: "Pushups", description: "Bodyweight pushups", calories_burned: 70, has_reps_sets: true, has_duration: false, reps: 12, sets: 3, time: "18:00", day_number: 1 },
+      { name: "Squats", description: "Bodyweight squats", calories_burned: 70, has_reps_sets: true, has_duration: false, reps: 12, sets: 3, time: "18:10", day_number: 1 },
+      { name: "Lunges", description: "Bodyweight lunges", calories_burned: 60, has_reps_sets: true, has_duration: false, reps: 12, sets: 3, time: "18:20", day_number: 1 },
+
+      // Tuesday
+      { name: "Brisk Walk", description: "40-minute brisk walk outdoors", calories_burned: 250, has_duration: true, has_reps_sets: false, duration: "40m", time: "07:30", day_number: 2 },
+      { name: "Plank", description: "Static plank hold", calories_burned: 70, has_reps_sets: true, has_duration: false, reps: 1, sets: 3, time: "17:30", day_number: 2 },
+      { name: "Crunches", description: "Abdominal crunches", calories_burned: 70, has_reps_sets: true, has_duration: false, reps: 15, sets: 3, time: "17:40", day_number: 2 },
+      { name: "Leg Raises", description: "Lying leg raises", calories_burned: 60, has_reps_sets: true, has_duration: false, reps: 15, sets: 3, time: "17:50", day_number: 2 },
+
+      // Wednesday
+      { name: "Cycling", description: "45-minute stationary or outdoor cycling", calories_burned: 400, has_duration: true, has_reps_sets: false, duration: "45m", time: "07:00", day_number: 3 },
+
+      // Thursday
+      { name: "Morning Walk", description: "20-minute walk", calories_burned: 100, has_duration: true, has_reps_sets: false, duration: "20m", time: "07:30", day_number: 4 },
+      { name: "Full-body Stretching", description: "Light dynamic and static stretches", calories_burned: 100, has_duration: true, has_reps_sets: false, duration: "10m", time: "07:50", day_number: 4 },
+      { name: "Pushups", description: "Pushups for upper body strength", calories_burned: 80, has_reps_sets: true, has_duration: false, reps: 10, sets: 3, time: "18:00", day_number: 4 },
+      { name: "Dumbbell Rows", description: "Bent-over dumbbell rows", calories_burned: 110, has_reps_sets: true, has_duration: false, reps: 10, sets: 3, time: "18:10", day_number: 4 },
+      { name: "Squats", description: "Bodyweight or dumbbell squats", calories_burned: 110, has_reps_sets: true, has_duration: false, reps: 10, sets: 3, time: "18:20", day_number: 4 },
+
+      // Friday
+      { name: "Yoga Flow", description: "Light yoga sequence with breathwork", calories_burned: 180, has_duration: true, has_reps_sets: false, duration: "30m", time: "07:00", day_number: 5 },
+
+      // Saturday
+      { name: "Hiking or Outdoor Activity", description: "Go for a light hike or outdoor walk", calories_burned: 500, has_duration: true, has_reps_sets: false, duration: "1h", time: "10:00", day_number: 6 },
+
+      // Sunday
+      { name: "Restorative Stretching", description: "Foam rolling and mobility work", calories_burned: 100, has_duration: true, has_reps_sets: false, duration: "20m", time: "09:00", day_number: 7 }
+    ]
+  };
+
+  await saveAndAdoptExercisePlan({
+    body: { userId, plan: defaultExercisePlan }
+  }, {
+    status: () => ({ json: () => {} })
+  });
 };
 
 module.exports = {
@@ -1026,5 +1170,6 @@ module.exports = {
   regenerateExercise,
   removeFavoriteExercise,
   replaceExerciseWithFavorite,
-  getTodaysExercisesByUser
+  getTodaysExercisesByUser,
+  createDefaultExercisePlan
 };

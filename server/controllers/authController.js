@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../db");
 const { OAuth2Client } = require("google-auth-library");
+const { createDefaultMealPlan } = require("./mealPlannerController");
+const { createDefaultExercisePlan } = require("./exercisePlannerController");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -36,28 +38,50 @@ const signup = async (req, res) => {
       'INSERT INTO "user" (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email',
       [username, email, hashedPassword]
     );
-
+    
+    const userId = result.rows[0].id;
+    
     // Create default settings for the user
     await pool.query(
       `INSERT INTO settings 
         (user_id, meal_reminders, exercise_reminders, progress_updates, water_intake_reminder, personalize_completed)
       VALUES 
         ($1, TRUE, TRUE, TRUE, TRUE, FALSE)`,
-      [result.rows[0].id]
+      [userId]
     );
+
+     // Create default plans
+    try {
+      await createDefaultMealPlan(userId);
+      await createDefaultExercisePlan(userId);
+      
+      await pool.query(
+        `UPDATE meal_plan SET is_adopted_plan = TRUE 
+         WHERE user_id = $1 AND name = 'Healthy Starter Meal Plan'`,
+        [userId]
+      );
+      
+      await pool.query(
+        `UPDATE exercise_plan SET is_adopted_plan = TRUE 
+         WHERE user_id = $1 AND name = 'Starter Fitness Plan'`,
+        [userId]
+      );
+    } catch (planError) {
+      console.error("Error creating default plans:", planError);
+    }
 
     // Create JWT token
     const token = jwt.sign(
-      { id: result.rows[0].id, email: result.rows[0].email },
+      { id: userId, email: result.rows[0].email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" } //24??
+      { expiresIn: "2h" } //24??
     );
 
     res.status(201).json({
       message: "User created successfully",
       token,
       user: {
-        id: result.rows[0].id,
+        id: userId,
         username: result.rows[0].username,
         email: result.rows[0].email,
       },
@@ -102,7 +126,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" } //24hrs??
+      { expiresIn: "2h" } //24hrs??
     );
 
     res.json({
@@ -190,7 +214,7 @@ const googleAuth = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "2h",
     });
 
     res.status(200).json({ token });
