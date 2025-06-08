@@ -9,7 +9,10 @@ export default function SavedPlansPopup({
       <div className="popup-container">
         <h2>Saved Plans</h2>
         <div className="saved-plans-list">
-          {savedPlans.map((plan) => (
+          {savedPlans.length === 0 ? (
+            <p className="no-plans-message">No saved plans yet</p>
+          ) : (
+          savedPlans.map((plan) => (
             <div key={plan.meal_plan_id} className="saved-plan-item">
               <div className="plan-info">
                 <h3>{plan.meal_plan_name}</h3>
@@ -36,7 +39,9 @@ export default function SavedPlansPopup({
                 </>
               )}
             </div>
-          ))}
+          
+          ))
+        )}
         </div>
         <button className="close-button" onClick={closePopup}>
           Close

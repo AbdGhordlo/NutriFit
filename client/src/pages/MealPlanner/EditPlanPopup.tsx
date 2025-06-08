@@ -26,8 +26,12 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
   favoriteMeals,
 }) => {
   const [isRegeneratingDay, setIsRegeneratingDay] = useState(false);
-  const [regeneratingMealId, setRegeneratingMealId] = useState<number | null>(null);
-  const [selectedMealForReplacement, setSelectedMealForReplacement] = useState<number | null>(null);
+  const [regeneratingMealId, setRegeneratingMealId] = useState<number | null>(
+    null
+  );
+  const [selectedMealForReplacement, setSelectedMealForReplacement] = useState<
+    number | null
+  >(null);
 
   const handleRegenerateDay = async () => {
     setIsRegeneratingDay(true);
@@ -47,99 +51,117 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
     }
   };
 
+  // Check if there are exercises for the current day
+  const hasMeals = weeklyPlan[currentDay]?.meals?.length > 0;
+
   return (
     <div className="popup-overlay">
       <div className="edit-plan-popup">
         <div className="popup-header">
-          <h2>Edit Day {weeklyPlan[currentDay].day_number}</h2>
+          <h2>Edit Day {weeklyPlan[currentDay]?.day_number}</h2>
           <button onClick={onClose} className="close-button">
             <X size={24} />
           </button>
         </div>
 
-        <div className="day-actions">
-          <button
-            onClick={handleRegenerateDay}
-            disabled={isRegeneratingDay}
-            className="action-button"
-          >
-            {isRegeneratingDay ? (
-              <ClipLoader color="#ffffff" size={20} />
-            ) : (
-              <>
-                <RefreshCw size={18} />
-                <span>Regenerate Entire Day</span>
-              </>
-            )}
-          </button>
-        </div>
+        {hasMeals ? (
+          <>
+            <div className="day-actions">
+              <button
+                onClick={handleRegenerateDay}
+                disabled={isRegeneratingDay}
+                className="action-button"
+              >
+                {isRegeneratingDay ? (
+                  <ClipLoader color="#ffffff" size={20} />
+                ) : (
+                  <>
+                    <RefreshCw size={18} />
+                    <span>Regenerate Entire Day</span>
+                  </>
+                )}
+              </button>
+            </div>
 
-        <div className="edit-plan-list">
-          {weeklyPlan[currentDay].meals.map((meal) => (
-            <div key={meal.id} className="edit-plan-item">
-              <div className="edit-plan-info">
-                <h3>{meal.name}</h3>
-                <p>{meal.time} • {meal.calories} kcal</p>
-                <div className="meal-macros">
-                  <span>P: {meal.protein}g</span>
-                  <span>C: {meal.carbs}g</span>
-                  <span>F: {meal.fats}g</span>
+            <div className="edit-plan-list">
+              {weeklyPlan[currentDay].meals.map((meal) => (
+                <div key={meal.id} className="edit-plan-item">
+                  <div className="edit-plan-info">
+                    <h3>{meal.name}</h3>
+                    <p>
+                      {meal.time} • {meal.calories} kcal
+                    </p>
+                    <div className="meal-macros">
+                      <span>P: {meal.protein}g</span>
+                      <span>C: {meal.carbs}g</span>
+                      <span>F: {meal.fats}g</span>
+                    </div>
+                  </div>
+
+                  <div className="edit-plan-actions">
+                    <button
+                      onClick={() => handleRegenerateMeal(meal.mealPlanMealId)}
+                      disabled={regeneratingMealId === meal.id}
+                      className="action-button small"
+                    >
+                      {regeneratingMealId === meal.id ? (
+                        <ClipLoader color="#ffffff" size={15} />
+                      ) : (
+                        <RefreshCw size={16} />
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => onAddToFavorites(meal)}
+                      className="action-button small"
+                    >
+                      <Heart size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedMealForReplacement(meal.id)}
+                      className={`action-button small ${
+                        selectedMealForReplacement === meal.id ? "active" : ""
+                      }`}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {selectedMealForReplacement && (
+              <div className="favorites-section">
+                <h3>Replace with a favorite meal:</h3>
+                <div className="favorites-list">
+                  {favoriteMeals.length > 0 ? (
+                    favoriteMeals.map((favorite) => (
+                      <div
+                        key={favorite.id}
+                        className="favorite-edit-plan-item"
+                        onClick={() => {
+                          onReplaceWithFavorite(
+                            selectedMealForReplacement,
+                            favorite
+                          );
+                          setSelectedMealForReplacement(null);
+                        }}
+                      >
+                        <h4>{favorite.name}</h4>
+                        <p>{favorite.calories} kcal</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No favorite meals saved yet.</p>
+                  )}
                 </div>
               </div>
-
-              <div className="edit-plan-actions">
-                <button
-                  onClick={() => handleRegenerateMeal(meal.mealPlanMealId)}
-                  disabled={regeneratingMealId === meal.id}
-                  className="action-button small"
-                >
-                  {regeneratingMealId === meal.id ? (
-                    <ClipLoader color="#ffffff" size={15} />
-                  ) : (
-                    <RefreshCw size={16} />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => onAddToFavorites(meal)}
-                  className="action-button small"
-                >
-                  <Heart size={16} />
-                </button>
-
-                <button
-                  onClick={() => setSelectedMealForReplacement(meal.id)}
-                  className={`action-button small ${selectedMealForReplacement === meal.id ? 'active' : ''}`}
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {selectedMealForReplacement && (
-          <div className="favorites-section">
-            <h3>Replace with a favorite meal:</h3>
-            <div className="favorites-list">
-              {favoriteMeals.length > 0 ? (
-                favoriteMeals.map((favorite) => (
-                  <div
-                    key={favorite.id}
-                    className="favorite-edit-plan-item"
-                    onClick={() => {
-                      onReplaceWithFavorite(selectedMealForReplacement, favorite);
-                      setSelectedMealForReplacement(null);
-                    }}
-                  >
-                    <h4>{favorite.name}</h4>
-                    <p>{favorite.calories} kcal</p>
-                  </div>
-                ))
-              ) : (
-                <p>No favorite meals saved yet.</p>
-              )}
-            </div>
+            )}
+          </>
+        ) : (
+          <div className="no-exercises-message">
+            <p>No meals found for this day.</p>
           </div>
         )}
       </div>

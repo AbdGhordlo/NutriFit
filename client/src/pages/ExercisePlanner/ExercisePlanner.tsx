@@ -117,6 +117,8 @@ export default function ExercisePlanner() {
       setShowSavedPlansPopup(true);
     } catch (error) {
       console.error("Error fetching saved plans:", error);
+        setSavedPlans([]);
+        setShowSavedPlansPopup(true);
     }
   };
 
@@ -431,19 +433,13 @@ export default function ExercisePlanner() {
     );
   }
 
-  if (weeklyPlan.length === 0) {
-    return (
-      <div className="no-plan-error-container">
-        <ErrorMessage message={"No exercise plan data found."} />
-      </div>
-    );
-  }
-
   return (
     <div className="outer-container">
       <div className="main-container">
         <h1 className="title">Weekly Exercise Plan</h1>
 
+        {weeklyPlan.length > 0 ? (
+          <>
         <div className={`day-container ${isToday(currentDay) ? "today" : ""}`}>
           <div className="day-header">
             <h2 className="day-name">
@@ -510,6 +506,12 @@ export default function ExercisePlanner() {
             <ChevronRight className="nav-icon" />
           </button>
         </div>
+        </>
+        ) : (
+        <div className="no-plan-error-container">
+        <ErrorMessage message={"No exercise plan data found. Generate a new plan!"} />
+      </div>
+      )}
       </div>
 
       <div className="buttons-container">
