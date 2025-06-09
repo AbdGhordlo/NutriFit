@@ -13,15 +13,16 @@ const {
   regenerateDay,
   regenerateMeal,
   replaceMealWithFavorite,
+  removeSavedPlan,
 } = require('../controllers/mealPlannerController');
 
 const router = express.Router();
 
 // Fetch the adopted meal plan for a user
-router.get('/:userId/adopted', getAdoptedMealPlanByUser);
+router.get('/adopted/:userId', getAdoptedMealPlanByUser);
 
 // Fetch all meal plans for a user (only plan info, no meals)
-router.get('/:userId/all', getAllMealPlansByUser);
+router.get('/all/:userId', getAllMealPlansByUser);
 
 // Fetch today's meals for a user from their adopted meal plan
 router.get('/users/:userId/meals/today', getTodaysMealsByUser);
@@ -36,19 +37,20 @@ router.post('/save-and-adopt-meal-plan', saveAndAdoptMealPlan);
 router.post('/adopt-meal-plan', adoptMealPlan);
 
 // Generate a meal plan using AI
-router.post('/:userId/generate-meal-plan', getMealPlan);
+router.post('/generate-meal-plan', getMealPlan);
 
+router.delete('/remove-meal-plan', removeSavedPlan);
 
 // ------------------- Edit Plan
 
 // Favorite meals routes
 router.get('/favorites/:userId', getFavoriteMeals);
-router.post('/favorites/:userId', addFavoriteMeal);
-router.delete('/favorites/:userId/:mealId', removeFavoriteMeal);
+router.post('/favorites', addFavoriteMeal);
+router.delete('/favorites', removeFavoriteMeal);
 
 // Meal plan editing routes
-router.post('/regenerate-day/:userId/:dayNumber', regenerateDay);
-router.post('/regenerate-meal/:userId/:mealPlanMealId', regenerateMeal);
-router.post('/replace-with-favorite/:userId', replaceMealWithFavorite);
+router.post('/regenerate-day', regenerateDay);
+router.post('/regenerate-meal', regenerateMeal);
+router.post('/replace-with-favorite', replaceMealWithFavorite);
 
 module.exports = router;

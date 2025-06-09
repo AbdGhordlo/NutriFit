@@ -1,5 +1,4 @@
 import { GeneratedMealPlan } from "../../types/mealPlannerTypes";
-import React from "react";
 import { ClipLoader } from "react-spinners";
 
 export default function GeneratedPlanPopup({
@@ -8,6 +7,7 @@ export default function GeneratedPlanPopup({
   handleSavePlan,
   handleSaveAndAdoptPlan,
   handleClosePopup,
+  handleRegeneratePlan,
 }: any) {
   const groupMealsByDay = (meals: GeneratedMealPlan["meals"]) => {
     const groupedMeals: { [key: number]: GeneratedMealPlan["meals"] } = {};
@@ -85,8 +85,14 @@ export default function GeneratedPlanPopup({
               </div>
             )}
             <div className="popup-buttons">
+              <button
+                className="regenerate-button"
+                onClick={handleRegeneratePlan}
+              >
+                Regenerate
+              </button>
               <button className="save-button" onClick={handleSavePlan}>
-                Add to Saved Plans
+                Save Plan
               </button>
               <button className="adopt-button" onClick={handleSaveAndAdoptPlan}>
                 Save & Adopt

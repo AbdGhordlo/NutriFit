@@ -1,37 +1,33 @@
 import React, { useState } from "react";
-import { DayPlan, Meal } from "../../types/mealPlannerTypes";
 import { ClipLoader } from "react-spinners";
 import { X, RefreshCw, Heart, Plus } from "lucide-react";
 import "../styles/EditPopupStyles.css";
+import { DayPlan, Exercise } from "../../types/exercisePlannerTypes";
 
-interface EditPlanPopupProps {
+interface EditExercisePopupProps {
   weeklyPlan: DayPlan[];
   currentDay: number;
   onRegenerateDay: (dayNumber: number) => Promise<void>;
-  onRegenerateMeal: (mealId: number) => Promise<void>;
-  onAddToFavorites: (meal: Meal) => void;
-  onReplaceWithFavorite: (mealId: number, favoriteMeal: Meal) => void;
+  onRegenerateExercise: (exerciseId: number) => Promise<void>;
+  onAddToFavorites: (exercise: Exercise) => void;
+  onReplaceWithFavorite: (exerciseId: number, favoriteExercise: Exercise) => void;
   onClose: () => void;
-  favoriteMeals: Meal[];
+  favoriteExercises: Exercise[];
 }
 
-export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
+export const EditExercisePopup: React.FC<EditExercisePopupProps> = ({
   weeklyPlan,
   currentDay,
   onRegenerateDay,
-  onRegenerateMeal,
+  onRegenerateExercise,
   onAddToFavorites,
   onReplaceWithFavorite,
   onClose,
-  favoriteMeals,
+  favoriteExercises,
 }) => {
   const [isRegeneratingDay, setIsRegeneratingDay] = useState(false);
-  const [regeneratingMealId, setRegeneratingMealId] = useState<number | null>(
-    null
-  );
-  const [selectedMealForReplacement, setSelectedMealForReplacement] = useState<
-    number | null
-  >(null);
+  const [regeneratingExerciseId, setRegeneratingExerciseId] = useState<number | null>(null);
+  const [selectedExerciseForReplacement, setSelectedExerciseForReplacement] = useState<Exercise | null>(null);
 
   const handleRegenerateDay = async () => {
     setIsRegeneratingDay(true);
@@ -42,17 +38,17 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
     }
   };
 
-  const handleRegenerateMeal = async (mealId: number) => {
-    setRegeneratingMealId(mealId);
+  const handleRegenerateExercise = async (exerciseId: number) => {
+    setRegeneratingExerciseId(exerciseId);
     try {
-      await onRegenerateMeal(mealId);
+      await onRegenerateExercise(exerciseId);
     } finally {
-      setRegeneratingMealId(null);
+      setRegeneratingExerciseId(null);
     }
   };
 
   // Check if there are exercises for the current day
-  const hasMeals = weeklyPlan[currentDay]?.meals?.length > 0;
+  const hasExercises = weeklyPlan[currentDay]?.exercises?.length > 0;
 
   return (
     <div className="popup-overlay">
@@ -64,7 +60,7 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
           </button>
         </div>
 
-        {hasMeals ? (
+        {hasExercises ? (
           <>
             <div className="day-actions">
               <button
@@ -84,27 +80,28 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
             </div>
 
             <div className="edit-plan-list">
-              {weeklyPlan[currentDay].meals.map((meal) => (
-                <div key={meal.id} className="edit-plan-item">
+              {weeklyPlan[currentDay].exercises.map((exercise) => (
+                <div key={exercise.exercise_plan_exercise_id} className="edit-plan-item">
                   <div className="edit-plan-info">
-                    <h3>{meal.name}</h3>
-                    <p>
-                      {meal.time} • {meal.calories} kcal
-                    </p>
-                    <div className="meal-macros">
-                      <span>P: {meal.protein}g</span>
-                      <span>C: {meal.carbs}g</span>
-                      <span>F: {meal.fats}g</span>
+                    <h3>{exercise.name}</h3>
+                    <p>{exercise.time} • {exercise.calories_burned} calories</p>
+                    <div className="exercise-details">
+                      {exercise.has_reps_sets && (
+                        <span>{exercise.sets}x{exercise.reps}</span>
+                      )}
+                      {exercise.has_duration && (
+                        <span>{exercise.duration}</span>
+                      )}
                     </div>
                   </div>
 
                   <div className="edit-plan-actions">
                     <button
-                      onClick={() => handleRegenerateMeal(meal.mealPlanMealId)}
-                      disabled={regeneratingMealId === meal.id}
+                      onClick={() => handleRegenerateExercise(exercise.exercise_plan_exercise_id)}
+                      disabled={regeneratingExerciseId === exercise.exercise_plan_exercise_id}
                       className="action-button small"
                     >
-                      {regeneratingMealId === meal.id ? (
+                      {regeneratingExerciseId === exercise.exercise_plan_exercise_id ? (
                         <ClipLoader color="#ffffff" size={15} />
                       ) : (
                         <RefreshCw size={16} />
@@ -112,17 +109,15 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
                     </button>
 
                     <button
-                      onClick={() => onAddToFavorites(meal)}
+                      onClick={() => onAddToFavorites(exercise)}
                       className="action-button small"
                     >
                       <Heart size={16} />
                     </button>
 
                     <button
-                      onClick={() => setSelectedMealForReplacement(meal.id)}
-                      className={`action-button small ${
-                        selectedMealForReplacement === meal.id ? "active" : ""
-                      }`}
+                      onClick={() => setSelectedExerciseForReplacement(exercise)}
+                      className={`action-button small ${selectedExerciseForReplacement?.id === exercise.id ? 'active' : ''}`}
                     >
                       <Plus size={16} />
                     </button>
@@ -131,29 +126,28 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
               ))}
             </div>
 
-            {selectedMealForReplacement && (
+            {selectedExerciseForReplacement && (
               <div className="favorites-section">
-                <h3>Replace with a favorite meal:</h3>
+                <h3>Replace with a favorite exercise:</h3>
                 <div className="favorites-list">
-                  {favoriteMeals.length > 0 ? (
-                    favoriteMeals.map((favorite) => (
+                  {favoriteExercises.length > 0 ? (
+                    favoriteExercises.map((favorite) => (
                       <div
                         key={favorite.id}
                         className="favorite-edit-plan-item"
                         onClick={() => {
-                          onReplaceWithFavorite(
-                            selectedMealForReplacement,
-                            favorite
-                          );
-                          setSelectedMealForReplacement(null);
+                          onReplaceWithFavorite(selectedExerciseForReplacement.exercise_plan_exercise_id, favorite);
+                          setSelectedExerciseForReplacement(null);
                         }}
                       >
                         <h4>{favorite.name}</h4>
-                        <p>{favorite.calories} kcal</p>
+                        <p>{favorite.calories_burned} calories</p>
+                        {favorite.has_reps_sets && <p>{favorite.sets}x{favorite.reps}</p>}
+                        {favorite.has_duration && <p>{favorite.duration}</p>}
                       </div>
                     ))
                   ) : (
-                    <p>No favorite meals saved yet.</p>
+                    <p className="no-favorites-message">No favorite exercises saved yet.</p>
                   )}
                 </div>
               </div>
@@ -161,7 +155,7 @@ export const EditPlanPopup: React.FC<EditPlanPopupProps> = ({
           </>
         ) : (
           <div className="no-exercises-message">
-            <p>No meals found for this day.</p>
+            <p>No exercises found for this day.</p>
           </div>
         )}
       </div>

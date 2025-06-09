@@ -78,13 +78,13 @@
     cursor: not-allowed;
   }
   
-  .meals-list {
+  .edit-plan-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
   
-  .meal-item {
+  .edit-plan-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -93,12 +93,12 @@
     border-radius: 8px;
   }
   
-  .meal-info h3 {
+  .edit-plan-info h3 {
     margin: 0 0 4px 0;
     font-size: 1rem;
   }
   
-  .meal-info p {
+  .edit-plan-info p {
     margin: 0 0 4px 0;
     font-size: 0.8rem;
     color: #666;
@@ -111,11 +111,18 @@
     color: #666;
   }
   
-  .meal-actions {
+  .edit-plan-actions {
     display: flex;
     gap: 8px;
   }
   
+  .exercise-details {
+    display: flex;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
   .favorites-section {
     margin-top: 20px;
     padding-top: 20px;
@@ -133,7 +140,7 @@
     gap: 8px;
   }
   
-  .favorite-meal-item {
+  .favorite-edit-plan-item {
     padding: 10px;
     border: 1px solid #e0e0e0;
     border-radius: 6px;
@@ -141,16 +148,16 @@
     transition: background-color 0.2s;
   }
   
-  .favorite-meal-item:hover {
+  .favorite-edit-plan-item:hover {
     background-color: #f5f5f5;
   }
   
-  .favorite-meal-item h4 {
+  .favorite-edit-plan-item h4 {
     margin: 0 0 4px 0;
     font-size: 0.9rem;
   }
   
-  .favorite-meal-item p {
+  .favorite-edit-plan-item p {
     margin: 0;
     font-size: 0.8rem;
     color: #666;

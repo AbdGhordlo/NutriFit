@@ -15,6 +15,7 @@ const ingredientsRoutes = require("./routes/ingredientsRoutes");
 const personalizationRoutes = require("./routes/personalizationRoutes");
 const settingsRoutes = require("./routes/settingsRoutes"); // Import settings routes
 const uploadRoutes = require("./routes/uploadRoutes"); // Import upload routes
+const progressPhotoRoutes = require("./routes/progressPhotoRoutes"); // Import progress photo routes
 const progressRoutes = require("./routes/progressRoutes"); // Import progress routes
 
 dotenv.config(); // Loads environment variables from a .env file into process.env
@@ -37,6 +38,7 @@ app.use("/ingredients", verifyToken, ingredientsRoutes);
 app.use("/personalization", verifyToken, personalizationRoutes);
 app.use("/settings", verifyToken, settingsRoutes); // Register settings routes
 app.use("/upload", verifyToken, uploadRoutes); // Register upload routes
+app.use("/progress-photos", verifyToken, progressPhotoRoutes); // Register progress photo routes
 app.use("/progress", verifyToken, progressRoutes); // Register progress routes
 
 // Test route

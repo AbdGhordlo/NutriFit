@@ -33,7 +33,7 @@ export const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("token");
-    navigate("/login");
+    navigate("/");
   };
 
   return {
