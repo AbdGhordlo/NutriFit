@@ -13,7 +13,7 @@ import { Slider } from "../Slider";
 
 /**
  * Renders the two sliders under “Lose Weight,” “Build Muscle” or “Body Recomposition.”
- * For “Lose Weight”: 
+ * For “Lose Weight”:
  *   • Target Weight ∈ [20, personalWeight]
  *   • Time Frame ∈ [ceil((personalWeight – targetWeight)/2), ceil((personalWeight–20)/2)]
  *
@@ -22,7 +22,7 @@ import { Slider } from "../Slider";
  *   • Time Frame ∈ [ceil((targetWeight – personalWeight)/2), ceil(50/2)]  // 25 weeks max
  *
  * For “Body Recomposition”:
- *   • Target Weight ∈ [personalWeight–10, personalWeight+10] 
+ *   • Target Weight ∈ [personalWeight–10, personalWeight+10]
  *     (clamped to ≥20kg on the lower bound)
  *   • Time Frame ∈ [computedMinRecomp, 24] where
  *       – diff = |personalWeight – targetWeight|
@@ -119,47 +119,8 @@ export const renderGoalWeightInputs = (
 
   // ── BODY RECOMPOSITION ────────────────────────────────────────────────────
   if (goalType === "body_recomposition") {
-    // ±10 kg window around personalWeight
-    const minWeight = personalWeight - 10;
-    const maxWeight = personalWeight + 10;
-    // Ensure minWeight is at least 20 (clamp so user cannot go below 20kg)
-    const clampedMinWeight = minWeight > 20 ? minWeight : 20;
-
-    // Compute the absolute difference
-    const diff = Math.abs(personalWeight - weightGoal.targetWeight);
-    // If diff > 0, minimum = ceil(diff/1) (1 kg/week combined pace)
-    // If diff = 0, force at least 4 weeks
-    const minRecompWeeks = diff > 0 ? Math.ceil(diff / 1) : 4;
-    // Cap the max at 24 weeks
-    const maxRecompWeeks = 24;
-
-    return (
-      <div className="w-full space-y-4 mt-4">
-        {/**** Target Weight ****/}
-        <Slider
-          label="Target Weight"
-          value={weightGoal.targetWeight}
-          onChange={(value) =>
-            setWeightGoal({ ...weightGoal, targetWeight: value })
-          }
-          min={clampedMinWeight}
-          max={maxWeight}
-          unit="kg"
-        />
-
-        {/**** Time Frame ****/}
-        <Slider
-          label="Time Frame"
-          value={weightGoal.timeframe}
-          onChange={(value) =>
-            setWeightGoal({ ...weightGoal, timeframe: value })
-          }
-          min={minRecompWeeks}
-          max={maxRecompWeeks}
-          unit=" weeks"
-        />
-      </div>
-    );
+    // Do not render target weight and timeframe sliders for body recomposition
+    return null;
   }
 
   // ── OTHERWISE (e.g. improve_health) ────────────────────────────────────────
@@ -184,7 +145,11 @@ export const renderGoalCard = (
 ) => (
   <button
     onClick={() => {
-      if (type === "lose_weight" || type === "build_muscle" || type === "body_recomposition") {
+      if (
+        type === "lose_weight" ||
+        type === "build_muscle" ||
+        type === "body_recomposition"
+      ) {
         // Pass along the existing weightGoal object so that Step2 can manipulate it
         setFitnessGoal({ type, goal: weightGoal });
       } else {
@@ -204,7 +169,9 @@ export const renderGoalCard = (
     </div>
     <p className="text-sm text-secondary-text text-left">{description}</p>
 
-    {(type === "lose_weight" || type === "build_muscle" || type === "body_recomposition") &&
+    {(type === "lose_weight" ||
+      type === "build_muscle" ||
+      type === "body_recomposition") &&
       fitnessGoal.type === type &&
       renderGoalWeightInputs(personalWeight, weightGoal, setWeightGoal, type)}
   </button>
