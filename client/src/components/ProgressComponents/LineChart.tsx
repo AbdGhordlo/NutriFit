@@ -13,26 +13,45 @@ const LineChart = ({ data, color = "#ef4444", height = 250 }) => {
       chartRef.current.clientWidth - margin.left - margin.right
     );
     const chartHeight = height - margin.top - margin.bottom;
-    const parseDate = d3.timeParse("%Y-%m-%d");
+    // Robust date parsing: handle YYYY-MM-DD and ISO strings
+    const parseDate = (d) => {
+      const ymd = d3.timeParse("%Y-%m-%d")(d);
+      if (ymd) return ymd;
+      return d3.isoParse(d);
+    };
     // Type the formatted data for D3
     const formattedData: { date: Date; value: number }[] = data
       .map((d: any) => ({ date: parseDate(d.date), value: +d.value }))
-      .filter((d) => d.date instanceof Date && !isNaN(d.date));
+      .filter((d) => d.date instanceof Date && !isNaN(d.date as any));
     if (!formattedData.length) return;
     // D3 expects [Date, Date] for extent
-    const xDomain = d3.extent(formattedData, (d) => d.date as Date) as [
-      Date,
-      Date
-    ];
+    const xDomain = d3.extent(
+      formattedData,
+      (d: { date: Date; value: number }) => d.date
+    ) as [Date, Date];
     const x = d3.scaleTime().domain(xDomain).range([0, width]);
     // Defensive: min/max fallback to 0 if undefined
-    const minVal = d3.min(formattedData, (d) => d.value) ?? 0;
-    const maxVal = d3.max(formattedData, (d) => d.value) ?? 0;
+    const minVal =
+      d3.min(formattedData, (d: { date: Date; value: number }) => d.value) ?? 0;
+    const maxVal =
+      d3.max(formattedData, (d: { date: Date; value: number }) => d.value) ?? 0;
     const y = d3
       .scaleLinear()
       .domain([
-        minVal === maxVal ? minVal - 1 : minVal * 0.95,
-        minVal === maxVal ? maxVal + 1 : maxVal * 1.05,
+        minVal === maxVal
+          ? typeof minVal === "number"
+            ? minVal - 1
+            : 0
+          : typeof minVal === "number"
+          ? minVal * 0.95
+          : 0,
+        minVal === maxVal
+          ? typeof maxVal === "number"
+            ? maxVal + 1
+            : 1
+          : typeof maxVal === "number"
+          ? maxVal * 1.05
+          : 1,
       ])
       .range([chartHeight, 0]);
     const svg = d3

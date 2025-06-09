@@ -10,6 +10,8 @@ import { getTodaysMealsByUser } from "../api/MealPlannerAPI";
 import { getTodaysExercisesByUser } from "../api/ExercisePlannerAPI";
 import * as homeService from "../services/homeService";
 import * as progressService from "../services/progressService";
+import { useGoalDates } from "../hooks/progress/useGoalDates";
+import { usePenaltyDays } from "../hooks/progress/usePenaltyDays";
 
 interface Meal {
   id: number;
@@ -47,6 +49,11 @@ function Home() {
   const { getAuthToken } = useAuth();
   const token = getAuthToken()!;
   const today = new Date().toISOString().slice(0, 10);
+  const { targetDate } = useGoalDates(userId, token);
+  const { incrementPenaltyDay, decrementPenaltyDay } = usePenaltyDays(
+    userId,
+    token
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,14 +113,31 @@ function Home() {
       updatedMeals.length > 0 && updatedMeals.every((m) => m.completed);
     const allExercisesCompleted =
       updatedExercises.length > 0 && updatedExercises.every((e) => e.completed);
+    const todayDate = new Date(today);
+    const isAfterTarget = targetDate && todayDate > targetDate;
     if (allMealsCompleted && allExercisesCompleted) {
       // Increment completed_days_count
       await progressService.updateCompletedDaysCount(userId, true, token);
-    } else {
-      // Decrement completed_days_count (if previously all were completed)
-      await progressService.updateCompletedDaysCount(userId, false, token);
+      // If today is after the original targetDate, decrement penalty days
+      if (isAfterTarget) {
+        await decrementPenaltyDay();
+      }
     }
   };
+
+  // Check at end of day if not all completed, increment penalty_days
+  useEffect(() => {
+    const now = new Date();
+    if (now.getHours() === 23 && now.getMinutes() >= 59) {
+      const allMealsCompleted =
+        meals.length > 0 && meals.every((m) => m.completed);
+      const allExercisesCompleted =
+        exercises.length > 0 && exercises.every((e) => e.completed);
+      if (!(allMealsCompleted && allExercisesCompleted)) {
+        incrementPenaltyDay();
+      }
+    }
+  }, [meals, exercises, userId, token, today]);
 
   const toggleMeal = async (meal: Meal) => {
     const updatedMeals = meals.map((m) =>

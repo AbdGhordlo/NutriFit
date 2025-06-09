@@ -22,6 +22,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import ErrorModal from "../components/ErrorModal";
 import { getUserIdFromToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
+import { addMeasurement } from "../services/progressService";
 
 function Personalization() {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ function Personalization() {
   const [budget, setBudget] = useState<Budget>("basic");
   const [hasKitchenInventory, setHasKitchenInventory] = useState(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -137,7 +138,26 @@ function Personalization() {
 
     setIsLoading(true);
     try {
-      console.log(`Saving Step ${stepNumber} Data:`, stepData); // Log step data
+      // Save height and weight to measurements table on Step 1
+      if (stepNumber === 1 && userId) {
+        const { height, weight } = stepData.personalInfo;
+        await addMeasurement(
+          Number(userId),
+          "height",
+          height,
+          "cm",
+          new Date(),
+          token
+        );
+        await addMeasurement(
+          Number(userId),
+          "weight",
+          weight,
+          "kg",
+          new Date(),
+          token
+        );
+      }
 
       const response = await fetch(
         `http://localhost:5000/personalization/${userId}/step/${stepNumber}`,
@@ -187,7 +207,7 @@ function Personalization() {
       step_4: { activityLevel },
       step_5: { budget, hasKitchenInventory },
     };
-  
+
     if (currentStep < 5) {
       await saveStepData(currentStep, stepData[`step_${currentStep}`]);
       setCurrentStep((prev) => (prev + 1) as Step);
@@ -202,7 +222,6 @@ function Personalization() {
       }
     }
   };
-  
 
   // Handle back step
   const handleBack = () => {

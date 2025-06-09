@@ -6,31 +6,66 @@ import AnthropometricMeasurements from "../components/ProgressComponents/Anthrop
 import GoalTracker from "../components/ProgressComponents/GoalTracker";
 import ProgressPhotos from "../components/ProgressComponents/ProgressPhotos";
 import { getUserIdFromToken } from "../utils/auth";
-import { getTodaysMealsByUser } from "../api/MealPlannerAPI";
-import { getTodaysExercisesByUser } from "../api/ExercisePlannerAPI";
-import * as homeService from "../services/homeService";
-import * as progressService from "../services/progressService";
-import * as personalizationService from "../services/personalizationService";
 import { useAuth } from "../utils/useAuth";
+import { useAnthropometricData } from "../hooks/progress/useAnthropometricData";
+import { useStreakData } from "../hooks/progress/useStreakData";
+import * as personalizationService from "../services/personalizationService";
+import { useGoalDates } from "../hooks/progress/useGoalDates";
+import { usePenaltyDays } from "../hooks/progress/usePenaltyDays";
+
 
 const Progress = () => {
   const [quote, setQuote] = useState({ quote: "", author: "" });
   const [photos, setPhotos] = useState([]);
-  // Streak state
-  const [dailyCompletedMeals, setDailyCompletedMeals] = useState(0);
-  const [dailyMaxMeals, setDailyMaxMeals] = useState(0);
-  const [dailyCompletedExercises, setDailyCompletedExercises] = useState(0);
-  const [dailyMaxExercises, setDailyMaxExercises] = useState(0);
-  const [dailyCompletedDays, setDailyCompletedDays] = useState(0);
-  const [weeklyCurrent, setWeeklyCurrent] = useState(0);
-  const [weeklyMax, setWeeklyMax] = useState(4); // Example: 4 weeks in a month
-  const [monthlyCurrent, setMonthlyCurrent] = useState(0);
-  const [monthlyMax, setMonthlyMax] = useState(12); // Example: 12 months in a year
-
+  const [goalData, setGoalData] = useState<any>(null);
   const userId = getUserIdFromToken();
   const { getAuthToken } = useAuth();
-  const token = getAuthToken();
+  const token = getAuthToken() || "";
   const today = new Date().toISOString().slice(0, 10);
+
+  // Use the custom hook for anthropometric data
+  const {
+    weightHistory,
+    heightHistory,
+    waistHistory,
+    hipHistory,
+    fatMassHistory,
+    leanMassHistory,
+    currentWeight,
+    currentHeight,
+    currentWaist,
+    currentHip,
+    currentFatMass,
+    currentLeanMass,
+    loading: anthropoLoading,
+    error: anthropoError,
+    saveMeasurement,
+  } = useAnthropometricData(userId, token);
+
+  // Use the custom hook for streak data
+  const {
+    dailyCompletedMeals,
+    dailyMaxMeals,
+    dailyCompletedExercises,
+    dailyMaxExercises,
+    dailyCompletedDays,
+    weeklyCurrent,
+    weeklyMax,
+    monthlyCurrent,
+    monthlyMax,
+    totalTimeframeWeeks,
+    loading: streakLoading,
+    error: streakError,
+  } = useStreakData(userId, token, today);
+
+  // Use custom hook for fetching goal dates data
+  const { startDate, targetDate, adjustedTargetDate } = useGoalDates(
+    userId,
+    token
+  );
+
+  // Use custom hook for fetching penalty days
+  const { penaltyDaysCount } = usePenaltyDays(userId, token);
 
   // Animation variants for page elements
   const containerVariants = {
@@ -66,76 +101,44 @@ const Progress = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch today's meals and exercises and compute streaks
-    const fetchStreakData = async () => {
+    const fetchGoalData = async () => {
       if (!userId || !token) return;
       try {
-        // Meals
-        const mealData = await getTodaysMealsByUser(userId, token);
-        const completedMealIds = await homeService.fetchMealProgress(
-          today,
+        const data = await personalizationService.fetchPersonalizationData(
+          userId,
           token
         );
-        setDailyMaxMeals((mealData.meals || []).length);
-        setDailyCompletedMeals(completedMealIds.length);
-
-        // Exercises
-        const exerciseData = await getTodaysExercisesByUser(userId, token);
-        const completedExerciseIds = await homeService.fetchExerciseProgress(
-          today,
-          token
-        );
-        setDailyMaxExercises((exerciseData.exercises || []).length);
-        setDailyCompletedExercises(completedExerciseIds.length);
-
-        // Fetch completed_days_count from backend
-        const { completed_days_count } =
-          await progressService.fetchCompletedDaysCount(userId, token);
-        setDailyCompletedDays(completed_days_count % 7);
-
-        // Fetch personalization data for timeframe
-        let weeklyMaxValue = 4;
-        let monthlyMaxValue = 12;
-        try {
-          const personalization =
-            await personalizationService.fetchPersonalizationData(
-              userId,
-              token
-            );
-          const steps_data = personalization.steps_data || {};
-          const fitnessGoal = steps_data.step_2?.fitnessGoal;
-          const weightGoal = steps_data.step_2?.weightGoal;
-          // If goal is weight-related and timeframe exists, use it
-          if (
-            fitnessGoal &&
-            ["lose_weight", "build_muscle", "body_recomposition"].includes(
-              fitnessGoal.type
-            ) &&
-            weightGoal?.timeframe
-          ) {
-            weeklyMaxValue = weightGoal.timeframe;
-            if (weightGoal.timeframe < 4) {
-              monthlyMaxValue = Math.ceil(weightGoal.timeframe / 4);
-            }
-          }
-        } catch (e) {
-          // fallback to default weekly/monthly max
+        const step2 = data?.steps_data?.step_2;
+        let targetWeight = undefined;
+        if (step2?.fitnessGoal?.goal?.targetWeight) {
+          targetWeight = step2.fitnessGoal.goal.targetWeight;
+        } else if (step2?.fitnessGoal?.weightGoal?.targetWeight) {
+          targetWeight = step2.fitnessGoal.weightGoal.targetWeight;
         }
-        setWeeklyCurrent(
-          Math.floor((completed_days_count / 7) % weeklyMaxValue)
-        );
-        setWeeklyMax(weeklyMaxValue);
-        setMonthlyCurrent(
-          Math.floor((completed_days_count / 28) % monthlyMaxValue)
-        );
-        setMonthlyMax(monthlyMaxValue);
+        if (
+          step2 &&
+          (step2.fitnessGoal?.type === "lose_weight" ||
+            step2.fitnessGoal?.type === "gain_weight")
+        ) {
+          setGoalData({
+            ...step2.fitnessGoal.goal,
+            type: step2.fitnessGoal.type,
+            targetWeight,
+          });
+        } else {
+          setGoalData(null);
+        }
       } catch (e) {
-        // Optionally handle error
+        setGoalData(null);
       }
     };
-    fetchStreakData();
-    // eslint-disable-next-line
-  }, [today, token]);
+    fetchGoalData();
+  }, [userId, token]);
+
+  // Helper: should show goal tracker
+  const shouldShowGoalTracker =
+    goalData &&
+    (goalData.type === "lose_weight" || goalData.type === "gain_weight");
 
   return (
     <motion.div
@@ -167,25 +170,54 @@ const Progress = () => {
               weeklyMax={weeklyMax}
               monthlyCurrent={monthlyCurrent}
               monthlyMax={monthlyMax}
+              totalTimeframeWeeks={totalTimeframeWeeks}
             />
+            {streakLoading && <div>Loading streaks...</div>}
+            {streakError && <div className="text-red-500">{streakError}</div>}
           </motion.div>
 
-          <motion.div
-            variants={itemVariants}
-            className="bg-white rounded-xl shadow-md p-6"
-          >
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
-              Goal Tracker
-            </h2>
-            {/* <GoalTracker goalData={goalData} /> */}
-          </motion.div>
+          {shouldShowGoalTracker && (
+            <motion.div
+              variants={itemVariants}
+              className="bg-white rounded-xl shadow-md p-6"
+            >
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Goal Tracker
+              </h2>
+              <GoalTracker
+                startWeight={weightHistory[0]?.value ?? 0}
+                currentWeight={currentWeight?.value ?? 0}
+                targetWeight={goalData?.targetWeight ?? 0}
+                startDate={startDate ?? new Date()}
+                targetDate={targetDate ?? new Date()}
+                adjustedTargetDate={adjustedTargetDate ?? new Date()}
+                penaltyDaysCount={penaltyDaysCount}
+              />
+            </motion.div>
+          )}
         </div>
 
         <motion.div
           variants={itemVariants}
           className="bg-white rounded-xl shadow-md p-6 mb-6"
         >
-          {/* <AnthropometricMeasurements historicalData={historicalData} /> */}
+          <AnthropometricMeasurements
+            weightHistory={weightHistory}
+            heightHistory={heightHistory}
+            waistHistory={waistHistory}
+            hipHistory={hipHistory}
+            fatMassHistory={fatMassHistory}
+            leanMassHistory={leanMassHistory}
+            currentWeight={currentWeight}
+            currentHeight={currentHeight}
+            currentWaist={currentWaist}
+            currentHip={currentHip}
+            currentFatMass={currentFatMass}
+            currentLeanMass={currentLeanMass}
+            onSaveMeasurement={saveMeasurement}
+          />
+          {anthropoLoading && <div>Loading measurements...</div>}
+          {anthropoError && <div className="text-red-500">{anthropoError}</div>}
         </motion.div>
         <motion.div variants={itemVariants} className="mb-6">
           <ProgressPhotos photos={photos} setPhotos={setPhotos} />

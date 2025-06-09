@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import RadialProgressBar from "./RadialProgressBar";
 import { FaTrophy, FaFire } from "react-icons/fa";
@@ -39,6 +39,7 @@ const StreakTracker = ({
   weeklyMax,
   monthlyCurrent,
   monthlyMax,
+  totalTimeframeWeeks,
 }: {
   dailyCompletedMeals: number;
   dailyMaxMeals: number;
@@ -49,6 +50,7 @@ const StreakTracker = ({
   weeklyMax: number;
   monthlyCurrent: number;
   monthlyMax: number;
+  totalTimeframeWeeks: number;
 }) => {
   // Calculate trophy levels based on streaks
   const getTrophyLevel = () => {
@@ -65,8 +67,33 @@ const StreakTracker = ({
 
   // Days of the week for display
   const daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
-  const displayMonthly = monthlyMax === 0 ? false : true;
 
+  // Trophy pagination state
+  const [weekPage, setWeekPage] = useState(0);
+  const [monthPage, setMonthPage] = useState(0);
+
+  // Calculate total week trophy pages
+  const weekTrophiesPerPage = 4;
+  const totalWeekPages = Math.ceil(weeklyMax / weekTrophiesPerPage);
+  // Calculate current page (auto-advance as user progresses)
+  const currentWeekPage = Math.floor(weeklyCurrent / weekTrophiesPerPage);
+  // For last page, show only the remaining trophies
+  const weekTrophiesThisPage =
+    currentWeekPage === totalWeekPages - 1
+      ? weeklyMax - weekTrophiesPerPage * (totalWeekPages - 1)
+      : Math.min(weekTrophiesPerPage, weeklyMax);
+
+  // Calculate total month trophy pages
+  const monthTrophiesPerPage = 12;
+  const totalMonthPages = Math.ceil(monthlyMax / monthTrophiesPerPage);
+  const currentMonthPage = Math.floor(monthlyCurrent / monthTrophiesPerPage);
+  const monthTrophiesThisPage =
+    currentMonthPage === totalMonthPages - 1
+      ? monthlyMax - monthTrophiesPerPage * (totalMonthPages - 1)
+      : Math.min(monthTrophiesPerPage, monthlyMax);
+
+  // Only show monthly if totalTimeframeWeeks > 4 and there is at least one month in the timeframe
+  const displayMonthly = totalTimeframeWeeks > 4 && monthlyMax > 0;
 
   return (
     <div className="streak-tracker">
@@ -160,14 +187,17 @@ const StreakTracker = ({
             <div className="mt-6 pt-4 border-t border-gray-100 w-full">
               <p className="text-sm text-gray-500 mb-3">Weekly Trophies</p>
               <div className="flex justify-center space-x-4">
-                {[1, 2, 3, 4].map((week) => (
-                  <Trophy
-                    key={`week-${week}`}
-                    level="bronze"
-                    size={32}
-                    opacity={week <= weeklyCurrent ? 1 : 0.3}
-                  />
-                ))}
+                {Array.from({ length: weekTrophiesThisPage }, (_, i) => {
+                  const trophyIndex = currentWeekPage * weekTrophiesPerPage + i;
+                  return (
+                    <Trophy
+                      key={`week-${trophyIndex + 1}`}
+                      level="bronze"
+                      size={32}
+                      opacity={trophyIndex < weeklyCurrent ? 1 : 0.3}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -209,32 +239,132 @@ const StreakTracker = ({
                 </svg>
               </span>
             </div>
-            <div className="flex flex-col items-center">
-              <RadialProgressBar
-                percentage={(monthlyCurrent / monthlyMax) * 100}
-                color="#FFD700" // Gold color
-                size={120}
-                thickness={12}
-                label={`${monthlyCurrent}/${monthlyMax}`}
-              />
-              <p className="mt-4 text-gray-600 text-center">
-                {monthlyCurrent} consecutive months of meeting weekly goals
-              </p>
+            <div className="flex flex-col items-center min-h-[180px] justify-center">
+              {Number(monthlyMax) > 0 &&
+              Number(monthlyCurrent) >= Number(monthlyMax) ? (
+                <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-lg p-6 shadow-inner">
+                  <span className="text-5xl mb-3 animate-bounce">🏆</span>
+                  <span className="text-xl font-bold text-yellow-700 text-center mb-2">
+                    Outstanding! You’ve earned every monthly trophy for your
+                    goal!
+                  </span>
+                  <span className="text-base text-gray-600 text-center mb-4">
+                    Share your dedication!
+                  </span>
+                  <button
+                    className="mt-2 px-5 py-2 bg-yellow-400 text-white rounded-lg font-semibold shadow hover:bg-yellow-500 transition"
+                    onClick={async () => {
+                      const today = new Date();
+                      const dateStr = today.toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      });
+                      const nutriFitLink = "http://localhost:5173/";
+                      const shareText =
+                        `🏆 Outstanding! I've earned every monthly trophy for my goal on NutriFit!\n\n` +
+                        `• Months streak: ${monthlyMax}\n` +
+                        `• Weeks streak: ${weeklyMax}\n` +
+                        `• Achieved on: ${dateStr}\n\n` +
+                        `Join me on NutriFit and start your journey! #NutriFit #Consistency #Achievement\n${nutriFitLink}`;
 
-              {/* Gold trophies for monthly progress */}
-              <div className="mt-6 pt-4 border-t border-gray-100 w-full">
-                <p className="text-sm text-gray-500 mb-3">Monthly Trophies</p>
-                <div className="flex justify-center space-x-4">
-                  {[1, 2, 3, 4, 5].map((month) => (
-                    <Trophy
-                      key={`month-${month}`}
-                      level="gold"
-                      size={32}
-                      opacity={month <= monthlyCurrent ? 1 : 0.3}
-                    />
-                  ))}
+                      // Try to share an image if supported
+                      const canShareFiles =
+                        navigator.canShare &&
+                        navigator.canShare({
+                          files: [
+                            new File([new Blob()], "logo.png", {
+                              type: "image/png",
+                            }),
+                          ],
+                        });
+                      if (navigator.share && canShareFiles) {
+                        // Fetch the logo image as a blob
+                        try {
+                          const response = await fetch(
+                            "/src/assets/imgs/monthly-streak-achievement.png"
+                          );
+                          const blob = await response.blob();
+                          const file = new File([blob], "nutrifit-trophy.png", {
+                            type: blob.type,
+                          });
+                          await navigator.share({
+                            title: "My NutriFit Achievement",
+                            text: shareText,
+                            files: [file],
+                          });
+                          return;
+                        } catch (e) {
+                          // If image fetch fails, fall back to text share
+                        }
+                      }
+                      if (navigator.share) {
+                        navigator.share({
+                          title: "My NutriFit Achievement",
+                          text: shareText,
+                        });
+                      } else {
+                        navigator.clipboard.writeText(shareText);
+                        alert("Achievement copied to clipboard!");
+                      }
+                    }}
+                  >
+                    Share Achievement
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <RadialProgressBar
+                    percentage={(monthlyCurrent / monthlyMax) * 100}
+                    color="#FFD700" // Gold color
+                    size={120}
+                    thickness={12}
+                    label={`${monthlyCurrent}/${monthlyMax}`}
+                  />
+                  <p className="mt-4 text-gray-600 text-center">
+                    {monthlyCurrent} consecutive months of meeting weekly goals
+                  </p>
+
+                  {/* Gold trophies for monthly progress */}
+                  <div className="mt-6 pt-4 border-t border-gray-100 w-full">
+                    <p className="text-sm text-gray-500 mb-3">
+                      Monthly Trophies
+                    </p>
+                    <div className="flex justify-center space-x-4">
+                      {Array.from({ length: monthTrophiesThisPage }, (_, i) => {
+                        const trophyIndex =
+                          currentMonthPage * monthTrophiesPerPage + i;
+                        return (
+                          <Trophy
+                            key={`month-${trophyIndex + 1}`}
+                            level="gold"
+                            size={32}
+                            opacity={trophyIndex < monthlyCurrent ? 1 : 0.3}
+                          />
+                        );
+                      })}
+                    </div>
+                    {totalMonthPages > 1 && (
+                      <div className="flex justify-center mt-2 space-x-2">
+                        {Array.from({ length: totalMonthPages }, (_, i) => (
+                          <button
+                            key={i}
+                            className={`w-2 h-2 rounded-full ${
+                              i === currentMonthPage
+                                ? "bg-yellow-400"
+                                : "bg-gray-300"
+                            }`}
+                            onClick={() => setMonthPage(i)}
+                            style={{ outline: "none", border: "none" }}
+                            aria-label={`Go to month trophy page ${i + 1}`}
+                            tabIndex={0}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         )}

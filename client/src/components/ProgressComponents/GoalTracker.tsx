@@ -7,41 +7,52 @@ import {
   format,
 } from "date-fns";
 
-const GoalTracker = (data: any) => {
-  const goalData = data.goalData;
+interface GoalTrackerProps {
+  startWeight: number;
+  currentWeight: number ;
+  targetWeight: number;
+  startDate: Date;
+  targetDate: Date;
+  adjustedTargetDate: Date;
+  penaltyDaysCount: number;
+}
 
+const GoalTracker: React.FC<GoalTrackerProps> = ({
+  startWeight,
+  currentWeight,
+  targetWeight,
+  startDate,
+  targetDate,
+  adjustedTargetDate,
+  penaltyDaysCount,
+}) => {
   // Calculate days left
   const today = new Date();
-  const totalDays = differenceInDays(goalData.targetDate, goalData.startDate);
-  const daysElapsed = differenceInDays(today, goalData.startDate);
-  const daysLeft = differenceInDays(goalData.targetDate, today);
+  const totalDays = differenceInDays(targetDate, startDate);
+  const daysElapsed = differenceInDays(today, startDate);
+  const daysLeft = differenceInDays(targetDate, today);
 
   let timeLeft: number;
   let timeLeftUnit: string;
 
   if (daysLeft > 30) {
-    timeLeft = differenceInCalendarMonths(goalData.targetDate, today);
+    timeLeft = differenceInCalendarMonths(targetDate, today);
     timeLeftUnit = timeLeft > 1 ? "months" : "month";
   } else if (daysLeft > 7) {
-    timeLeft = differenceInCalendarWeeks(goalData.targetDate, today);
+    timeLeft = differenceInCalendarWeeks(targetDate, today);
     timeLeftUnit = timeLeft > 1 ? "weeks" : "week";
   } else {
-    timeLeft = differenceInDays(goalData.targetDate, today);
+    timeLeft = differenceInDays(targetDate, today);
     timeLeftUnit = timeLeft > 1 ? "days" : "day";
   }
 
   // Calculate progress percentage
-  const totalWeightLossGoal = goalData.startWeight - goalData.targetWeight;
-  const currentWeightLoss = goalData.startWeight - goalData.currentWeight;
+  const totalWeightLossGoal = startWeight - targetWeight;
+  const currentWeightLoss = startWeight - currentWeight;
   const progressPercentage = Math.min(
     100,
     (currentWeightLoss / totalWeightLossGoal) * 100
   );
-
-  // Calculate time penalty for cheating days (each cheat day adds 2 days)
-  const penaltyDays = goalData.cheatingDays * 2;
-  const adjustedTargetDate = new Date(goalData.targetDate);
-  adjustedTargetDate.setDate(adjustedTargetDate.getDate() + penaltyDays);
 
   return (
     <div className="goal-tracker">
@@ -57,8 +68,8 @@ const GoalTracker = (data: any) => {
           </h3>
 
           <div className="flex justify-between text-sm text-gray-600 mb-1">
-            <span>Current: {goalData.currentWeight}kg</span>
-            <span>Target: {goalData.targetWeight}kg</span>
+            <span>Current: {currentWeight}kg</span>
+            <span>Target: {targetWeight}kg</span>
           </div>
 
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-3">
@@ -100,19 +111,19 @@ const GoalTracker = (data: any) => {
               <span className="text-sm text-gray-600 ml-1">{timeLeftUnit}</span>
             </div>
 
-            {penaltyDays > 0 && (
+            {penaltyDaysCount > 0 && (
               <div className="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                +{penaltyDays} penalty days
+                +{penaltyDaysCount} penalty days
               </div>
             )}
           </div>
 
           <div className="flex text-sm text-gray-600 justify-between">
-            <span>Started: {format(goalData.startDate, "MMM d, yyyy")}</span>
-            <span>Target: {format(goalData.targetDate, "MMM d, yyyy")}</span>
+            <span>Started: {format(startDate, "MMM d, yyyy")}</span>
+            <span>Target: {format(targetDate, "MMM d, yyyy")}</span>
           </div>
 
-          {penaltyDays > 0 && (
+          {penaltyDaysCount > 0 && (
             <div className="mt-2 text-sm text-gray-600">
               <span>Adjusted Target: </span>
               <span className="font-medium">
