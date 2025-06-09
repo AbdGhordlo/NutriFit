@@ -12,11 +12,10 @@ import { useStreakData } from "../hooks/progress/useStreakData";
 import * as personalizationService from "../services/personalizationService";
 import { useGoalDates } from "../hooks/progress/useGoalDates";
 import { usePenaltyDays } from "../hooks/progress/usePenaltyDays";
-
+import { useProgressPhotos } from "../hooks/progress/useProgressPhotos";
 
 const Progress = () => {
   const [quote, setQuote] = useState({ quote: "", author: "" });
-  const [photos, setPhotos] = useState([]);
   const [goalData, setGoalData] = useState<any>(null);
   const userId = getUserIdFromToken();
   const { getAuthToken } = useAuth();
@@ -66,6 +65,9 @@ const Progress = () => {
 
   // Use custom hook for fetching penalty days
   const { penaltyDaysCount } = usePenaltyDays(userId, token);
+
+  // Use custom hook for progress photos
+  const progressPhotos = useProgressPhotos();
 
   // Animation variants for page elements
   const containerVariants = {
@@ -220,7 +222,15 @@ const Progress = () => {
           {anthropoError && <div className="text-red-500">{anthropoError}</div>}
         </motion.div>
         <motion.div variants={itemVariants} className="mb-6">
-          <ProgressPhotos photos={photos} setPhotos={setPhotos} />
+          <ProgressPhotos
+            photos={progressPhotos.photos}
+            uploadCountThisMonth={progressPhotos.uploadCountThisMonth}
+            loading={progressPhotos.loading}
+            error={progressPhotos.error}
+            clearError={progressPhotos.clearError}
+            handlePhotoUpload={progressPhotos.handlePhotoUpload}
+            handleDeletePhoto={progressPhotos.handleDeletePhoto}
+          />
         </motion.div>
       </div>
     </motion.div>

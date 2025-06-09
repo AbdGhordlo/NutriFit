@@ -31,8 +31,6 @@ export function usePenaltyDays(userId: number, token: string): PenaltyDaysData {
 
   useEffect(() => {
     fetchPenaltyDays();
-      console.log("Penalty Days Count:", penaltyDaysCount);
-
   }, [fetchPenaltyDays]);
 
   const incrementPenaltyDay = async () => {

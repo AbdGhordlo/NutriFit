@@ -9,7 +9,10 @@ const {
   getMeasurementsByType,
   editLastMeasurement,
   getPenaltyDaysCount,
-  updatePenaltyDaysCount
+  updatePenaltyDaysCount,
+  uploadProgressPhoto,
+  listProgressPhotos,
+  deleteProgressPhoto
 } = require('../controllers/progressController');
 const router = express.Router();
 
@@ -42,5 +45,10 @@ router.get('/:userId/penalty-days-count', getPenaltyDaysCount);
 
 // Route to increment or decrement penalty_days_count for a user
 router.put('/:userId/penalty-days-count', updatePenaltyDaysCount);
+
+// Progress photo endpoints
+router.post('/:userId/photos', uploadProgressPhoto);
+router.get('/:userId/photos', listProgressPhotos);
+router.delete('/:userId/photos/:photoId', deleteProgressPhoto);
 
 module.exports = router;

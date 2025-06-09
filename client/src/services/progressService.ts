@@ -5,7 +5,7 @@ export const uploadProgressPhoto = async (userId: number, token: string, file: F
     const formData = new FormData();
     formData.append("progressPhoto", file);
     const response = await fetch(
-      `${BASE}/progress-photos/${userId}/photos`,
+      `${BASE}/${userId}/photos`,
       {
         method: "POST",
         headers: {
@@ -29,7 +29,7 @@ export const uploadProgressPhoto = async (userId: number, token: string, file: F
 export const listProgressPhotos = async (userId: number, token: string) => {
   try {
     const response = await fetch(
-      `${BASE}/progress-photos/${userId}/photos`,
+      `${BASE}/${userId}/photos`,
       {
         method: "GET",
         headers: {
@@ -52,7 +52,7 @@ export const listProgressPhotos = async (userId: number, token: string) => {
 export const deleteProgressPhoto = async (userId: number, photoId: number, token: string) => {
   try {
     const response = await fetch(
-      `${BASE}/progress-photos/${userId}/photos/${photoId}`,
+      `${BASE}/${userId}/photos/${photoId}`,
       {
         method: "DELETE",
         headers: {
