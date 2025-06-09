@@ -55,3 +55,7 @@ export async function upsertExerciseProgress(
 export function addExerciseProgress(id: number, today: string, token: string) {
   throw new Error("Function not implemented.");
 }
+
+export function getTodaysMealsByUser(userId: number, token: string) {
+    throw new Error("Function not implemented.");
+}

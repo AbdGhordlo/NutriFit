@@ -9,6 +9,9 @@ import { useAuth } from "../utils/useAuth";
 import { getTodaysMealsByUser } from "../api/MealPlannerAPI";
 import { getTodaysExercisesByUser } from "../api/ExercisePlannerAPI";
 import * as homeService from "../services/homeService";
+import * as progressService from "../services/progressService";
+import { useGoalDates } from "../hooks/progress/useGoalDates";
+import { usePenaltyDays } from "../hooks/progress/usePenaltyDays";
 
 interface Meal {
   id: number;
@@ -46,6 +49,11 @@ function Home() {
   const { getAuthToken } = useAuth();
   const token = getAuthToken()!;
   const today = new Date().toISOString().slice(0, 10);
+  const { targetDate } = useGoalDates(userId, token);
+  const { incrementPenaltyDay, decrementPenaltyDay } = usePenaltyDays(
+    userId,
+    token
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,12 +103,47 @@ function Home() {
     // eslint-disable-next-line
   }, [today, token]);
 
+  // Helper to check if all meals and exercises are completed for today
+  const checkAndUpdateCompletedDaysCount = async (
+    updatedMeals: Meal[],
+    updatedExercises: Exercise[]
+  ) => {
+    if (!userId || !token) return;
+    const allMealsCompleted =
+      updatedMeals.length > 0 && updatedMeals.every((m) => m.completed);
+    const allExercisesCompleted =
+      updatedExercises.length > 0 && updatedExercises.every((e) => e.completed);
+    const todayDate = new Date(today);
+    const isAfterTarget = targetDate && todayDate > targetDate;
+    if (allMealsCompleted && allExercisesCompleted) {
+      // Increment completed_days_count
+      await progressService.updateCompletedDaysCount(userId, true, token);
+      // If today is after the original targetDate, decrement penalty days
+      if (isAfterTarget) {
+        await decrementPenaltyDay();
+      }
+    }
+  };
+
+  // Check at end of day if not all completed, increment penalty_days
+  useEffect(() => {
+    const now = new Date();
+    if (now.getHours() === 23 && now.getMinutes() >= 59) {
+      const allMealsCompleted =
+        meals.length > 0 && meals.every((m) => m.completed);
+      const allExercisesCompleted =
+        exercises.length > 0 && exercises.every((e) => e.completed);
+      if (!(allMealsCompleted && allExercisesCompleted)) {
+        incrementPenaltyDay();
+      }
+    }
+  }, [meals, exercises, userId, token, today]);
+
   const toggleMeal = async (meal: Meal) => {
-    setMeals((prev) =>
-      prev.map((m) =>
-        m.id === meal.id ? { ...m, completed: !m.completed } : m
-      )
+    const updatedMeals = meals.map((m) =>
+      m.id === meal.id ? { ...m, completed: !m.completed } : m
     );
+    setMeals(updatedMeals);
     try {
       await homeService.upsertMealProgress(
         meal.id,
@@ -108,17 +151,17 @@ function Home() {
         !meal.completed,
         token
       );
+      await checkAndUpdateCompletedDaysCount(updatedMeals, exercises);
     } catch (e) {
       // Optionally handle error
     }
   };
 
   const toggleExercise = async (exercise: Exercise) => {
-    setExercises((prev) =>
-      prev.map((e) =>
-        e.id === exercise.id ? { ...e, completed: !e.completed } : e
-      )
+    const updatedExercises = exercises.map((e) =>
+      e.id === exercise.id ? { ...e, completed: !e.completed } : e
     );
+    setExercises(updatedExercises);
     try {
       await homeService.upsertExerciseProgress(
         exercise.id,
@@ -126,6 +169,7 @@ function Home() {
         !exercise.completed,
         token
       );
+      await checkAndUpdateCompletedDaysCount(meals, updatedExercises);
     } catch (e) {
       // Optionally handle error
     }
