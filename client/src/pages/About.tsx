@@ -56,10 +56,10 @@ export default function About() {
                   <h3 className="font-semibold text-gray-900 mb-2">Holistic</h3>
                   <p className="text-sm text-gray-600">Nutrition and fitness in one platform</p>
                 </div>
-                <div className="bg-orange-50 p-6 rounded-2xl text-center">
-                  <Users className="w-8 h-8 text-orange-600 mx-auto mb-3" />
-                  <h3 className="font-semibold text-gray-900 mb-2">Community</h3>
-                  <p className="text-sm text-gray-600">Connect with like-minded health enthusiasts</p>
+                <div className="bg-yellow-50 p-6 rounded-2xl text-center">
+                  <span className="text-4xl mx-auto mb-3 block">📊</span>
+                  <h3 className="font-semibold text-gray-900 mb-2">Smart Tracking</h3>
+                  <p className="text-sm text-gray-600">Easily track your daily calorie intake and activities.</p>
                 </div>
               </div>
             </div>
