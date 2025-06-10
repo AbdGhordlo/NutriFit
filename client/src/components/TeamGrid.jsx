@@ -31,6 +31,7 @@ export const creators = [
     status: "Student at TED University",
     location: "Ankara, Turkey",
     linkedin: "#",
+    github: "#",
     email: "amira@nutrifit.com"
   },
   {
@@ -74,11 +75,11 @@ export default function TeamGrid() {
           <div className="space-y-3 text-sm">
             <div className="flex items-center text-gray-500">
               <Calendar className="w-4 h-4 mr-2 text-green-500" />
-              <span>{creator.status}</span>
+              <a href="https://www.tedu.edu.tr/en" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-green-700 transition-colors">{creator.status}</a>
             </div>
             <div className="flex items-center text-gray-500">
               <MapPin className="w-4 h-4 mr-2 text-green-500" />
-              <span>{creator.location}</span>
+              <a href="https://www.google.com/search?q=ankara+turkey&oq=ankara+turkey&gs_lcrp=EgRlZGdlKgcIABAAGIAEMgcIABAAGIAEMgcIARAAGIAEMgcIAhAAGIAEMg0IAxAAGJECGIAEGIoFMgcIBBAAGIAEMgcIBRAAGIAEMgcIBhAAGIAEMgcIBxAAGIAE0gEINDA3MWowajSoAgCwAgA&sourceid=chrome&ie=UTF-8" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-green-700 transition-colors">{creator.location}</a>
             </div>
           </div>
           <div className="flex justify-center space-x-3 mt-6 pt-4 border-t border-gray-100">
