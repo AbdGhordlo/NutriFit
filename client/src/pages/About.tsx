@@ -1,13 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Users, Heart, Target, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import TeamGrid from "../components/TeamGrid";
 
 export default function About() {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
   const handleGetStarted = (e) => {
     e.preventDefault();
-    navigate("/register");
+    if (isLoggedIn) {
+      navigate("/home");
+    } else {
+      navigate("/register");
+    }
   };
   const handleSignIn = (e) => {
     e.preventDefault();
