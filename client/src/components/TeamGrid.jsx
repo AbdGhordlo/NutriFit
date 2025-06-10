@@ -37,7 +37,7 @@ export const creators = [
     name: "Hussein Abdikarim Hussein",
     role: "Computer Engineering Student",
     image: PictureHussein,
-    description: "Design systems expert passionate about creating intuitive health experiences. Former design lead at Spotify and Airbnb.",
+    description: "Final-year Computer Engineering student at TED University, graduating in June 2025. Passionate about using technology to make health journeys more intuitive, personalized, and sustainable.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
     linkedin: "https://www.linkedin.com/in/hussein-abdikarim/",
