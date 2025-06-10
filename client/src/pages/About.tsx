@@ -1,8 +1,19 @@
 import React from "react";
 import { Users, Heart, Target, Award } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import TeamGrid from "../components/TeamGrid";
 
 export default function About() {
+  const navigate = useNavigate();
+  const handleGetStarted = (e) => {
+    e.preventDefault();
+    navigate("/register");
+  };
+  const handleSignIn = (e) => {
+    e.preventDefault();
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       {/* Hero Section */}
@@ -86,11 +97,25 @@ export default function About() {
           <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-3xl p-12 text-white">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Health?</h2>
             <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who have already started their journey with NutriFit's personalized approach to wellness.
+              NutriFit is designed to make your health journey enjoyable & sustainable. Start with us today, small steps lead to big results! 💚
             </p>
-            <button className="bg-white text-green-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200">
-              Get Started Today
-            </button>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center">
+                <button
+                  onClick={handleGetStarted}
+                  className="bg-white text-green-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+                >
+                  Get Started Now
+                </button>
+              </div>
+              <button
+                onClick={handleSignIn}
+                className="px-0 py-0 m-0 text-center text-green-100 font-bold hover:text-white hover:underline transition-colors duration-300 bg-transparent border-none cursor-pointer"
+                style={{ background: "none", border: "none" }}
+              >
+                Already have an account? Sign in
+              </button>
+            </div>
           </div>
         </div>
       </section>

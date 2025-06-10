@@ -40,8 +40,8 @@ export const creators = [
     description: "Design systems expert passionate about creating intuitive health experiences. Former design lead at Spotify and Airbnb.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
-    linkedin: "#",
-    email: "james@nutrifit.com"
+    linkedin: "https://www.linkedin.com/in/hussein-abdikarim/",
+    email: "husseinabdikarim18@gmail.com"
   }
 ];
 
