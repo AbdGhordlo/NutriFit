@@ -1,44 +1,45 @@
 import React from "react";
 import { Calendar, MapPin, Mail, Linkedin, Github } from "lucide-react";
+import PictureHussein from '../assets/imgs/Hussein Abdikarim - Nutrifit.jpg';
 
 export const creators = [
   {
-    name: "Sarah Chen",
-    role: "Co-Founder & CEO",
+    name: "Abdallah Raed Hani Ghordlo",
+    role: "Computer Engineering Student",
     image: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
     description: "Passionate about revolutionizing health tech with AI-driven solutions. Former Google product manager with 8+ years in health tech.",
-    status: "Currently leading strategic partnerships",
-    location: "San Francisco, CA",
+    status: "Student at TED University",
+    location: "Ankara, Turkey",
     linkedin: "#",
     email: "sarah@nutrifit.com"
   },
   {
-    name: "Marcus Rodriguez",
-    role: "Co-Founder & CTO",
+    name: "Ahmet Tokgöz",
+    role: "Computer Engineering Student",
     image: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
     description: "Full-stack developer and AI enthusiast. Previously at Tesla, building scalable systems for millions of users worldwide.",
-    status: "Building our next-gen AI engine",
-    location: "Austin, TX",
+    status: "Student at TED University",
+    location: "Ankara, Turkey",
     github: "#",
     email: "marcus@nutrifit.com"
   },
   {
-    name: "Dr. Amira Hassan",
-    role: "Head of Nutrition Science",
+    name: "Basme Zantout",
+    role: "Software Engineering Student",
     image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
     description: "Registered dietitian and nutrition researcher with PhD from Harvard. Published 50+ papers on personalized nutrition.",
-    status: "Developing evidence-based meal algorithms",
-    location: "Boston, MA",
+    status: "Student at TED University",
+    location: "Ankara, Turkey",
     linkedin: "#",
     email: "amira@nutrifit.com"
   },
   {
-    name: "James Park",
-    role: "Lead UX Designer",
-    image: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
+    name: "Hussein Abdikarim Hussein",
+    role: "Computer Engineering Student",
+    image: PictureHussein,
     description: "Design systems expert passionate about creating intuitive health experiences. Former design lead at Spotify and Airbnb.",
-    status: "Crafting our mobile experience",
-    location: "New York, NY",
+    status: "Student at TED University",
+    location: "Ankara, Turkey",
     linkedin: "#",
     email: "james@nutrifit.com"
   }
