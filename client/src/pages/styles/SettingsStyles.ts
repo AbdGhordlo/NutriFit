@@ -60,21 +60,26 @@ export const styles = {
     fontSize: "14px",
     color: "#6b7280",
   },
-  toggle: (active) => ({
+   // UPDATED toggle (track) style
+  toggle: (active: boolean) => ({
     width: "44px",
-    height: "20px",
+    height: "24px",                 // ↑ increase height to 24px
     backgroundColor: active ? "#7ec987" : "#d1d5db",
     borderRadius: "12px",
-    padding: "2px",
+    padding: "2px",                 // 2px padding leaves inner height = 20px
     cursor: "pointer",
     transition: "background-color 0.2s",
   }),
-  toggleHandle: (active) => ({
-    width: "20px",
+
+  // UPDATED toggleHandle (circle) style
+  toggleHandle: (active: boolean) => ({
+    width: "20px",                  // 20x20 circle fits inside 24px‐tall track
     height: "20px",
     backgroundColor: "white",
     borderRadius: "50%",
-    transform: active ? "translateX(23px)" : "translateX(0)",
+    transform: active 
+       ? "translateX(20px)"         // 44px total width – (2px left pad + 20px handle + 2px right pad) = 20px
+       : "translateX(0)",
     transition: "transform 0.2s",
   }),
   wideInput: {

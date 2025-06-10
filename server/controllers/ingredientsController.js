@@ -34,16 +34,9 @@ const getInStockUserIngredients = async (userId) => {
   try {
     const result = await pool.query(
       `SELECT 
-        i.id AS ingredient_id,
-        i.name AS ingredient_name,
-        i.category AS ingredient_category,
-        i.calories AS ingredient_calories,
-        i.protein AS ingredient_protein,
-        i.carbs AS ingredient_carbs,
-        i.fats AS ingredient_fats
+        i.name AS ingredient_name
       FROM user_ingredients ui
-      JOIN user_ingredient_ingredient uii ON ui.id = uii.user_ingredients_id
-      JOIN ingredient i ON uii.ingredient_id = i.id
+      JOIN ingredient i ON ui.ingredient_id = i.id
       WHERE ui.user_id = $1 AND ui.in_stock = true
       ORDER BY i.category, i.name`,
       [userId]
@@ -51,7 +44,7 @@ const getInStockUserIngredients = async (userId) => {
     return result.rows;
   } catch (err) {
     console.error(err);
-    throw err; // Throw error to be handled by the calling function
+    throw err;
   }
 };
 
@@ -82,6 +75,9 @@ const toggleIngredientStock = async (req, res) => {
   }
 };
 const addIngredient = async (req, res) => {
+  console.log("=== ADD INGREDIENT DEBUG ===");
+  console.log("Request body:", req.body);
+
   const {
     userId,
     name,
@@ -93,56 +89,84 @@ const addIngredient = async (req, res) => {
     servingSize: serving_size,
   } = req.body;
 
+  console.log("Parsed values:", {
+    userId,
+    name,
+    category,
+    calories,
+    protein,
+    carbs,
+    fats,
+    serving_size,
+  });
+
   // Validation
   if (!name || !category) {
+    console.log("Validation failed: missing name or category");
     return res.status(400).json({ error: "Name and category are required" });
   }
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    console.log("Transaction started");
 
-    // Generate a unique name by incorporating the category if needed
-    // This approach treats the ingredient name as "{original_name}_{category}"
-    // We'll display just the original name to the user, but store it uniquely
-    const processedName = `${name}_${category}`;
-
-    // Check if this exact processed name already exists
+    // Check if this exact ingredient with same name, category AND nutritional values exists
+    console.log("Checking for existing ingredient...");
     const existingIngredientResult = await client.query(
-      `SELECT id FROM ingredient WHERE name = $1`,
-      [processedName]
+      `SELECT id FROM ingredient 
+       WHERE name = $1 AND category = $2 AND calories = $3 AND protein = $4 AND carbs = $5 AND fats = $6 AND serving_size = $7`,
+      [name, category, calories, protein, carbs, fats, serving_size]
+    );
+
+    console.log(
+      "Existing ingredient check result:",
+      existingIngredientResult.rows
     );
 
     let ingredientId;
 
     if (existingIngredientResult.rows.length > 0) {
-      // This exact ingredient with this name and category already exists
+      console.log("Found existing ingredient with same nutritional values");
+      // This exact ingredient with same nutritional values already exists
       ingredientId = existingIngredientResult.rows[0].id;
 
       // Check if the user already has this ingredient
+      console.log("Checking if user already has this ingredient...");
       const alreadyLinkedResult = await client.query(
         `SELECT id FROM user_ingredients
          WHERE user_id = $1 AND ingredient_id = $2`,
         [userId, ingredientId]
       );
 
+      console.log("User ingredient check result:", alreadyLinkedResult.rows);
+
       if (alreadyLinkedResult.rows.length > 0) {
+        console.log("User already has this ingredient");
         await client.query("ROLLBACK");
         return res
           .status(409)
           .json({ error: "This ingredient is already added for the user." });
       }
     } else {
-      // No conflict, insert new ingredient with the processed name
-      const insertIngredientResult = await client.query(
-        `INSERT INTO ingredient (name, category, calories, protein, carbs, fats, serving_size)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING id`,
-        [processedName, category, calories, protein, carbs, fats, serving_size]
-      );
-      ingredientId = insertIngredientResult.rows[0].id;
+      console.log("No existing ingredient found, creating new one...");
+      try {
+        // No exact match found, insert new ingredient
+        const insertIngredientResult = await client.query(
+          `INSERT INTO ingredient (name, category, calories, protein, carbs, fats, serving_size)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING id`,
+          [name, category, calories, protein, carbs, fats, serving_size]
+        );
+        console.log("New ingredient created:", insertIngredientResult.rows);
+        ingredientId = insertIngredientResult.rows[0].id;
+      } catch (insertError) {
+        console.error("Error inserting ingredient:", insertError);
+        throw insertError;
+      }
     }
 
+    console.log("Creating user_ingredients entry...");
     // Create user_ingredients entry
     const insertUserIngredientResult = await client.query(
       `INSERT INTO user_ingredients (user_id, in_stock, ingredient_id)
@@ -151,16 +175,17 @@ const addIngredient = async (req, res) => {
       [userId, true, ingredientId]
     );
 
+    console.log("User ingredient created:", insertUserIngredientResult.rows);
     const userIngredientId = insertUserIngredientResult.rows[0].id;
 
     await client.query("COMMIT");
+    console.log("Transaction committed successfully");
 
     res.status(201).json({
       message: "Ingredient added successfully",
       ingredient: {
         user_ingredient_id: userIngredientId,
         ingredient_id: ingredientId,
-        // We return the original name to the user, not the processed one
         name: name,
         category,
         calories,
@@ -173,11 +198,14 @@ const addIngredient = async (req, res) => {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-
-    console.error("Error adding ingredient:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("=== ERROR IN ADD INGREDIENT ===");
+    console.error("Error details:", error);
+    console.error("Error message:", error.message);
+    console.error("Error code:", error.code);
+    res.status(500).json({ error: "Server error", details: error.message });
   } finally {
     client.release();
+    console.log("Database connection released");
   }
 };
 const searchFood = async (query) => {

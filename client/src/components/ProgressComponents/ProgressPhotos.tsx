@@ -1,58 +1,47 @@
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { FaCamera, FaTrash, FaCloudUploadAlt } from "react-icons/fa";
+import ErrorModal from "../ErrorModal";
 
-interface ProgressPhoto {
-  id: string;
+export interface ProgressPhoto {
+  id: number;
   url: string;
-  date: Date;
+  uploaded_at: string;
 }
 
 interface ProgressPhotosProps {
   photos: ProgressPhoto[];
-  setPhotos: (prev) => void;
+  uploadCountThisMonth: number;
+  loading: boolean;
+  error?: string | null;
+  handlePhotoUpload: (file: File) => Promise<void>;
+  handleDeletePhoto: (photoId: number) => Promise<void>;
+  clearError: () => void;
 }
 
-const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) => {
-  const [uploadCountThisMonth, setUploadCountThisMonth] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+const ProgressPhotos: React.FC<ProgressPhotosProps> = ({
+  photos,
+  uploadCountThisMonth,
+  loading,
+  handlePhotoUpload,
+  handleDeletePhoto,
+  error,
+  clearError,
+}) => {
   const [isDragging, setIsDragging] = useState(false);
-
-  const handlePhotoUpload = (file: File) => {
-    const currentDate = new Date();
-    const currentMonthNow = currentDate.getMonth();
-
-    // Reset counter if month changed
-    if (currentMonthNow !== currentMonth) {
-      setUploadCountThisMonth(0);
-      setCurrentMonth(currentMonthNow);
-    }
-
-    // Check if user has already uploaded 2 photos this month
-    if (uploadCountThisMonth >= 2) {
-      alert("You can only upload two progress photos per month.");
-      return;
-    }
-
-    // Create object URL for preview
-    const imageUrl = URL.createObjectURL(file);
-
-    // Add new photo
-    const newPhoto: ProgressPhoto = {
-      id: Date.now().toString(),
-      url: imageUrl,
-      date: currentDate,
-    };
-
-    setPhotos((prev) => [...prev, newPhoto]);
-    setUploadCountThisMonth((prev) => prev + 1);
-  };
+  const [fileSizeError, setFileSizeError] = useState<string | null>(null);
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handlePhotoUpload(file);
+      if (file.size > 5 * 1024 * 1024) {
+        setFileSizeError(
+          "File size must be 5MB or less. Please choose a smaller image."
+        );
+        return;
+      }
+      handlePhotoUpload(file).catch(() => {});
     }
   };
 
@@ -70,31 +59,23 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith("image/")) {
-        handlePhotoUpload(file);
+        if (file.size > 5 * 1024 * 1024) {
+          setFileSizeError(
+            "File size must be 5MB or less. Please choose a smaller image."
+          );
+          return;
+        }
+        handlePhotoUpload(file).catch(() => {});
       } else {
-        alert("Please drop an image file.");
+        setFileSizeError("Please drop an image file.");
       }
     },
-    [uploadCountThisMonth, currentMonth]
+    [handlePhotoUpload]
   );
 
-  const handleDeletePhoto = (photoId: string) => {
-    const photoToDelete = photos.find((photo) => photo.id === photoId);
-    if (!photoToDelete) return;
-
-    const currentMonthNow = new Date().getMonth();
-    const photoMonth = photoToDelete.date.getMonth();
-
-    setPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
-
-    // If we're deleting a photo from the current month, decrement the counter
-    if (currentMonthNow === photoMonth) {
-      setUploadCountThisMonth((prev) => Math.max(0, prev - 1));
-    }
-  };
+  const closeFileSizeError = () => setFileSizeError(null);
 
   return (
     <div className="progress-photos bg-white rounded-xl shadow-md p-6">
@@ -115,7 +96,6 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
           />
         </motion.label>
       </div>
-
       <div
         className={`min-h-[200px] rounded-lg border-2 border-dashed transition-colors ${
           isDragging ? "border-primary-green bg-teal-50" : "border-gray-300"
@@ -124,7 +104,9 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {photos.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-gray-500">Loading...</div>
+        ) : photos.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <FaCloudUploadAlt className="mx-auto text-5xl mb-4 text-gray-400" />
             <p className="font-medium">Drag & drop your progress photo here</p>
@@ -146,7 +128,7 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
                     <img
                       src={photo.url}
                       alt={`Progress from ${format(
-                        photo.date,
+                        parseISO(photo.uploaded_at),
                         "MMM d, yyyy"
                       )}`}
                       className="w-full h-48 object-cover rounded-lg"
@@ -162,7 +144,7 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 mt-2">
-                    {format(photo.date, "MMM d, yyyy")}
+                    {format(parseISO(photo.uploaded_at), "MMM d, yyyy")}
                   </p>
                 </motion.div>
               ))}
@@ -170,7 +152,6 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
           </div>
         )}
       </div>
-
       <div className="mt-4 text-sm text-gray-500">
         <p>
           * You can upload two progress photos per month to track your fitness
@@ -180,6 +161,12 @@ const ProgressPhotos: React.FC<ProgressPhotosProps> = ({ photos, setPhotos }) =>
           <p className="mt-1">Uploads this month: {uploadCountThisMonth}/2</p>
         )}
       </div>
+      <ErrorModal isOpen={!!error} message={error ?? ""} onClose={clearError} />
+      <ErrorModal
+        isOpen={!!fileSizeError}
+        message={fileSizeError ?? ""}
+        onClose={closeFileSizeError}
+      />
     </div>
   );
 };

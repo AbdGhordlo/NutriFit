@@ -1,60 +1,70 @@
-import React, { useState } from "react";
-import { Clock, UtensilsCrossed } from "lucide-react";
+import React from "react";
+import { Clock, UtensilsCrossed, Loader } from "lucide-react";
 import { styles } from "./styles/DailyMealsStyles";
 
 interface Meal {
   id: number;
+  mealId: number;
   name: string;
   time: string;
   calories: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
+  description?: string;
   completed: boolean;
 }
 
-export default function DailyMeals() {
-  const [meals, setMeals] = useState<Meal[]>([
-    {
-      id: 1,
-      name: "Oatmeal with Berries",
-      time: "08:00",
-      calories: 350,
-      completed: true,
-    },
-    {
-      id: 2,
-      name: "Greek Yogurt & Nuts",
-      time: "11:00",
-      calories: 200,
-      completed: true,
-    },
-    {
-      id: 3,
-      name: "Grilled Chicken Salad",
-      time: "13:00",
-      calories: 450,
-      completed: true,
-    },
-    {
-      id: 4,
-      name: "Protein Smoothie",
-      time: "16:00",
-      calories: 250,
-      completed: false,
-    },
-    {
-      id: 5,
-      name: "Salmon with Quinoa",
-      time: "19:00",
-      calories: 550,
-      completed: false,
-    },
-    {
-      id: 6,
-      name: "Cottage Cheese",
-      time: "21:00",
-      calories: 150,
-      completed: false,
-    },
-  ]);
+interface DailyMealsProps {
+  meals: Meal[];
+  loading: boolean;
+  error: string | null;
+  currentDay: number;
+  onToggle: (meal: Meal) => void;
+}
+
+const DailyMeals: React.FC<DailyMealsProps> = ({
+  meals,
+  loading,
+  error,
+  currentDay,
+  onToggle,
+}) => {
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <h2 style={styles.title}>Today's Meal Plan</h2>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "2rem",
+          }}
+        >
+          <Loader size={24} className="animate-spin" />
+          <span style={{ marginLeft: "0.5rem" }}>Loading meals...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.container}>
+        <h2 style={styles.title}>Today's Meal Plan</h2>
+        <div
+          style={{
+            padding: "1rem",
+            textAlign: "center",
+            color: "#ef4444",
+          }}
+        >
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -83,10 +93,7 @@ export default function DailyMeals() {
               <input
                 type="checkbox"
                 checked={meal.completed}
-                //This toggles the checkmark (task completed or not)
-                onChange={() => {setMeals(prev => prev.map(prevMeal => {
-                  return prevMeal.id === meal.id ? {...prevMeal, completed: !prevMeal.completed} : prevMeal
-                }))}}
+                onChange={() => onToggle(meal)}
                 style={styles.checkboxInput}
               />
               <div
@@ -108,9 +115,8 @@ export default function DailyMeals() {
                     d="M7 10L9 12L13 8"
                     stroke="white"
                     strokeWidth="1.5"
-                    //you can make these "round"
-                    strokeLinecap="inherit"
-                    strokeLinejoin="inherit"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </div>
@@ -118,6 +124,20 @@ export default function DailyMeals() {
           </div>
         ))}
       </div>
+
+      {meals.length === 0 && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "2rem",
+            color: "#6b7280",
+          }}
+        >
+          No meals planned for today. Consider adding some meals to your plan!
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default DailyMeals;

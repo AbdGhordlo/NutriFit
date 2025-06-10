@@ -1,40 +1,73 @@
-import React, { useState } from "react";
-import { Clock, Dumbbell } from "lucide-react";
+import React from "react";
+import { Clock, Dumbbell, Loader } from "lucide-react";
 import { styles } from "./styles/DailyExercisesStyles";
 
 interface Exercise {
   id: number;
+  exerciseId?: number;
   name: string;
   time: string;
-  duration: string;
-  calories: number;
+  duration?: string;
+  calories_burned?: number;
   completed: boolean;
+  reps?: number;
+  sets?: number;
 }
 
-export default function DailyExercises() {
-  const [exercises, setExercises] = useState<Exercise[]>([
-    {
-      id: 1,
-      name: "Morning Cardio",
-      time: "09:30",
-      duration: "30 min",
-      calories: 300,
-      completed: true,
-    },
-    {
-      id: 2,
-      name: "Upper Body Strength",
-      time: "17:00",
-      duration: "45 min",
-      calories: 250,
-      completed: false,
-    },
-  ]);
+interface DailyExercisesProps {
+  exercises: Exercise[];
+  loading: boolean;
+  error: string | null;
+  currentDay: number;
+  onToggle: (exercise: Exercise) => void;
+}
+
+const DailyExercises: React.FC<DailyExercisesProps> = ({
+  exercises,
+  loading,
+  error,
+  currentDay,
+  onToggle,
+}) => {
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <h2 style={styles.title}>Today's Exercise Plan</h2>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "2rem",
+          }}
+        >
+          <Loader size={24} className="animate-spin" />
+          <span style={{ marginLeft: "0.5rem" }}>Loading exercises...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.container}>
+        <h2 style={styles.title}>Today's Exercise Plan</h2>
+        <div
+          style={{
+            padding: "1rem",
+            textAlign: "center",
+            color: "#ef4444",
+          }}
+        >
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Today's Exercise Plan</h2>
-
       <div style={styles.exercisesList}>
         {exercises.map((exercise) => (
           <div
@@ -51,10 +84,18 @@ export default function DailyExercises() {
                 <div style={styles.exerciseTime}>
                   <Clock size={16} />
                   <span>{exercise.time}</span>
-                  <span>•</span>
-                  <span>{exercise.duration}</span>
-                  <span>•</span>
-                  <span>{exercise.calories} kcal</span>
+                  {exercise.duration && (
+                    <>
+                      <span>•</span>
+                      <span>{exercise.duration}</span>
+                    </>
+                  )}
+                  {typeof exercise.calories_burned === "number" && (
+                    <>
+                      <span>•</span>
+                      <span>{exercise.calories_burned} kcal</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -63,10 +104,7 @@ export default function DailyExercises() {
               <input
                 type="checkbox"
                 checked={exercise.completed}
-                //This toggles the checkmark (task completed or not)
-                onChange={() => {setExercises(prev => prev.map(prevExercise => {
-                  return prevExercise.id === exercise.id ? {...prevExercise, completed: !prevExercise.completed} : prevExercise
-                }))}}
+                onChange={() => onToggle(exercise)}
                 style={styles.checkboxInput}
               />
               <div
@@ -88,9 +126,8 @@ export default function DailyExercises() {
                     d="M7 10L9 12L13 8"
                     stroke="white"
                     strokeWidth="1.5"
-                    //you can make these "round"
-                    strokeLinecap="inherit"
-                    strokeLinejoin="inherit"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </div>
@@ -98,6 +135,20 @@ export default function DailyExercises() {
           </div>
         ))}
       </div>
+      {exercises.length === 0 && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "2rem",
+            color: "#6b7280",
+          }}
+        >
+          No exercises planned for today. Consider adding some exercises to your
+          plan!
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default DailyExercises;

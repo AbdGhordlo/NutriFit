@@ -363,7 +363,7 @@ export default function Settings() {
           {/* Profile Settings Container */}
           <ProfileSection 
             profile={profile}
-            handleProfileChange={handleProfileChange}
+            handleProfileChange={(field, value) => handleProfileChange(field as keyof UserProfile, value)}
             handleProfilePhotoUpload={handleProfilePhotoUpload}
             handleRemoveProfilePhoto={handleRemoveProfilePhoto}
             styles={styles}

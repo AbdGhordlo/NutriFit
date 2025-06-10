@@ -1,5 +1,6 @@
 export interface Exercise {
   id: number;
+  exercise_id: number;
   name: string;
   description: string;
   calories_burned: number;
@@ -7,8 +8,9 @@ export interface Exercise {
   has_duration: boolean;
   reps?: number;
   sets?: number;
-  duration?: number;
+  duration?: string;
   time: string;
+  exercise_plan_exercise_id: number;
 }
 
 export interface DayPlan {

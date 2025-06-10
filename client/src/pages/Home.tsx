@@ -1,17 +1,204 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import DailyProgress from "../components/DailyProgress";
 import DailyMeals from "../components/DailyMeals";
 import DailyExercises from "../components/DailyExercises";
 import { styles } from "./styles/HomeStyles";
 import "../assets/commonStyles.css";
+import { getUserIdFromToken } from "../utils/auth";
+import { useAuth } from "../utils/useAuth";
+import { getTodaysMealsByUser } from "../api/MealPlannerAPI";
+import { getTodaysExercisesByUser } from "../api/ExercisePlannerAPI";
+import * as homeService from "../services/homeService";
+import * as progressService from "../services/progressService";
+import { useGoalDates } from "../hooks/progress/useGoalDates";
+import { usePenaltyDays } from "../hooks/progress/usePenaltyDays";
+
+interface Meal {
+  id: number;
+  mealId: number;
+  name: string;
+  time: string;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
+  description?: string;
+  completed: boolean;
+}
+
+interface Exercise {
+  id: number;
+  exerciseId?: number;
+  name: string;
+  time: string;
+  duration?: string;
+  calories_burned?: number;
+  completed: boolean;
+  reps?: number;
+  sets?: number;
+}
 
 function Home() {
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentDay, setCurrentDay] = useState<number>(1);
+
+  const userId = getUserIdFromToken();
+  const { getAuthToken } = useAuth();
+  const token = getAuthToken()!;
+  const today = new Date().toISOString().slice(0, 10);
+  const { targetDate } = useGoalDates(userId, token);
+  const { incrementPenaltyDay, decrementPenaltyDay } = usePenaltyDays(
+    userId,
+    token
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!userId || !token) {
+          setError("User not authenticated");
+          setLoading(false);
+          return;
+        }
+        // Fetch meals
+        const mealData = await getTodaysMealsByUser(userId, token);
+        setCurrentDay(mealData.currentDay || 1);
+        const completedMealIds = await homeService.fetchMealProgress(
+          today,
+          token
+        );
+        const mealsWithCompletion = (mealData.meals || []).map(
+          (meal: Meal) => ({
+            ...meal,
+            completed: completedMealIds.includes(meal.id),
+          })
+        );
+        setMeals(mealsWithCompletion);
+
+        // Fetch exercises
+        const exerciseData = await getTodaysExercisesByUser(userId, token);
+        const completedExerciseIds = await homeService.fetchExerciseProgress(
+          today,
+          token
+        );
+        const exercisesWithCompletion = (exerciseData.exercises || []).map(
+          (exercise: Exercise) => ({
+            ...exercise,
+            completed: completedExerciseIds.includes(exercise.id),
+          })
+        );
+        setExercises(exercisesWithCompletion);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch today's data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+    // eslint-disable-next-line
+  }, [today, token]);
+
+  // Helper to check if all meals and exercises are completed for today
+  const checkAndUpdateCompletedDaysCount = async (
+    updatedMeals: Meal[],
+    updatedExercises: Exercise[]
+  ) => {
+    if (!userId || !token) return;
+    const allMealsCompleted =
+      updatedMeals.length > 0 && updatedMeals.every((m) => m.completed);
+    const allExercisesCompleted =
+      updatedExercises.length > 0 && updatedExercises.every((e) => e.completed);
+    const todayDate = new Date(today);
+    const isAfterTarget = targetDate && todayDate > targetDate;
+    if (allMealsCompleted && allExercisesCompleted) {
+      // Increment completed_days_count
+      await progressService.updateCompletedDaysCount(userId, true, token);
+      // If today is after the original targetDate, decrement penalty days
+      if (isAfterTarget) {
+        await decrementPenaltyDay();
+      }
+    }
+  };
+
+  // Check at end of day if not all completed, increment penalty_days
+  useEffect(() => {
+    const now = new Date();
+    if (now.getHours() === 23 && now.getMinutes() >= 59) {
+      const allMealsCompleted =
+        meals.length > 0 && meals.every((m) => m.completed);
+      const allExercisesCompleted =
+        exercises.length > 0 && exercises.every((e) => e.completed);
+      if (!(allMealsCompleted && allExercisesCompleted)) {
+        incrementPenaltyDay();
+      }
+    }
+  }, [meals, exercises, userId, token, today]);
+
+  const toggleMeal = async (meal: Meal) => {
+    const updatedMeals = meals.map((m) =>
+      m.id === meal.id ? { ...m, completed: !m.completed } : m
+    );
+    setMeals(updatedMeals);
+    try {
+      await homeService.upsertMealProgress(
+        meal.id,
+        today,
+        !meal.completed,
+        token
+      );
+      await checkAndUpdateCompletedDaysCount(updatedMeals, exercises);
+    } catch (e) {
+      // Optionally handle error
+    }
+  };
+
+  const toggleExercise = async (exercise: Exercise) => {
+    const updatedExercises = exercises.map((e) =>
+      e.id === exercise.id ? { ...e, completed: !e.completed } : e
+    );
+    setExercises(updatedExercises);
+    try {
+      await homeService.upsertExerciseProgress(
+        exercise.id,
+        today,
+        !exercise.completed,
+        token
+      );
+      await checkAndUpdateCompletedDaysCount(meals, updatedExercises);
+    } catch (e) {
+      // Optionally handle error
+    }
+  };
+
   return (
     <div className="outer-container">
-      <DailyProgress />
+      <DailyProgress
+        meals={meals}
+        exercises={exercises}
+        loading={loading}
+        error={error}
+        currentDay={currentDay}
+      />
       <div style={styles.gridContainer}>
-        <DailyMeals />
-        <DailyExercises />
+        <DailyMeals
+          meals={meals}
+          loading={loading}
+          error={error}
+          currentDay={currentDay}
+          onToggle={toggleMeal}
+        />
+        <DailyExercises
+          exercises={exercises}
+          loading={loading}
+          error={error}
+          currentDay={currentDay}
+          onToggle={toggleExercise}
+        />
       </div>
     </div>
   );

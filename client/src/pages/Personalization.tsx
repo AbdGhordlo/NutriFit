@@ -26,6 +26,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import ErrorModal from "../components/ErrorModal";
 import { getUserIdFromToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
+import { addMeasurement } from "../services/progressService";
 
 function Personalization() {
   const navigate = useNavigate();
@@ -259,6 +260,7 @@ function Personalization() {
       },
       step_5: { budget, hasKitchenInventory },
     };
+
 
     if (currentStep < 5) {
       await saveStepData(currentStep, stepData[`step_${currentStep}`]);

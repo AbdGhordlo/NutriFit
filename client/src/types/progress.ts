@@ -63,8 +63,8 @@ export interface Measurement {
   export interface GoalData {
     startDate: Date;
     targetDate: Date;
-    targetWeight: number;
-    startWeight: number;
-    currentWeight: number;
+    targetMeasurement: number;
+    startMeasurement: number;
+    currentMeasurement: number;
     cheatingDays: number;
   }
