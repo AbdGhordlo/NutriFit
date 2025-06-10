@@ -162,21 +162,17 @@ export default function Footer() {
               >
                 Contact
               </Link>
-              <a
-                href="#"
+              <Link
+                to="/privacy"
                 style={{
                   ...styles.link,
                   color: hoveredLink === 2 ? "#4d7051" : "#4b5563",
                 }}
                 onMouseEnter={() => setHoveredLink(2)}
                 onMouseLeave={() => setHoveredLink(null)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  openSection("privacy");
-                }}
               >
                 Privacy
-              </a>
+              </Link>
             </div>
 
             <div style={styles.socialLinks}>
@@ -199,7 +195,7 @@ export default function Footer() {
       </footer>
 
       {/* Modal for About/Contact/Privacy */}
-      {activeSection && (
+      {activeSection && activeSection !== "privacy" && (
         <div style={styles.modal.overlay} onClick={handleModalClick}>
           <div style={styles.modal.container} ref={modalRef}>
             <div style={styles.modal.header}>
