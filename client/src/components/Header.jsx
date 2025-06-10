@@ -13,6 +13,7 @@ import {
   LogIn,
   UserPlus,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "../assets/imgs/logo-no-padding.png";
 import "./styles/headerStyles.css";
 //npm install prop-types
@@ -125,6 +126,7 @@ export default function Header({ toggleSidebar }) {
   
   const currentPath = window.location.pathname;
   const isAuthPage = currentPath === "/login" || currentPath === "/register";
+  const isAboutPage = currentPath === "/about";
   //ispublicpage can be assessed by checking if the path is not an auth page
   // Determine what to show based on authentication and page type
   const shouldShowNotifications = isLoggedIn;
@@ -149,6 +151,13 @@ export default function Header({ toggleSidebar }) {
               <span className="brand-name">NutriFit</span>
             </div>
           </a>
+          {isAboutPage && (
+            <div className="hidden md:flex items-center space-x-8 ml-8">
+              <Link to="/home" className="text-gray-600 hover:text-green-600 transition-colors">Home</Link>
+              <span className="text-green-600 font-medium">About</span>
+              <Link to="/contact" className="text-gray-600 hover:text-green-600 transition-colors">Contact</Link>
+            </div>
+          )}
         </div>
 
         <div className="actions-container">
