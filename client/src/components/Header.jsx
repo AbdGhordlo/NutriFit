@@ -156,6 +156,7 @@ export default function Header({ toggleSidebar }) {
               <Link to="/home" className="text-gray-600 hover:text-green-600 transition-colors">Home</Link>
               <span className="text-green-600 font-medium">About</span>
               <Link to="/contact" className="text-gray-600 hover:text-green-600 transition-colors">Contact</Link>
+              <Link to="/privacy" className="text-gray-600 hover:text-green-600 transition-colors">Privacy</Link>
             </div>
           )}
         </div>
