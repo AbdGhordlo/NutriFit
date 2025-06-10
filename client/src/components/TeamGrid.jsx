@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, MapPin, Mail, Linkedin, Github } from "lucide-react";
+import { Calendar, MapPin, Linkedin, Github } from "lucide-react";
 import PictureHussein from '../assets/imgs/Hussein Abdikarim - Nutrifit.jpg';
 
 export const creators = [
@@ -11,7 +11,7 @@ export const creators = [
     status: "Student at TED University",
     location: "Ankara, Turkey",
     linkedin: "#",
-    email: "sarah@nutrifit.com"
+    github: "#",
   },
   {
     name: "Ahmet Tokgöz",
@@ -20,8 +20,8 @@ export const creators = [
     description: "Full-stack developer and AI enthusiast. Previously at Tesla, building scalable systems for millions of users worldwide.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
+    linkedin: "#",
     github: "#",
-    email: "marcus@nutrifit.com"
   },
   {
     name: "Basme Zantout",
@@ -32,7 +32,6 @@ export const creators = [
     location: "Ankara, Turkey",
     linkedin: "#",
     github: "#",
-    email: "amira@nutrifit.com"
   },
   {
     name: "Hussein Abdikarim Hussein",
@@ -42,7 +41,7 @@ export const creators = [
     status: "Student at TED University",
     location: "Ankara, Turkey",
     linkedin: "https://www.linkedin.com/in/hussein-abdikarim/",
-    email: "husseinabdikarim18@gmail.com"
+    github: "https://github.com/Husseinabdikarim",
   }
 ];
 
@@ -83,9 +82,6 @@ export default function TeamGrid() {
             </div>
           </div>
           <div className="flex justify-center space-x-3 mt-6 pt-4 border-t border-gray-100">
-            <a href={`mailto:${creator.email}`} className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
-              <Mail className="w-4 h-4" />
-            </a>
             {creator.linkedin && (
               <a href={creator.linkedin} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
                 <Linkedin className="w-4 h-4" />
