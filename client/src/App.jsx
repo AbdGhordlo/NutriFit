@@ -19,7 +19,8 @@ import Register from "./pages/Register";
 import Personalization from "./pages/Personalization";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NutriFitMainPage from "./pages/NutriFitMainPage";
-
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 import "./AppStyles.css";
 
@@ -31,7 +32,7 @@ function AppContent() {
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1000);
 
   // Define routes where the sidebar, header, and footer should not be displayed
-  const noSidebarRoutes = ["/login", "/register", "/"];
+  const noSidebarRoutes = ["/login", "/register", "/", "/about", "/contact"];
   const shouldShowSidebar = !noSidebarRoutes.includes(location.pathname);
   const shouldShowFooter = !noSidebarRoutes.includes(location.pathname);
 
@@ -66,6 +67,8 @@ function AppContent() {
             <Route path="/" element={<NutriFitMainPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
               <Route path="/meal-planner" element={<MealPlanner />} />

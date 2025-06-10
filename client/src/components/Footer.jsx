@@ -3,6 +3,7 @@ import { FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
 import { AiOutlineX } from "react-icons/ai";
 import Logo from "../assets/imgs/logo-no-padding.png";
 import { styles } from "./styles/FooterStyles";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   const [hoveredIcon, setHoveredIcon] = useState(null);
@@ -139,28 +140,43 @@ export default function Footer() {
 
           <div style={styles.rightSection}>
             <div style={styles.links}>
-              {[
-                { name: "About", section: "about" },
-                { name: "Contact", section: "contact" },
-                { name: "Privacy", section: "privacy" }
-              ].map((item, index) => (
-                <a
-                  key={index}
-                  href="#"
-                  style={{
-                    ...styles.link,
-                    color: hoveredLink === index ? "#4d7051" : "#4b5563",
-                  }}
-                  onMouseEnter={() => setHoveredLink(index)}
-                  onMouseLeave={() => setHoveredLink(null)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    openSection(item.section);
-                  }}
-                >
-                  {item.name}
-                </a>
-              ))}
+              <Link
+                to="/about"
+                style={{
+                  ...styles.link,
+                  color: hoveredLink === 0 ? "#4d7051" : "#4b5563",
+                }}
+                onMouseEnter={() => setHoveredLink(0)}
+                onMouseLeave={() => setHoveredLink(null)}
+              >
+                About
+              </Link>
+              <Link
+                to="/contact"
+                style={{
+                  ...styles.link,
+                  color: hoveredLink === 1 ? "#4d7051" : "#4b5563",
+                }}
+                onMouseEnter={() => setHoveredLink(1)}
+                onMouseLeave={() => setHoveredLink(null)}
+              >
+                Contact
+              </Link>
+              <a
+                href="#"
+                style={{
+                  ...styles.link,
+                  color: hoveredLink === 2 ? "#4d7051" : "#4b5563",
+                }}
+                onMouseEnter={() => setHoveredLink(2)}
+                onMouseLeave={() => setHoveredLink(null)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  openSection("privacy");
+                }}
+              >
+                Privacy
+              </a>
             </div>
 
             <div style={styles.socialLinks}>
