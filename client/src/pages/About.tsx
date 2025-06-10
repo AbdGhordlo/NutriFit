@@ -48,25 +48,6 @@ const creators = [
 export default function About() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm border-b border-green-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                <Heart className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">NutriFit</span>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/home" className="text-gray-600 hover:text-green-600 transition-colors">Home</Link>
-              <span className="text-green-600 font-medium">About</span>
-              <Link to="/contact" className="text-gray-600 hover:text-green-600 transition-colors">Contact</Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -211,21 +192,6 @@ export default function About() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                <Heart className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">NutriFit</span>
-            </div>
-            <p className="text-gray-500">© 2024 NutriFit. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
 
       <style>{`
         @keyframes fadeInUp {
