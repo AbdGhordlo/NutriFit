@@ -7,9 +7,6 @@ import {
   Apple,
   LineChart,
   Settings,
-  LogIn,
-  UserPlus,
-  UserRoundPen,
 } from "lucide-react";
 import "./styles/Sidebar.css";
 
@@ -20,9 +17,6 @@ const navItems = [
   { icon: Apple, label: "Ingredients", path: "/ingredients" },
   { icon: LineChart, label: "Progress", path: "/progress" },
   { icon: Settings, label: "Settings", path: "/settings" },
-  { icon: LogIn, label: "Login", path: "/login" },
-  { icon: UserPlus, label: "Register", path: "/register" },
-  { icon: UserRoundPen, label: 'Personalization', path: '/personalization' }
 ];
 
 export default function Sidebar({ isVisible, toggleSidebar, isLargeScreen }) {

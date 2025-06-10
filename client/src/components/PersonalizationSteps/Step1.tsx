@@ -14,15 +14,15 @@ export const Step1 = ({ personalInfo, setPersonalInfo }: Step1Props) => (
       label="Height"
       value={personalInfo.height}
       onChange={(value) => setPersonalInfo({ ...personalInfo, height: value })}
-      min={60}
-      max={280}
+      min={130}
+      max={250}
       unit="cm"
     />
     <Slider
       label="Weight"
       value={personalInfo.weight}
       onChange={(value) => setPersonalInfo({ ...personalInfo, weight: value })}
-      min={20}
+      min={30}
       max={230}
       unit="kg"
     />
@@ -30,8 +30,8 @@ export const Step1 = ({ personalInfo, setPersonalInfo }: Step1Props) => (
       label="Age"
       value={personalInfo.age}
       onChange={(value) => setPersonalInfo({ ...personalInfo, age: value })}
-      min={18}
-      max={120}
+      min={15}
+      max={100}
       unit=""
     />
     <div className="mb-6">
