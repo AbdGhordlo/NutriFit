@@ -4,6 +4,8 @@ const pool = require("../db");
 const { OAuth2Client } = require("google-auth-library");
 const { createDefaultMealPlan } = require("./mealPlannerController");
 const { createDefaultExercisePlan } = require("./exercisePlannerController");
+const crypto = require("crypto");
+const { sendResetEmail } = require("../utils/mail");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -246,4 +248,61 @@ const googleAuth = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, deleteAccount, googleAuth };
+/**
+ * Send a one-time code to user’s email
+ */
+async function forgotPassword(req, res) {
+  const { email } = req.body;
+  // always respond 200 so attackers can’t probe valid emails
+  const userQ = await pool.query(`SELECT id FROM "user" WHERE email=$1`, [email]);
+  if (userQ.rows.length) {
+    const token = crypto.randomBytes(3).toString("hex").toUpperCase(); // e.g. “A1B2C3”
+    const expires = Date.now() + 1000 * 60 * 15; // 15m
+    await pool.query(
+      `UPDATE "user" SET reset_token=$1, reset_expires=$2 WHERE email=$3`,
+      [token, expires, email]
+    );
+    try {
+      await sendResetEmail(email, token);
+      console.log("✅ reset email sent");
+    } catch (mailErr) {
+      console.error("❌ sendResetEmail error:", mailErr);
+    }
+  }
+  res.json({ message: "If that email exists, a code has been sent." });
+}
+
+/**
+ * Consume code + set new password
+ */
+async function resetPassword(req, res) {
+  const { email, code, newPassword } = req.body;
+  const userQ = await pool.query(
+    `SELECT id, reset_token, reset_expires FROM "user" WHERE email=$1`,
+    [email]
+  );
+  const user = userQ.rows[0];
+  if (
+    !user ||
+    user.reset_token !== code ||
+    user.reset_expires < Date.now()
+  ) {
+    return res.status(400).json({ message: "Invalid or expired code" });
+  }
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(newPassword, salt);
+  await pool.query(
+    `UPDATE "user" SET password_hash=$1, reset_token=NULL, reset_expires=NULL WHERE id=$2`,
+    [hash, user.id]
+  );
+  res.json({ message: "Password has been reset" });
+}
+
+module.exports = {
+  signup,
+  login,
+  deleteAccount,
+  googleAuth,
+  forgotPassword,
+  resetPassword,
+};

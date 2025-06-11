@@ -156,7 +156,7 @@ export default function Login() {
             </div>
 
             <div style={styles.forgotPassword}>
-              <a href="#" style={styles.link}>
+              <a href="/forgot-password" style={styles.link}>
                 Forgot password?
               </a>
             </div>
