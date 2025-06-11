@@ -497,7 +497,7 @@ VALUES
   (7, 'hip', 91.5, 'cm', '2025-02-01', CURRENT_TIMESTAMP),
   (7, 'hip', 91.2, 'cm', '2025-03-01', CURRENT_TIMESTAMP),
   (7, 'hip', 91.0, 'cm', '2025-05-01', CURRENT_TIMESTAMP),
-  (7, 'hip', 90.8, 'cm', '2025-06-01', CURRENT_TIMESTAMP)
+  (7, 'hip', 90.8, 'cm', '2025-06-01', CURRENT_TIMESTAMP),
 
  -- Body Fat Mass measurements
   (7, 'fat_mass', 13.5, 'kg', '2025-03-01', CURRENT_TIMESTAMP),
