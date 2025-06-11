@@ -155,7 +155,7 @@ export default function Header({ toggleSidebar }) {
             </div>
           </a>
           {showTopNav && (
-            <div className="hidden md:flex items-center space-x-8 ml-8">
+            <div className="md:flex items-center space-x-8 ml-8">
               <Link to="/home" className="text-gray-600 hover:text-green-600 transition-colors">Home</Link>
               {isAboutPage ? (
                 <span className="text-green-600 font-medium">About</span>
