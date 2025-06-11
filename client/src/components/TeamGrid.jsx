@@ -1,6 +1,7 @@
 import React from "react";
 import { Calendar, MapPin, Linkedin, Github } from "lucide-react";
 import PictureHussein from '../assets/imgs/Hussein Abdikarim - Nutrifit.jpg';
+import PictureAhmet from '../assets/imgs/ahmeyfotos.jpg';
 
 export const creators = [
   {
@@ -16,12 +17,12 @@ export const creators = [
   {
     name: "Ahmet Tokgöz",
     role: "Computer Engineering Student",
-    image: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
-    description: "Full-stack developer and AI enthusiast. Previously at Tesla, building scalable systems for millions of users worldwide.",
+    image: PictureAhmet,
+    description: "Final-year Computer Engineering student at TED University, with secondary field in Applied Data Analytics. Also studying Business Administration at Istanbul University (Open Education).",
     status: "Student at TED University",
     location: "Ankara, Turkey",
-    linkedin: "#",
-    github: "#",
+    linkedin: "https://tr.linkedin.com/in/ahmet-tokg%C3%B6z-960a1a264",
+    github: "https://github.com/ahmettkgz",
   },
   {
     name: "Basme Zantout",
