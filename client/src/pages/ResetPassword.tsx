@@ -1,4 +1,3 @@
-// src/pages/ResetPassword.jsx
 import React, { useState } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Lock, Mail } from "lucide-react";
@@ -14,6 +13,11 @@ export default function ResetPassword() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // focus trackers for styling
+  const [codeFocus, setCodeFocus] = useState(false);
+  const [passFocus, setPassFocus] = useState(false);
+  const [confFocus, setConfFocus] = useState(false);
 
   const handleReset = async (e) => {
     e.preventDefault();
@@ -45,7 +49,9 @@ export default function ResetPassword() {
         <p style={styles.subtitle}>
           Enter the code you received, plus your new password.
         </p>
+
         <form style={styles.form} onSubmit={handleReset}>
+          {/* Email (disabled) */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Email</label>
             <div style={styles.inputContainer}>
@@ -54,11 +60,15 @@ export default function ResetPassword() {
                 type="email"
                 value={email}
                 disabled
-                className="input input-focused"
+                style={{
+                  ...styles.input,
+                  ...styles.inputDisabled,
+                }}
               />
             </div>
           </div>
 
+          {/* Reset Code */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Reset Code</label>
             <div style={styles.inputContainer}>
@@ -68,11 +78,18 @@ export default function ResetPassword() {
                 placeholder="ABC123"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
+                onFocus={() => setCodeFocus(true)}
+                onBlur={() => setCodeFocus(false)}
                 required
+                style={{
+                  ...styles.input,
+                  ...(codeFocus ? styles.inputFocused : {}),
+                }}
               />
             </div>
           </div>
 
+          {/* New Password */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>New Password</label>
             <div style={styles.inputContainer}>
@@ -82,11 +99,18 @@ export default function ResetPassword() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setPassFocus(true)}
+                onBlur={() => setPassFocus(false)}
                 required
+                style={{
+                  ...styles.input,
+                  ...(passFocus ? styles.inputFocused : {}),
+                }}
               />
             </div>
           </div>
 
+          {/* Confirm Password */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Confirm Password</label>
             <div style={styles.inputContainer}>
@@ -96,7 +120,13 @@ export default function ResetPassword() {
                 placeholder="••••••••"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
+                onFocus={() => setConfFocus(true)}
+                onBlur={() => setConfFocus(false)}
                 required
+                style={{
+                  ...styles.input,
+                  ...(confFocus ? styles.inputFocused : {}),
+                }}
               />
             </div>
           </div>
@@ -107,8 +137,11 @@ export default function ResetPassword() {
             {loading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
+
         <p style={styles.footer}>
-          <Link to="/login" style={styles.link}>Back to Sign In</Link>
+          <Link to="/login" style={styles.link}>
+            Back to Sign In
+          </Link>
         </p>
       </div>
     </div>
