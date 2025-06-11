@@ -225,6 +225,25 @@ CREATE TABLE progress_photo (
   uploaded_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE progress (
+  id SERIAL PRIMARY KEY,
+  user_id INT UNIQUE REFERENCES "user"(id) ON DELETE CASCADE,
+  completed_days_count INT DEFAULT 0,
+  penalty_days_count INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE body_measurements (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+  measurement_type VARCHAR(20) NOT NULL, -- e.g. 'weight', 'height', 'bmi'
+  value NUMERIC NOT NULL,
+  unit VARCHAR(20),                      -- e.g. 'kg', 'cm', 'm²'
+  measured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Data
 
 -- Insert Meal Plan
@@ -472,3 +491,32 @@ ALTER TABLE ingredient DROP CONSTRAINT ingredient_name_key;
 -- Add the new composite unique constraint
 ALTER TABLE ingredient ADD CONSTRAINT ingredient_unique_nutrition 
 UNIQUE (name, category, calories, protein, carbs, fats, serving_size);
+
+-- Insert dummy measurements for user_id = 7
+INSERT INTO body_measurements (user_id, measurement_type, value, unit, measured_at, created_at)
+VALUES
+  -- Weight measurements
+  (7, 'weight', 45.0, 'kg', '2025-02-01', CURRENT_TIMESTAMP),
+  (7, 'weight', 44.8, 'kg', '2025-03-01', CURRENT_TIMESTAMP),
+  (7, 'weight', 44.6, 'kg', '2025-04-01', CURRENT_TIMESTAMP),
+  (7, 'weight', 44.5, 'kg', '2025-05-01', CURRENT_TIMESTAMP),
+  (7, 'weight', 44.3, 'kg', '2025-06-01', CURRENT_TIMESTAMP),
+
+  -- Height measurements
+  (7, 'height', 146.9, 'cm', '2023-06-08', CURRENT_TIMESTAMP),
+  (7, 'height', 147.0, 'cm', '2025-06-01', CURRENT_TIMESTAMP),
+
+  -- Waist measurements
+  (7, 'waist', 70.5, 'cm', '2025-01-01', CURRENT_TIMESTAMP),
+  (7, 'waist', 69.8, 'cm', '2025-04-01', CURRENT_TIMESTAMP),
+  (7, 'waist', 68.9, 'cm', '2025-06-01', CURRENT_TIMESTAMP),
+
+  -- Hip measurements
+  (7, 'hip', 91.5, 'cm', '2025-02-01', CURRENT_TIMESTAMP),
+  (7, 'hip', 91.2, 'cm', '2025-03-01', CURRENT_TIMESTAMP),
+  (7, 'hip', 91.0, 'cm', '2025-05-01', CURRENT_TIMESTAMP),
+  (7, 'hip', 90.8, 'cm', '2025-06-01', CURRENT_TIMESTAMP)
+
+ -- Body Fat Mass measurements
+  (7, 'fat_mass', 13.5, 'kg', '2025-03-01', CURRENT_TIMESTAMP),
+  (7, 'fat_mass', 12.9, 'kg', '2025-06-01', CURRENT_TIMESTAMP);

@@ -1,86 +1,47 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import { FaCamera, FaTrash, FaCloudUploadAlt } from "react-icons/fa";
-import {
-  uploadProgressPhoto,
-  listProgressPhotos,
-  deleteProgressPhoto,
-} from "../../services/progressService";
-import { useAuth } from "../../utils/useAuth";
+import ErrorModal from "../ErrorModal";
 
-interface ProgressPhoto {
+export interface ProgressPhoto {
   id: number;
   url: string;
   uploaded_at: string;
 }
 
-const ProgressPhotos: React.FC = () => {
-  const { getAuthToken, getAuthUserId } = useAuth();
-  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
-  const [uploadCountThisMonth, setUploadCountThisMonth] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+interface ProgressPhotosProps {
+  photos: ProgressPhoto[];
+  uploadCountThisMonth: number;
+  loading: boolean;
+  error?: string | null;
+  handlePhotoUpload: (file: File) => Promise<void>;
+  handleDeletePhoto: (photoId: number) => Promise<void>;
+  clearError: () => void;
+}
+
+const ProgressPhotos: React.FC<ProgressPhotosProps> = ({
+  photos,
+  uploadCountThisMonth,
+  loading,
+  handlePhotoUpload,
+  handleDeletePhoto,
+  error,
+  clearError,
+}) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch progress photos on mount
-  useEffect(() => {
-    const fetchPhotos = async () => {
-      const token = getAuthToken();
-      const userId = getAuthUserId();
-      if (!token || !userId) return;
-      setLoading(true);
-      try {
-        const data = await listProgressPhotos(userId, token);
-        setPhotos(data);
-        // Count uploads for this month
-        const now = new Date();
-        const monthUploads = data.filter((p: ProgressPhoto) => {
-          const d = parseISO(p.uploaded_at);
-          return (
-            d.getMonth() === now.getMonth() &&
-            d.getFullYear() === now.getFullYear()
-          );
-        });
-        setUploadCountThisMonth(monthUploads.length);
-        setCurrentMonth(now.getMonth());
-      } catch (e) {
-        setPhotos([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPhotos();
-    // eslint-disable-next-line
-  }, []);
-
-  const handlePhotoUpload = async (file: File) => {
-    const token = getAuthToken();
-    const userId = getAuthUserId();
-    if (!token || !userId) return;
-    const now = new Date();
-    const currentMonthNow = now.getMonth();
-    if (currentMonthNow !== currentMonth) {
-      setUploadCountThisMonth(0);
-      setCurrentMonth(currentMonthNow);
-    }
-    if (uploadCountThisMonth >= 2) {
-      alert("You can only upload two progress photos per month.");
-      return;
-    }
-    try {
-      const res = await uploadProgressPhoto(userId, token, file);
-      setPhotos((prev) => [res, ...prev]);
-      setUploadCountThisMonth((prev) => prev + 1);
-    } catch (e) {
-      alert("Failed to upload photo.");
-    }
-  };
+  const [fileSizeError, setFileSizeError] = useState<string | null>(null);
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handlePhotoUpload(file);
+      if (file.size > 5 * 1024 * 1024) {
+        setFileSizeError(
+          "File size must be 5MB or less. Please choose a smaller image."
+        );
+        return;
+      }
+      handlePhotoUpload(file).catch(() => {});
     }
   };
 
@@ -100,28 +61,21 @@ const ProgressPhotos: React.FC = () => {
       setIsDragging(false);
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith("image/")) {
-        handlePhotoUpload(file);
+        if (file.size > 5 * 1024 * 1024) {
+          setFileSizeError(
+            "File size must be 5MB or less. Please choose a smaller image."
+          );
+          return;
+        }
+        handlePhotoUpload(file).catch(() => {});
       } else {
-        alert("Please drop an image file.");
+        setFileSizeError("Please drop an image file.");
       }
     },
-    [uploadCountThisMonth, currentMonth]
+    [handlePhotoUpload]
   );
 
-  const handleDeletePhoto = async (photoId: number) => {
-    const token = getAuthToken();
-    const userId = getAuthUserId();
-    if (!token || !userId) return;
-    try {
-      await deleteProgressPhoto(userId, photoId, token);
-      setPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
-      // Optionally update upload count
-      const now = new Date();
-      setUploadCountThisMonth((prev) => Math.max(0, prev - 1));
-    } catch (e) {
-      alert("Failed to delete photo.");
-    }
-  };
+  const closeFileSizeError = () => setFileSizeError(null);
 
   return (
     <div className="progress-photos bg-white rounded-xl shadow-md p-6">
@@ -207,6 +161,12 @@ const ProgressPhotos: React.FC = () => {
           <p className="mt-1">Uploads this month: {uploadCountThisMonth}/2</p>
         )}
       </div>
+      <ErrorModal isOpen={!!error} message={error ?? ""} onClose={clearError} />
+      <ErrorModal
+        isOpen={!!fileSizeError}
+        message={fileSizeError ?? ""}
+        onClose={closeFileSizeError}
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import RadialProgressBar from "./RadialProgressBar";
 import { FaTrophy, FaFire } from "react-icons/fa";
@@ -29,21 +29,79 @@ const Fire = ({ active, size = 24 }) => {
   );
 };
 
-const StreakTracker = (data: any) => {
-  const streakData = data.streakData;
-
+const StreakTracker = ({
+  dailyCompletedMeals,
+  dailyMaxMeals,
+  dailyCompletedExercises,
+  dailyMaxExercises,
+  dailyCompletedDays,
+  weeklyCurrent,
+  weeklyMax,
+  monthlyCurrent,
+  monthlyMax,
+  totalTimeframeWeeks,
+}: {
+  dailyCompletedMeals: number;
+  dailyMaxMeals: number;
+  dailyCompletedExercises: number;
+  dailyMaxExercises: number;
+  dailyCompletedDays: number;
+  weeklyCurrent: number;
+  weeklyMax: number;
+  monthlyCurrent: number;
+  monthlyMax: number;
+  totalTimeframeWeeks: number;
+}) => {
   // Calculate trophy levels based on streaks
   const getTrophyLevel = () => {
-    if (streakData.weekly.current == 4) return "gold";
+    if (weeklyCurrent === 4) return "gold";
     return "bronze";
   };
 
+  // Calculate next trophy level based on streaks
+  const getNextTrophyLevel = () => {
+    if (weeklyCurrent === 3) return "gold";
+    if (weeklyCurrent >= 1 && weeklyCurrent <= 2) return "bronze";
+    return "fire";
+  };
+
   // Days of the week for display
-  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
+
+  // Trophy pagination state
+  const [weekPage, setWeekPage] = useState(0);
+  const [monthPage, setMonthPage] = useState(0);
+
+  // Calculate total week trophy pages
+  const weekTrophiesPerPage = 4;
+  const totalWeekPages = Math.ceil(weeklyMax / weekTrophiesPerPage);
+  // Calculate current page (auto-advance as user progresses)
+  const currentWeekPage = Math.floor(weeklyCurrent / weekTrophiesPerPage);
+  // For last page, show only the remaining trophies
+  const weekTrophiesThisPage =
+    currentWeekPage === totalWeekPages - 1
+      ? weeklyMax - weekTrophiesPerPage * (totalWeekPages - 1)
+      : Math.min(weekTrophiesPerPage, weeklyMax);
+
+  // Calculate total month trophy pages
+  const monthTrophiesPerPage = 12;
+  const totalMonthPages = Math.ceil(monthlyMax / monthTrophiesPerPage);
+  const currentMonthPage = Math.floor(monthlyCurrent / monthTrophiesPerPage);
+  const monthTrophiesThisPage =
+    currentMonthPage === totalMonthPages - 1
+      ? monthlyMax - monthTrophiesPerPage * (totalMonthPages - 1)
+      : Math.min(monthTrophiesPerPage, monthlyMax);
+
+  // Only show monthly if totalTimeframeWeeks > 4 and there is at least one month in the timeframe
+  const displayMonthly = totalTimeframeWeeks > 4 && monthlyMax > 0;
 
   return (
     <div className="streak-tracker">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div
+        className={`grid grid-cols-1 gap-6 ${
+          displayMonthly ? "md:grid-cols-3" : "md:grid-cols-2"
+        }`}
+      >
         {/* Daily Progress */}
         <motion.div
           className="bg-white rounded-lg p-6 shadow-sm border border-gray-100"
@@ -52,53 +110,52 @@ const StreakTracker = (data: any) => {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Daily Progress
           </h3>
-          <div className="flex flex-col space-y-4 pt-3 justify-between h-[80%]">
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Meals</span>
-                <span className="font-medium text-gray-800">
-                  {streakData.daily.meals}/{streakData.daily.maxMeals} meals
-                </span>
+          <div className="flex flex-col space-y-4 pt-3 justify-between h-[86%]">
+            <div className="flex flex-col justify-between h-full py-4">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Meals</span>
+                  <span className="font-medium text-gray-800">
+                    {dailyCompletedMeals}/{dailyMaxMeals} meals
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${(dailyCompletedMeals / dailyMaxMeals) * 100}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${
-                      (streakData.daily.meals / streakData.daily.maxMeals) * 100
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
 
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Exercise</span>
-                <span className="font-medium text-gray-800">1/2 workouts</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${
-                      (streakData.daily.exercises / streakData.daily.maxExercises) * 100
-                    }%`,
-                  }}
-                />
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Exercise</span>
+                  <span className="font-medium text-gray-800">
+                    {dailyCompletedExercises}/{dailyMaxExercises} workouts
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${
+                        (dailyCompletedExercises / dailyMaxExercises) * 100
+                      }%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Days of the week with fire icons */}
-            <div className="mt-4 pt-2 border-t border-gray-100">
+            <div className="pt-2 border-t border-gray-100">
+              <div className="text-sm text-gray-500 mb-3">Daily Streaks</div>
               <div className="flex justify-between">
                 {daysOfWeek.map((day, index) => (
                   <div key={day} className="flex flex-col items-center">
-                    <span className="text-xs text-gray-500 mb-1">{day}</span>
-                    <Fire
-                    // complete days is a number which represents the number of days completed
-                      active={streakData.daily.completedDays > index}
-                    />
+                    <Fire active={dailyCompletedDays > index} />
                   </div>
                 ))}
               </div>
@@ -116,75 +173,201 @@ const StreakTracker = (data: any) => {
           </h3>
           <div className="flex flex-col items-center">
             <RadialProgressBar
-              percentage={
-                (streakData.weekly.current / streakData.weekly.max) * 100
-              }
+              percentage={(weeklyCurrent / weeklyMax) * 100}
               color="#b87333" // Bronze color
               size={120}
               thickness={12}
-              label={`${streakData.weekly.current}/${streakData.weekly.max}`}
+              label={`${weeklyCurrent}/${weeklyMax}`}
             />
             <p className="mt-4 text-gray-600 text-center">
-              {streakData.weekly.current} consecutive weeks of meeting daily
-              goals
+              {weeklyCurrent} consecutive weeks of meeting daily goals
             </p>
 
             {/* Bronze trophies for weekly progress */}
             <div className="mt-6 pt-4 border-t border-gray-100 w-full">
               <p className="text-sm text-gray-500 mb-3">Weekly Trophies</p>
               <div className="flex justify-center space-x-4">
-                {[1, 2, 3, 4].map((week) => (
-                  <Trophy
-                    key={`week-${week}`}
-                    level="bronze"
-                    size={32}
-                    opacity={week <= streakData.weekly.current ? 1 : 0.3}
-                  />
-                ))}
+                {Array.from({ length: weekTrophiesThisPage }, (_, i) => {
+                  const trophyIndex = currentWeekPage * weekTrophiesPerPage + i;
+                  return (
+                    <Trophy
+                      key={`week-${trophyIndex + 1}`}
+                      level="bronze"
+                      size={32}
+                      opacity={trophyIndex < weeklyCurrent ? 1 : 0.3}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
         </motion.div>
 
         {/* Monthly Progress */}
-        <motion.div
-          className="bg-white rounded-lg p-6 shadow-sm border border-gray-100"
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
-        >
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Monthly Progress
-          </h3>
-          <div className="flex flex-col items-center">
-            <RadialProgressBar
-              percentage={
-                (streakData.monthly.current / streakData.monthly.max) * 100
-              }
-              color="#FFD700" // Gold color
-              size={120}
-              thickness={12}
-              label={`${streakData.monthly.current}/${streakData.monthly.max}`}
-            />
-            <p className="mt-4 text-gray-600 text-center">
-              {streakData.monthly.current} consecutive months of meeting weekly
-              goals
-            </p>
-
-            {/* Gold trophies for monthly progress */}
-            <div className="mt-6 pt-4 border-t border-gray-100 w-full">
-              <p className="text-sm text-gray-500 mb-3">Monthly Trophies</p>
-              <div className="flex justify-center space-x-4">
-                {[1, 2, 3, 4, 5].map((month) => (
-                  <Trophy
-                    key={`month-${month}`}
-                    level="gold"
-                    size={32}
-                    opacity={month <= streakData.monthly.current ? 1 : 0.3}
-                  />
-                ))}
-              </div>
+        {displayMonthly && (
+          <motion.div
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100"
+            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          >
+            <div className="flex items-center mb-2">
+              <h3 className="text-lg font-semibold text-gray-800 mr-2">
+                Monthly Progress
+              </h3>
+              <span
+                title="A month here is considered as 28 days (4 weeks)"
+                style={{ cursor: "pointer" }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="12" cy="12" r="10" fill="#fbbf24" />
+                  <text
+                    x="12"
+                    y="16"
+                    textAnchor="middle"
+                    fontSize="14"
+                    fill="#fff"
+                    fontFamily="Arial"
+                    fontWeight="bold"
+                  >
+                    i
+                  </text>
+                </svg>
+              </span>
             </div>
-          </div>
-        </motion.div>
+            <div className="flex flex-col items-center min-h-[180px] justify-center">
+              {Number(monthlyMax) > 0 &&
+              Number(monthlyCurrent) >= Number(monthlyMax) ? (
+                <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-lg p-6 shadow-inner">
+                  <span className="text-5xl mb-3 animate-bounce">🏆</span>
+                  <span className="text-xl font-bold text-yellow-700 text-center mb-2">
+                    Outstanding! You’ve earned every monthly trophy for your
+                    goal!
+                  </span>
+                  <span className="text-base text-gray-600 text-center mb-4">
+                    Share your dedication!
+                  </span>
+                  <button
+                    className="mt-2 px-5 py-2 bg-yellow-400 text-white rounded-lg font-semibold shadow hover:bg-yellow-500 transition"
+                    onClick={async () => {
+                      const today = new Date();
+                      const dateStr = today.toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      });
+                      const nutriFitLink = "http://localhost:5173/";
+                      const shareText =
+                        `🏆 Outstanding! I've earned every monthly trophy for my goal on NutriFit!\n\n` +
+                        `• Months streak: ${monthlyMax}\n` +
+                        `• Weeks streak: ${weeklyMax}\n` +
+                        `• Achieved on: ${dateStr}\n\n` +
+                        `Join me on NutriFit and start your journey! #NutriFit #Consistency #Achievement\n${nutriFitLink}`;
+
+                      // Try to share an image if supported
+                      const canShareFiles =
+                        navigator.canShare &&
+                        navigator.canShare({
+                          files: [
+                            new File([new Blob()], "logo.png", {
+                              type: "image/png",
+                            }),
+                          ],
+                        });
+                      if (navigator.share && canShareFiles) {
+                        // Fetch the logo image as a blob
+                        try {
+                          const response = await fetch(
+                            "/src/assets/imgs/monthly-streak-achievement.png"
+                          );
+                          const blob = await response.blob();
+                          const file = new File([blob], "nutrifit-trophy.png", {
+                            type: blob.type,
+                          });
+                          await navigator.share({
+                            title: "My NutriFit Achievement",
+                            text: shareText,
+                            files: [file],
+                          });
+                          return;
+                        } catch (e) {
+                          // If image fetch fails, fall back to text share
+                        }
+                      }
+                      if (navigator.share) {
+                        navigator.share({
+                          title: "My NutriFit Achievement",
+                          text: shareText,
+                        });
+                      } else {
+                        navigator.clipboard.writeText(shareText);
+                        alert("Achievement copied to clipboard!");
+                      }
+                    }}
+                  >
+                    Share Achievement
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <RadialProgressBar
+                    percentage={(monthlyCurrent / monthlyMax) * 100}
+                    color="#FFD700" // Gold color
+                    size={120}
+                    thickness={12}
+                    label={`${monthlyCurrent}/${monthlyMax}`}
+                  />
+                  <p className="mt-4 text-gray-600 text-center">
+                    {monthlyCurrent} consecutive months of meeting weekly goals
+                  </p>
+
+                  {/* Gold trophies for monthly progress */}
+                  <div className="mt-6 pt-4 border-t border-gray-100 w-full">
+                    <p className="text-sm text-gray-500 mb-3">
+                      Monthly Trophies
+                    </p>
+                    <div className="flex justify-center space-x-4">
+                      {Array.from({ length: monthTrophiesThisPage }, (_, i) => {
+                        const trophyIndex =
+                          currentMonthPage * monthTrophiesPerPage + i;
+                        return (
+                          <Trophy
+                            key={`month-${trophyIndex + 1}`}
+                            level="gold"
+                            size={32}
+                            opacity={trophyIndex < monthlyCurrent ? 1 : 0.3}
+                          />
+                        );
+                      })}
+                    </div>
+                    {totalMonthPages > 1 && (
+                      <div className="flex justify-center mt-2 space-x-2">
+                        {Array.from({ length: totalMonthPages }, (_, i) => (
+                          <button
+                            key={i}
+                            className={`w-2 h-2 rounded-full ${
+                              i === currentMonthPage
+                                ? "bg-yellow-400"
+                                : "bg-gray-300"
+                            }`}
+                            onClick={() => setMonthPage(i)}
+                            style={{ outline: "none", border: "none" }}
+                            aria-label={`Go to month trophy page ${i + 1}`}
+                            tabIndex={0}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <motion.div
@@ -202,13 +385,13 @@ const StreakTracker = (data: any) => {
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Daily</span>
                 <span className="text-base font-medium text-gray-800">
-                  {streakData.daily.completedDays}/7 days complete
+                  {dailyCompletedDays}/7 days complete
                 </span>
                 <p className="text-xs text-gray-600 mt-1">
-                  {streakData.daily.completedDays.length >= 5
+                  {dailyCompletedDays >= 5
                     ? "Amazing daily streak!"
                     : `${
-                        7 - streakData.daily.completedDays
+                        7 - dailyCompletedDays
                       } more days to complete this week`}
                 </p>
               </div>
@@ -217,14 +400,13 @@ const StreakTracker = (data: any) => {
                   Weekly
                 </span>
                 <span className="text-base font-medium text-gray-800">
-                  {streakData.weekly.current}/{streakData.weekly.max} weeks
-                  complete
+                  {weeklyCurrent}/{weeklyMax} weeks complete
                 </span>
                 <p className="text-xs text-gray-600 mt-1">
-                  {streakData.weekly.current >= streakData.weekly.max
+                  {weeklyCurrent >= weeklyMax
                     ? "Monthly goal achieved!"
                     : `${
-                        streakData.weekly.max - streakData.weekly.current
+                        weeklyMax - weeklyCurrent
                       } more weeks to reach monthly goal`}
                 </p>
               </div>
@@ -233,24 +415,27 @@ const StreakTracker = (data: any) => {
                   Monthly
                 </span>
                 <span className="text-base font-medium text-gray-800">
-                  {streakData.monthly.current}/{streakData.monthly.max} months
-                  complete
+                  {monthlyCurrent}/{monthlyMax} months complete
                 </span>
                 <p className="text-xs text-gray-600 mt-1">
-                  {streakData.monthly.current >= streakData.monthly.max
+                  {monthlyCurrent >= monthlyMax
                     ? "Yearly goal achieved!"
                     : `${
-                        streakData.monthly.max - streakData.monthly.current
+                        monthlyMax - monthlyCurrent
                       } more months to reach yearly goal`}
                 </p>
               </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-4">
-            <Trophy level={getTrophyLevel()} size={48} />
+            {getNextTrophyLevel() === "fire" ? (
+              <FaFire size={48} color="#f97316" />
+            ) : (
+              <Trophy level={getNextTrophyLevel()} size={48} />
+            )}
             <div className="text-sm text-gray-600">
               <p className="font-medium">Next Trophy</p>
-              <p className="capitalize">{getTrophyLevel()} Level</p>
+              <p className="capitalize">{getNextTrophyLevel()} Level</p>
             </div>
           </div>
         </div>
