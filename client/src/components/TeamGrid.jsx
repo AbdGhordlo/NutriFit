@@ -2,23 +2,24 @@ import React from "react";
 import { Calendar, MapPin, Linkedin, Github } from "lucide-react";
 import PictureHussein from '../assets/imgs/Hussein Abdikarim - Nutrifit.jpg';
 import PictureAhmet from '../assets/imgs/ahmeyfotos.jpg';
+import PictureAbdallah from '../assets/imgs/Abdallah Ghordlo.jpg';
 
 export const creators = [
   {
-    name: "Abdallah Raed Hani Ghordlo",
+    name: "Abdallah Ghordlo",
     role: "Computer Engineering Student",
-    image: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
-    description: "Passionate about revolutionizing health tech with AI-driven solutions. Former Google product manager with 8+ years in health tech.",
+    image: PictureAbdallah,
+    description: "Senior Computer Engineering Student at TED University, with a secondary field in Applied Data Analytics. Pationate about Web Development and Machine Learning.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
-    linkedin: "#",
-    github: "#",
+    linkedin: "www.linkedin.com/in/abdallah-ghordlo",
+    github: "https://github.com/AbdGhordlo",
   },
   {
     name: "Ahmet Tokgöz",
     role: "Computer Engineering Student",
     image: PictureAhmet,
-    description: "Final-year Computer Engineering student at TED University, with secondary field in Applied Data Analytics. Also studying Business Administration at Istanbul University (Open Education).",
+    description: "Senior Computer Engineering Student at TED University, with a secondary field in Applied Data Analytics. Also studying Business Administration at Istanbul University (Open Education).",
     status: "Student at TED University",
     location: "Ankara, Turkey",
     linkedin: "https://tr.linkedin.com/in/ahmet-tokg%C3%B6z-960a1a264",
@@ -28,17 +29,17 @@ export const creators = [
     name: "Basme Zantout",
     role: "Software Engineering Student",
     image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
-    description: "Registered dietitian and nutrition researcher with PhD from Harvard. Published 50+ papers on personalized nutrition.",
+    description: "Registered dietitian and nutrition researcher with PhD from Harvard. Published 50+ papers on personalized nutrition.Registered dietitian and nutrition researcher with PhD from Harvard. Published 50+ papers on personalized nutrition.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
     linkedin: "#",
     github: "#",
   },
   {
-    name: "Hussein Abdikarim Hussein",
+    name: "Hussein Abdikarim",
     role: "Computer Engineering Student",
     image: PictureHussein,
-    description: "Final-year Computer Engineering student at TED University, graduating in June 2025. Passionate about using technology to make health journeys more intuitive, personalized, and sustainable.",
+    description: "Senior Computer Engineering Student at TED University, with a secondary field in Applied Data Analytics. Passionate about using technology to make health journeys more intuitive, personalized, and sustainable.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
     linkedin: "https://www.linkedin.com/in/hussein-abdikarim/",
