@@ -253,23 +253,45 @@ const googleAuth = async (req, res) => {
  */
 async function forgotPassword(req, res) {
   const { email } = req.body;
-  // always respond 200 so attackers can’t probe valid emails
-  const userQ = await pool.query(`SELECT id FROM "user" WHERE email=$1`, [email]);
-  if (userQ.rows.length) {
-    const token = crypto.randomBytes(3).toString("hex").toUpperCase(); // e.g. “A1B2C3”
-    const expires = Date.now() + 1000 * 60 * 15; // 15m
-    await pool.query(
-      `UPDATE "user" SET reset_token=$1, reset_expires=$2 WHERE email=$3`,
-      [token, expires, email]
-    );
-    try {
-      await sendResetEmail(email, token);
-      console.log("✅ reset email sent");
-    } catch (mailErr) {
-      console.error("❌ sendResetEmail error:", mailErr);
-    }
+
+  // 1) Check existence
+  const userQ = await pool.query(
+    `SELECT id, google_id FROM "user" WHERE email = $1`,
+    [email]
+  );
+
+  if (userQ.rows.length === 0) {
+    return res
+      .status(404)
+      .json({ message: "Email not registered" });
   }
-  res.json({ message: "If that email exists, a code has been sent." });
+
+  const { id: userId, google_id: googleId } = userQ.rows[0];
+
+  // 2) Block Google-OAuth users
+  if (googleId !== null) {
+    return res
+      .status(400)
+      .json({ message: "Please sign in with Google" });
+  }
+
+  // 3) All good—generate code & email
+  const token   = crypto.randomBytes(3).toString("hex").toUpperCase();
+  const expires = Date.now() + 1000 * 60 * 15; // 15 min
+  await pool.query(
+    `UPDATE "user" SET reset_token=$1, reset_expires=$2 WHERE id=$3`,
+    [token, expires, userId]
+  );
+
+  try {
+    await sendResetEmail(email, token);
+    console.log("✅ reset email sent to", email);
+  } catch (mailErr) {
+    console.error("❌ sendResetEmail error:", mailErr);
+    // we still fall through to respond, so UI can show a friendly message
+  }
+
+  res.json({ message: "Reset code sent if email is valid for password login." });
 }
 
 /**
