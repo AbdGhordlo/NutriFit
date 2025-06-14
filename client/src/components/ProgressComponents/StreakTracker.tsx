@@ -68,9 +68,6 @@ const StreakTracker = ({
   // Days of the week for display
   const daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
 
-  // Trophy pagination state
-  const [weekPage, setWeekPage] = useState(0);
-  const [monthPage, setMonthPage] = useState(0);
 
   // Calculate total week trophy pages
   const weekTrophiesPerPage = 4;
@@ -354,7 +351,6 @@ const StreakTracker = ({
                                 ? "bg-yellow-400"
                                 : "bg-gray-300"
                             }`}
-                            onClick={() => setMonthPage(i)}
                             style={{ outline: "none", border: "none" }}
                             aria-label={`Go to month trophy page ${i + 1}`}
                             tabIndex={0}

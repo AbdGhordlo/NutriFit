@@ -32,6 +32,7 @@ import GeneratedPlanPopup from "./GeneratedPlanPopup";
 import { DayPlan, GeneratedMealPlan, Meal } from "../../types/mealPlannerTypes";
 import { EditPlanPopup } from "./EditPlanPopup";
 import FavoriteMealsPopup from "./FavoriteMealsPopup";
+import { resetDailyMealProgress } from "../../services/homeService";
 
 export default function MealPlanner() {
   const [currentDay, setCurrentDay] = useState(0);
@@ -141,6 +142,7 @@ export default function MealPlanner() {
       const userId = Number(getUserIdFromToken()); // Ensure userId is a number
       if (isNaN(userId)) throw new Error("Invalid user ID");
 
+      await resetDailyMealProgress(token); // Reset today's meal progress
       await adoptMealPlan(userId, mealPlanId, token);
       alert("Meal plan adopted successfully!");
       window.location.reload(); // Reload to reflect the new adopted plan
@@ -415,6 +417,7 @@ export default function MealPlanner() {
       const userId = Number(getUserIdFromToken()); // Ensure userId is a number
       if (isNaN(userId)) throw new Error("Invalid user ID");
 
+      await resetDailyMealProgress(token); // Reset today's meal progress
       await saveAndAdoptMealPlan(userId, generatedPlan, token);
       alert("Meal plan adopted successfully!");
       window.location.reload(); // Reload the page to reflect the changes
