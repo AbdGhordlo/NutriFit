@@ -3,6 +3,7 @@ import { Calendar, MapPin, Linkedin, Github } from "lucide-react";
 import PictureHussein from '../assets/imgs/Hussein Abdikarim - Nutrifit.jpg';
 import PictureAhmet from '../assets/imgs/ahmeyfotos.jpg';
 import PictureAbdallah from '../assets/imgs/Abdallah Ghordlo.jpg';
+import PictureBasme from '../assets/imgs/Basme Zantout.png';
 
 export const creators = [
   {
@@ -28,12 +29,12 @@ export const creators = [
   {
     name: "Basme Zantout",
     role: "Software Engineering Student",
-    image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
-    description: "Registered dietitian and nutrition researcher with PhD from Harvard. Published 50+ papers on personalized nutrition.Registered dietitian and nutrition researcher with PhD from Harvard. Published 50+ papers on personalized nutrition.",
+    image: PictureBasme,
+    description: "Senior Software Engineering Student at TED University, with a secondary field in Applied Data Analytics. Passionate about building user-friendly digital experiences. Enjoys blending creativity with technology to solve real-world problems.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
-    linkedin: "#",
-    github: "#",
+    linkedin: "https://www.linkedin.com/in/basme-zantout/",
+    github: "https://github.com/bmzantout",
   },
   {
     name: "Hussein Abdikarim",
