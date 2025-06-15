@@ -1,3 +1,15 @@
+-- -- User Table
+-- CREATE TABLE "user" (
+--     id SERIAL PRIMARY KEY,
+--     username VARCHAR(50) UNIQUE NOT NULL,
+--     email VARCHAR(100) UNIQUE NOT NULL,
+--     password_hash VARCHAR(255),
+--     google_id VARCHAR(255),
+--     profile_picture TEXT,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
 -- User Table
 CREATE TABLE "user" (
     id SERIAL PRIMARY KEY,
@@ -6,9 +18,15 @@ CREATE TABLE "user" (
     password_hash VARCHAR(255),
     google_id VARCHAR(255),
     profile_picture TEXT,
+
+    -- password-reset support
+    reset_token   VARCHAR(64),
+    reset_expires BIGINT,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
  
 -- Meal Plan Table
 CREATE TABLE meal_plan (
@@ -226,155 +244,155 @@ CREATE TABLE body_measurements (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Data
+-- -- Data
 
--- Insert Meal Plan
-INSERT INTO meal_plan (user_id, name, description)
-VALUES (1, '7-Day Healthy Meal Plan', 'A balanced 7-day meal plan focusing on protein and nutrient-rich foods.');
+-- -- Insert Meal Plan
+-- INSERT INTO meal_plan (user_id, name, description)
+-- VALUES (1, '7-Day Healthy Meal Plan', 'A balanced 7-day meal plan focusing on protein and nutrient-rich foods.');
 
--- Insert Meals
-INSERT INTO meal (name, description, calories, protein, carbs, fats)
-VALUES 
-('Scrambled Eggs with Avocado Toast', 'A protein-packed breakfast with healthy fats.', 400, 20, 30, 18),
-('Grilled Chicken Salad', 'Grilled chicken breast with fresh greens and vinaigrette.', 450, 35, 20, 12),
-('Salmon with Quinoa', 'Grilled salmon with lemon and a side of quinoa.', 500, 40, 30, 18),
-('Greek Yogurt with Berries', 'Greek yogurt topped with mixed berries and honey.', 300, 25, 35, 5),
-('Oatmeal with Almond Butter', 'Oatmeal with almond butter and banana slices.', 350, 15, 45, 12),
-('Beef Stir-Fry with Brown Rice', 'Lean beef with mixed vegetables served over brown rice.', 550, 45, 50, 15),
-('Tuna Sandwich on Whole Grain', 'Tuna with lettuce and tomato on whole grain bread.', 400, 35, 40, 10),
-('Vegetable Soup with Lentils', 'A hearty vegetable and lentil soup.', 380, 25, 50, 8),
-('Chicken Breast with Sweet Potato', 'Oven-baked chicken breast with mashed sweet potato.', 480, 40, 45, 8),
-('Egg Omelet with Spinach', 'Three-egg omelet with spinach and feta cheese.', 370, 30, 20, 15),
-('Protein Shake', 'Whey protein shake with almond milk.', 250, 30, 10, 5),
-('Fruit & Nuts', 'Mixed nuts with apple slices.', 300, 10, 40, 15),
-('Cottage Cheese with Pineapple', 'Low-fat cottage cheese with fresh pineapple chunks.', 350, 30, 35, 5);
+-- -- Insert Meals
+-- INSERT INTO meal (name, description, calories, protein, carbs, fats)
+-- VALUES 
+-- ('Scrambled Eggs with Avocado Toast', 'A protein-packed breakfast with healthy fats.', 400, 20, 30, 18),
+-- ('Grilled Chicken Salad', 'Grilled chicken breast with fresh greens and vinaigrette.', 450, 35, 20, 12),
+-- ('Salmon with Quinoa', 'Grilled salmon with lemon and a side of quinoa.', 500, 40, 30, 18),
+-- ('Greek Yogurt with Berries', 'Greek yogurt topped with mixed berries and honey.', 300, 25, 35, 5),
+-- ('Oatmeal with Almond Butter', 'Oatmeal with almond butter and banana slices.', 350, 15, 45, 12),
+-- ('Beef Stir-Fry with Brown Rice', 'Lean beef with mixed vegetables served over brown rice.', 550, 45, 50, 15),
+-- ('Tuna Sandwich on Whole Grain', 'Tuna with lettuce and tomato on whole grain bread.', 400, 35, 40, 10),
+-- ('Vegetable Soup with Lentils', 'A hearty vegetable and lentil soup.', 380, 25, 50, 8),
+-- ('Chicken Breast with Sweet Potato', 'Oven-baked chicken breast with mashed sweet potato.', 480, 40, 45, 8),
+-- ('Egg Omelet with Spinach', 'Three-egg omelet with spinach and feta cheese.', 370, 30, 20, 15),
+-- ('Protein Shake', 'Whey protein shake with almond milk.', 250, 30, 10, 5),
+-- ('Fruit & Nuts', 'Mixed nuts with apple slices.', 300, 10, 40, 15),
+-- ('Cottage Cheese with Pineapple', 'Low-fat cottage cheese with fresh pineapple chunks.', 350, 30, 35, 5);
 
--- Day 1
-INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
-(1, 1, 1, 1, '08:00'), -- Breakfast
-(1, 11, 1, 2, '10:30'), -- Snack: Protein Shake
-(1, 2, 1, 3, '13:00'), -- Lunch
-(1, 12, 1, 4, '16:00'), -- Snack: Fruit & Nuts
-(1, 3, 1, 5, '19:30'), -- Dinner
-(1, 12, 1, 6, '20:00'); -- Snack: Fruit & Nuts
+-- -- Day 1
+-- INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
+-- (1, 1, 1, 1, '08:00'), -- Breakfast
+-- (1, 11, 1, 2, '10:30'), -- Snack: Protein Shake
+-- (1, 2, 1, 3, '13:00'), -- Lunch
+-- (1, 12, 1, 4, '16:00'), -- Snack: Fruit & Nuts
+-- (1, 3, 1, 5, '19:30'), -- Dinner
+-- (1, 12, 1, 6, '20:00'); -- Snack: Fruit & Nuts
 
--- Day 2
-INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
-(1, 4, 2, 1, '07:45'), -- Breakfast
-(1, 5, 2, 2, '12:00'), -- Lunch
-(1, 6, 2, 3, '18:30'), -- Dinner
-(1, 13, 2, 4, '21:00'); -- Snack: Cottage Cheese with Pineapple
+-- -- Day 2
+-- INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
+-- (1, 4, 2, 1, '07:45'), -- Breakfast
+-- (1, 5, 2, 2, '12:00'), -- Lunch
+-- (1, 6, 2, 3, '18:30'), -- Dinner
+-- (1, 13, 2, 4, '21:00'); -- Snack: Cottage Cheese with Pineapple
 
--- Day 3
-INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
-(1, 7, 3, 1, '08:15'), -- Breakfast
-(1, 8, 3, 2, '12:45'), -- Lunch
-(1, 9, 3, 3, '18:00'), -- Dinner
-(1, 4, 3, 4, '20:30'); -- Snack: Greek Yogurt with Berries
+-- -- Day 3
+-- INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
+-- (1, 7, 3, 1, '08:15'), -- Breakfast
+-- (1, 8, 3, 2, '12:45'), -- Lunch
+-- (1, 9, 3, 3, '18:00'), -- Dinner
+-- (1, 4, 3, 4, '20:30'); -- Snack: Greek Yogurt with Berries
 
--- Day 4
-INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
-(1, 10, 4, 1, '08:30'), -- Breakfast
-(1, 1, 4, 2, '12:15'), -- Lunch
-(1, 2, 4, 3, '19:00'), -- Dinner
-(1, 12, 4, 4, '21:30'); -- Snack: Fruit & Nuts
+-- -- Day 4
+-- INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
+-- (1, 10, 4, 1, '08:30'), -- Breakfast
+-- (1, 1, 4, 2, '12:15'), -- Lunch
+-- (1, 2, 4, 3, '19:00'), -- Dinner
+-- (1, 12, 4, 4, '21:30'); -- Snack: Fruit & Nuts
 
--- Day 5
-INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
-(1, 3, 5, 1, '09:00'), -- Breakfast
-(1, 4, 5, 2, '13:00'), -- Lunch
-(1, 5, 5, 3, '17:30'), -- Snack: Oatmeal with Almond Butter
-(1, 6, 5, 4, '20:00'); -- Dinner
+-- -- Day 5
+-- INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
+-- (1, 3, 5, 1, '09:00'), -- Breakfast
+-- (1, 4, 5, 2, '13:00'), -- Lunch
+-- (1, 5, 5, 3, '17:30'), -- Snack: Oatmeal with Almond Butter
+-- (1, 6, 5, 4, '20:00'); -- Dinner
 
--- Day 6
-INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
-(1, 6, 6, 1, '08:00'), -- Breakfast
-(1, 7, 6, 2, '12:30'), -- Lunch
-(1, 8, 6, 3, '15:30'), -- Snack: Vegetable Soup with Lentils
-(1, 9, 6, 4, '19:00'); -- Dinner
+-- -- Day 6
+-- INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
+-- (1, 6, 6, 1, '08:00'), -- Breakfast
+-- (1, 7, 6, 2, '12:30'), -- Lunch
+-- (1, 8, 6, 3, '15:30'), -- Snack: Vegetable Soup with Lentils
+-- (1, 9, 6, 4, '19:00'); -- Dinner
 
--- Day 7
-INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
-(1, 9, 7, 1, '07:45'), -- Breakfast
-(1, 10, 7, 2, '11:30'), -- Snack: Egg Omelet with Spinach
-(1, 11, 7, 3, '14:00'), -- Lunch: Protein Shake
-(1, 12, 7, 4, '17:00'), -- Snack: Fruit & Nuts
-(1, 13, 7, 5, '20:00'); -- Dinner: Cottage Cheese with Pineapple
+-- -- Day 7
+-- INSERT INTO meal_plan_meal (meal_plan_id, meal_id, day_number, meal_order, time) VALUES 
+-- (1, 9, 7, 1, '07:45'), -- Breakfast
+-- (1, 10, 7, 2, '11:30'), -- Snack: Egg Omelet with Spinach
+-- (1, 11, 7, 3, '14:00'), -- Lunch: Protein Shake
+-- (1, 12, 7, 4, '17:00'), -- Snack: Fruit & Nuts
+-- (1, 13, 7, 5, '20:00'); -- Dinner: Cottage Cheese with Pineapple
 
--- Insert Exercise Plan
-INSERT INTO exercise_plan (user_id, name, description)
-VALUES 
-(1, '7-Day Fitness Plan', 'A balanced 7-day exercise plan focusing on strength and cardio.');
+-- -- Insert Exercise Plan
+-- INSERT INTO exercise_plan (user_id, name, description)
+-- VALUES 
+-- (1, '7-Day Fitness Plan', 'A balanced 7-day exercise plan focusing on strength and cardio.');
 
--- Insert Exercises
-INSERT INTO exercise (name, description, calories_burned, has_reps_sets, has_duration)
-VALUES 
-('Push-ups', 'Bodyweight exercise targeting chest, shoulders, and triceps.', 100, TRUE, FALSE),
-('Squats', 'Bodyweight exercise targeting legs and glutes.', 150, TRUE, FALSE),
-('Plank', 'Core strengthening exercise.', 50, FALSE, TRUE),
-('Running', 'Cardio exercise to improve endurance.', 300, FALSE, TRUE),
-('Pull-ups', 'Bodyweight exercise targeting back and biceps.', 120, TRUE, FALSE),
-('Burpees', 'Full-body exercise combining strength and cardio.', 200, TRUE, FALSE),
-('Jumping Jacks', 'Cardio exercise to improve heart rate.', 100, FALSE, TRUE),
-('Lunges', 'Bodyweight exercise targeting legs and glutes.', 120, TRUE, FALSE),
-('Mountain Climbers', 'Core and cardio exercise.', 150, FALSE, TRUE),
-('Bicycle Crunches', 'Core exercise targeting abs.', 80, TRUE, FALSE);
+-- -- Insert Exercises
+-- INSERT INTO exercise (name, description, calories_burned, has_reps_sets, has_duration)
+-- VALUES 
+-- ('Push-ups', 'Bodyweight exercise targeting chest, shoulders, and triceps.', 100, TRUE, FALSE),
+-- ('Squats', 'Bodyweight exercise targeting legs and glutes.', 150, TRUE, FALSE),
+-- ('Plank', 'Core strengthening exercise.', 50, FALSE, TRUE),
+-- ('Running', 'Cardio exercise to improve endurance.', 300, FALSE, TRUE),
+-- ('Pull-ups', 'Bodyweight exercise targeting back and biceps.', 120, TRUE, FALSE),
+-- ('Burpees', 'Full-body exercise combining strength and cardio.', 200, TRUE, FALSE),
+-- ('Jumping Jacks', 'Cardio exercise to improve heart rate.', 100, FALSE, TRUE),
+-- ('Lunges', 'Bodyweight exercise targeting legs and glutes.', 120, TRUE, FALSE),
+-- ('Mountain Climbers', 'Core and cardio exercise.', 150, FALSE, TRUE),
+-- ('Bicycle Crunches', 'Core exercise targeting abs.', 80, TRUE, FALSE);
 
--- Day 1
-    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-    VALUES 
-    (1, 1, 1, 1, '08:00', 15, 3, NULL), -- Push-ups
-    (1, 2, 1, 2, '08:30', 20, 3, NULL), -- Squats
-    (1, 3, 1, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
-    (1, 4, 1, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
+-- -- Day 1
+--     INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+--     VALUES 
+--     (1, 1, 1, 1, '08:00', 15, 3, NULL), -- Push-ups
+--     (1, 2, 1, 2, '08:30', 20, 3, NULL), -- Squats
+--     (1, 3, 1, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
+--     (1, 4, 1, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
 
-    -- Day 2
-    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-    VALUES 
-    (1, 5, 2, 1, '08:00', 10, 3, NULL), -- Pull-ups
-    (1, 6, 2, 2, '08:30', 12, 3, NULL), -- Burpees
-    (1, 7, 2, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
-    (1, 8, 2, 4, '18:00', 15, 3, NULL); -- Lunges
+--     -- Day 2
+--     INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+--     VALUES 
+--     (1, 5, 2, 1, '08:00', 10, 3, NULL), -- Pull-ups
+--     (1, 6, 2, 2, '08:30', 12, 3, NULL), -- Burpees
+--     (1, 7, 2, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
+--     (1, 8, 2, 4, '18:00', 15, 3, NULL); -- Lunges
 
-    -- Day 3
-    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-    VALUES 
-    (1, 9, 3, 1, '08:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
-    (1, 10, 3, 2, '08:30', 20, 3, NULL), -- Bicycle Crunches
-    (1, 1, 3, 3, '09:00', 15, 3, NULL), -- Push-ups
-    (1, 2, 3, 4, '18:00', 20, 3, NULL); -- Squats
+--     -- Day 3
+--     INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+--     VALUES 
+--     (1, 9, 3, 1, '08:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
+--     (1, 10, 3, 2, '08:30', 20, 3, NULL), -- Bicycle Crunches
+--     (1, 1, 3, 3, '09:00', 15, 3, NULL), -- Push-ups
+--     (1, 2, 3, 4, '18:00', 20, 3, NULL); -- Squats
 
-    -- Day 4
-    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-    VALUES 
-    (1, 3, 4, 1, '08:00', NULL, NULL, '45 seconds'), -- Plank
-    (1, 4, 4, 2, '08:30', NULL, NULL, '25 minutes'), -- Running
-    (1, 5, 4, 3, '09:00', 10, 3, NULL), -- Pull-ups
-    (1, 6, 4, 4, '18:00', 12, 3, NULL); -- Burpees
+--     -- Day 4
+--     INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+--     VALUES 
+--     (1, 3, 4, 1, '08:00', NULL, NULL, '45 seconds'), -- Plank
+--     (1, 4, 4, 2, '08:30', NULL, NULL, '25 minutes'), -- Running
+--     (1, 5, 4, 3, '09:00', 10, 3, NULL), -- Pull-ups
+--     (1, 6, 4, 4, '18:00', 12, 3, NULL); -- Burpees
 
-    -- Day 5
-    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-    VALUES 
-    (1, 7, 5, 1, '08:00', NULL, NULL, '3 minutes'), -- Jumping Jacks
-    (1, 8, 5, 2, '08:30', 15, 3, NULL), -- Lunges
-    (1, 9, 5, 3, '09:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
-    (1, 10, 5, 4, '18:00', 20, 3, NULL); -- Bicycle Crunches
+--     -- Day 5
+--     INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+--     VALUES 
+--     (1, 7, 5, 1, '08:00', NULL, NULL, '3 minutes'), -- Jumping Jacks
+--     (1, 8, 5, 2, '08:30', 15, 3, NULL), -- Lunges
+--     (1, 9, 5, 3, '09:00', NULL, NULL, '2 minutes'), -- Mountain Climbers
+--     (1, 10, 5, 4, '18:00', 20, 3, NULL); -- Bicycle Crunches
 
-    -- Day 6
-    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-    VALUES 
-    (1, 1, 6, 1, '08:00', 15, 3, NULL), -- Push-ups
-    (1, 2, 6, 2, '08:30', 20, 3, NULL), -- Squats
-    (1, 3, 6, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
-    (1, 4, 6, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
+--     -- Day 6
+--     INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+--     VALUES 
+--     (1, 1, 6, 1, '08:00', 15, 3, NULL), -- Push-ups
+--     (1, 2, 6, 2, '08:30', 20, 3, NULL), -- Squats
+--     (1, 3, 6, 3, '09:00', NULL, NULL, '1 minute'), -- Plank
+--     (1, 4, 6, 4, '18:00', NULL, NULL, '30 minutes'); -- Running
 
-    -- Day 7
-    INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
-    VALUES 
-    (1, 5, 7, 1, '08:00', 10, 3, NULL), -- Pull-ups
-    (1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
-    (1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
-    (1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
+--     -- Day 7
+--     INSERT INTO exercise_plan_exercise (exercise_plan_id, exercise_id, day_number, exercise_order, time, reps, sets, duration)
+--     VALUES 
+--     (1, 5, 7, 1, '08:00', 10, 3, NULL), -- Pull-ups
+--     (1, 6, 7, 2, '08:30', 12, 3, NULL), -- Burpees
+--     (1, 7, 7, 3, '09:00', NULL, NULL, '5 minutes'), -- Jumping Jacks
+--     (1, 8, 7, 4, '18:00', 15, 3, NULL); -- Lunges
 
 -- -- Insert default settings for test user
 -- INSERT INTO settings (
@@ -497,7 +515,7 @@ VALUES
   (7, 'hip', 91.5, 'cm', '2025-02-01', CURRENT_TIMESTAMP),
   (7, 'hip', 91.2, 'cm', '2025-03-01', CURRENT_TIMESTAMP),
   (7, 'hip', 91.0, 'cm', '2025-05-01', CURRENT_TIMESTAMP),
-  (7, 'hip', 90.8, 'cm', '2025-06-01', CURRENT_TIMESTAMP)
+  (7, 'hip', 90.8, 'cm', '2025-06-01', CURRENT_TIMESTAMP),
 
  -- Body Fat Mass measurements
   (7, 'fat_mass', 13.5, 'kg', '2025-03-01', CURRENT_TIMESTAMP),

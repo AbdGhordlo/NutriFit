@@ -106,6 +106,11 @@ export const styles = {
     borderColor: "#7ec987",
     boxShadow: "0 0 0 3px rgba(126, 201, 135, 0.1)",
   } as React.CSSProperties,
+  inputDisabled: {
+    backgroundColor: "#f3f4f6",
+    cursor: "not-allowed",
+    opacity: 0.7,
+  } as React.CSSProperties,
   inputIcon: {
     position: 'absolute',
     left: '12px',

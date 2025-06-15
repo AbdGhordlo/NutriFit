@@ -16,10 +16,14 @@ import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword   from "./pages/ResetPassword";
 import Personalization from "./pages/Personalization";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NutriFitMainPage from "./pages/NutriFitMainPage";
-
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
 
 import "./AppStyles.css";
 
@@ -31,7 +35,7 @@ function AppContent() {
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1000);
 
   // Define routes where the sidebar, header, and footer should not be displayed
-  const noSidebarRoutes = ["/login", "/register", "/"];
+  const noSidebarRoutes = ["/login", "/register", "/", "/about", "/contact", "/privacy", "/forgot-password", "/reset-password"];
   const shouldShowSidebar = !noSidebarRoutes.includes(location.pathname);
   const shouldShowFooter = !noSidebarRoutes.includes(location.pathname);
 
@@ -66,6 +70,11 @@ function AppContent() {
             <Route path="/" element={<NutriFitMainPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
               <Route path="/meal-planner" element={<MealPlanner />} />

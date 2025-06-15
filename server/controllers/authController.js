@@ -4,6 +4,8 @@ const pool = require("../db");
 const { OAuth2Client } = require("google-auth-library");
 const { createDefaultMealPlan } = require("./mealPlannerController");
 const { createDefaultExercisePlan } = require("./exercisePlannerController");
+const crypto = require("crypto");
+const { sendResetEmail } = require("../utils/mail");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -246,4 +248,83 @@ const googleAuth = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, deleteAccount, googleAuth };
+/**
+ * Send a one-time code to user’s email
+ */
+async function forgotPassword(req, res) {
+  const { email } = req.body;
+
+  // 1) Check existence
+  const userQ = await pool.query(
+    `SELECT id, google_id FROM "user" WHERE email = $1`,
+    [email]
+  );
+
+  if (userQ.rows.length === 0) {
+    return res
+      .status(404)
+      .json({ message: "Email not registered" });
+  }
+
+  const { id: userId, google_id: googleId } = userQ.rows[0];
+
+  // 2) Block Google-OAuth users
+  if (googleId !== null) {
+    return res
+      .status(400)
+      .json({ message: "Please sign in with Google" });
+  }
+
+  // 3) All good—generate code & email
+  const token   = crypto.randomBytes(3).toString("hex").toUpperCase();
+  const expires = Date.now() + 1000 * 60 * 15; // 15 min
+  await pool.query(
+    `UPDATE "user" SET reset_token=$1, reset_expires=$2 WHERE id=$3`,
+    [token, expires, userId]
+  );
+
+  try {
+    await sendResetEmail(email, token);
+    console.log("✅ reset email sent to", email);
+  } catch (mailErr) {
+    console.error("❌ sendResetEmail error:", mailErr);
+    // we still fall through to respond, so UI can show a friendly message
+  }
+
+  res.json({ message: "Reset code sent if email is valid for password login." });
+}
+
+/**
+ * Consume code + set new password
+ */
+async function resetPassword(req, res) {
+  const { email, code, newPassword } = req.body;
+  const userQ = await pool.query(
+    `SELECT id, reset_token, reset_expires FROM "user" WHERE email=$1`,
+    [email]
+  );
+  const user = userQ.rows[0];
+  if (
+    !user ||
+    user.reset_token !== code ||
+    user.reset_expires < Date.now()
+  ) {
+    return res.status(400).json({ message: "Invalid or expired code" });
+  }
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(newPassword, salt);
+  await pool.query(
+    `UPDATE "user" SET password_hash=$1, reset_token=NULL, reset_expires=NULL WHERE id=$2`,
+    [hash, user.id]
+  );
+  res.json({ message: "Password has been reset" });
+}
+
+module.exports = {
+  signup,
+  login,
+  deleteAccount,
+  googleAuth,
+  forgotPassword,
+  resetPassword,
+};
