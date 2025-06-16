@@ -15,17 +15,24 @@ import SaveSettingsButton from "../components/SettingsComponents/SaveSettingsBut
 // Services & Hooks
 import { useAuth } from "../utils/useAuth";
 import * as settingsService from "../services/settingsService";
+import {
+  toggleMealReminders,
+  toggleExerciseReminders,
+  toggleWaterIntakeReminder,
+} from "../services/settingsService";
 
 // Types
 import { initialSettings } from "../utils/settingsData";
 import { SettingSection, UserProfile, PasswordForm } from "../types/settings";
 
 export default function Settings() {
-  const { getAuthToken, getAuthUserId, logout } = useAuth();   // Auth hook
-  
+  const { getAuthToken, getAuthUserId, logout } = useAuth(); // Auth hook
+
   // State
-  const [settingsList, setSettingsList] = useState<SettingSection[]>(initialSettings);
-  const [personalizationCompleted, setPersonalizationCompleted] = useState(false);
+  const [settingsList, setSettingsList] =
+    useState<SettingSection[]>(initialSettings);
+  const [personalizationCompleted, setPersonalizationCompleted] =
+    useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,52 +49,69 @@ export default function Settings() {
     confirmPassword: "",
   });
   const [passwordError, setPasswordError] = useState<string>("");
-  
+
+  // Notification toggle states
+  const [mealReminders, setMealReminders] = useState<boolean | null>(null);
+  const [exerciseReminders, setExerciseReminders] = useState<boolean | null>(
+    null
+  );
+  const [waterIntakeReminder, setWaterIntakeReminder] = useState<
+    boolean | null
+  >(null);
+
   const userHasPersonalized = personalizationCompleted;
-  
+
   // Fetch settings data on component mount
   useEffect(() => {
     const loadUserSettings = async () => {
       const token = getAuthToken();
       const userId = getAuthUserId();
-      
+
       if (!token || !userId) return;
-      
+
       try {
         setLoading(true);
         const data = await settingsService.fetchUserSettings(userId, token);
-        
+
         // Update profile information
         setProfile({
           fullName: data.profile.fullName || "John Doe",
           email: data.profile.email || "johndoe@example.com",
           photoUrl: data.profile.photoUrl || "",
         });
-        
+
         // Update notification settings
         const notificationSettings = data.notifications;
         setSettingsList((prevSettingsList) => {
           const newSettingsList = [...prevSettingsList];
-          
           // Update individual notification settings in the notifications section (index 1)
           if (newSettingsList[1] && newSettingsList[1].settings) {
-            newSettingsList[1].settings = newSettingsList[1].settings.map(setting => {
-              if (setting.name === "Meal Reminders") {
-                return { ...setting, value: notificationSettings.mealReminders };
-              } else if (setting.name === "Exercise Reminders") {
-                return { ...setting, value: notificationSettings.exerciseReminders };
-              } else if (setting.name === "Progress Updates") {
-                return { ...setting, value: notificationSettings.progressUpdates };
-              } else if (setting.name === "Water Intake Reminder") {
-                return { ...setting, value: notificationSettings.waterIntakeReminder };
+            newSettingsList[1].settings = newSettingsList[1].settings.map(
+              (setting) => {
+                if (setting.name === "Meal Reminders") {
+                  return {
+                    ...setting,
+                    value: notificationSettings.mealReminders,
+                  };
+                } else if (setting.name === "Exercise Reminders") {
+                  return {
+                    ...setting,
+                    value: notificationSettings.exerciseReminders,
+                  };
+                } else if (setting.name === "Water Intake Reminder") {
+                  return {
+                    ...setting,
+                    value: notificationSettings.waterIntakeReminder,
+                  };
+                }
+                return setting;
               }
-              return setting;
-            });
+            );
           }
-          
+
           return newSettingsList;
         });
-        
+
         // Set personalization status
         setPersonalizationCompleted(data.personalizationCompleted || false);
       } catch (error) {
@@ -103,6 +127,30 @@ export default function Settings() {
     loadUserSettings();
   }, []);
 
+  // Fetch notification toggle states on mount
+  useEffect(() => {
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+
+    const fetchNotificationStates = async () => {
+      try {
+        const [meal, exercise, water] = await Promise.all([
+          settingsService.fetchMealReminders(userId, token),
+          settingsService.fetchExerciseReminders(userId, token),
+          settingsService.fetchWaterIntakeReminder(userId, token),
+        ]);
+        setMealReminders(meal.value);
+        setExerciseReminders(exercise.value);
+        setWaterIntakeReminder(water.value);
+      } catch (err) {
+        console.error("Error fetching notification states:", err);
+      }
+    };
+
+    fetchNotificationStates();
+  }, []);
+
   // Validate profile picture URL when it changes
   useEffect(() => {
     if (profile.photoUrl) {
@@ -115,7 +163,7 @@ export default function Settings() {
         console.log("Profile picture not found, clearing URL");
         setProfile((prev) => ({
           ...prev,
-          photoUrl: "", 
+          photoUrl: "",
         }));
       };
       img.src = profile.photoUrl;
@@ -123,19 +171,51 @@ export default function Settings() {
   }, [profile.photoUrl]);
 
   // Event handlers
-  const handleToggle = (passedSetting: any) => {
-    setSettingsList((prevSettingsList) => {
-      const newSettingsList = prevSettingsList.map((section) => ({
-        ...section,
-        settings: section.settings.map((setting) =>
-          setting.name === passedSetting.name
-            ? { ...setting, value: !setting.value }
-            : setting
-        ),
-      }));
-      
-      return newSettingsList;
-    });
+  const handleToggle = async (passedSetting: any) => {
+    const token = getAuthToken();
+    const userId = getAuthUserId();
+    if (!token || !userId) return;
+
+    let toggleFn;
+    let stateSetter;
+    let stateName;
+    if (passedSetting.name === "Meal Reminders") {
+      toggleFn = toggleMealReminders;
+      stateSetter = setMealReminders;
+      stateName = "mealReminders";
+    } else if (passedSetting.name === "Exercise Reminders") {
+      toggleFn = toggleExerciseReminders;
+      stateSetter = setExerciseReminders;
+      stateName = "exerciseReminders";
+    } else if (passedSetting.name === "Water Intake Reminder") {
+      toggleFn = toggleWaterIntakeReminder;
+      stateSetter = setWaterIntakeReminder;
+      stateName = "waterIntakeReminder";
+    }
+
+    if (toggleFn && stateSetter) {
+      try {
+        const newValue = !passedSetting.value;
+        await toggleFn(userId, token, newValue);
+        setSettingsList((prevSettingsList) => {
+          const newSettingsList = prevSettingsList.map((section) => ({
+            ...section,
+            settings: section.settings.map((setting) =>
+              setting.name === passedSetting.name
+                ? { ...setting, value: newValue }
+                : setting
+            ),
+          }));
+          return newSettingsList;
+        });
+        stateSetter(newValue);
+      } catch (error) {
+        console.error(
+          `[Notification Toggle] Error toggling ${stateName}:`,
+          error
+        );
+      }
+    }
   };
 
   const handleProfileChange = (field: keyof UserProfile, value: string) => {
@@ -178,15 +258,15 @@ export default function Settings() {
     const token = getAuthToken();
     const userId = getAuthUserId();
     if (!token || !userId) return;
-    
+
     try {
       setIsSaving(true);
-      
+
       await settingsService.updatePassword(userId, token, {
         currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword
+        newPassword: passwordForm.newPassword,
       });
-      
+
       // Password successfully changed
       setIsPasswordModalOpen(false);
       setPasswordForm({
@@ -194,7 +274,7 @@ export default function Settings() {
         newPassword: "",
         confirmPassword: "",
       });
-      
+
       showSuccessMessage();
     } catch (error) {
       console.error("Error changing password:", error);
@@ -204,20 +284,26 @@ export default function Settings() {
     }
   };
 
-  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
     const file = e.target.files[0];
     const token = getAuthToken();
     const userId = getAuthUserId();
     if (!token || !userId) return;
-    
+
     try {
       setIsSaving(true);
 
       // Development fallback
       try {
-        const result = await settingsService.uploadProfilePicture(userId, token, file);
+        const result = await settingsService.uploadProfilePicture(
+          userId,
+          token,
+          file
+        );
         setProfile((prev) => ({
           ...prev,
           photoUrl: result.url || "",
@@ -226,7 +312,7 @@ export default function Settings() {
         console.error("API error:", error);
         // Show success in development anyway
       }
-      
+
       showSuccessMessage();
     } catch (error) {
       console.error("Error uploading profile picture:", error);
@@ -241,16 +327,16 @@ export default function Settings() {
     const token = getAuthToken();
     const userId = getAuthUserId();
     if (!token || !userId) return;
-    
+
     try {
       setIsSaving(true);
-  
+
       // Update local state first
       setProfile((prev) => ({
         ...prev,
         photoUrl: "",
       }));
-  
+
       // Try to call specific delete API (this will likely fail with 404 in development)
       try {
         await settingsService.deleteProfilePicture(userId, token);
@@ -258,7 +344,7 @@ export default function Settings() {
         console.error("API error:", error);
         // Expected during development - continue with update profile API
       }
-      
+
       // IMPORTANT: Also update the profile data in backend
       try {
         await settingsService.updateUserProfile(userId, token, {
@@ -269,7 +355,7 @@ export default function Settings() {
       } catch (profileError) {
         console.error("Error updating profile:", profileError);
       }
-      
+
       showSuccessMessage();
     } catch (error) {
       console.error("Error removing profile picture:", error);
@@ -285,7 +371,7 @@ export default function Settings() {
     const token = getAuthToken();
     const userId = getAuthUserId();
     if (!token || !userId) return;
-    
+
     try {
       setIsSaving(true);
 
@@ -309,7 +395,7 @@ export default function Settings() {
     const token = getAuthToken();
     const userId = getAuthUserId();
     if (!token || !userId) return;
-    
+
     setIsSaving(true);
 
     try {
@@ -329,14 +415,17 @@ export default function Settings() {
         await settingsService.updateNotificationSettings(userId, token, {
           mealReminders: settingsList[1].settings[0].value,
           exerciseReminders: settingsList[1].settings[1].value,
-          progressUpdates: settingsList[1].settings[2].value,
-          waterIntakeReminder: settingsList[1].settings[3].value,
+          waterIntakeReminder: settingsList[1].settings[2].value,
         });
       } catch (notificationsError) {
         console.error("Error updating notifications:", notificationsError);
       }
 
       showSuccessMessage();
+      // Refresh the page after a short delay to ensure settings propagate
+      setTimeout(() => {
+        window.location.reload();
+      }, 500); // 0.5s delay for UX
     } catch (error) {
       console.error("Error saving settings:", error);
       showSuccessMessage(); // Show success in development anyway
@@ -354,6 +443,20 @@ export default function Settings() {
     );
   }
 
+  // Before rendering, update notification settings to use the latest state
+  const notificationSettingsWithState = settingsList[1]?.settings?.map(
+    (setting) => {
+      if (setting.name === "Meal Reminders") {
+        return { ...setting, value: mealReminders };
+      } else if (setting.name === "Exercise Reminders") {
+        return { ...setting, value: exerciseReminders };
+      } else if (setting.name === "Water Intake Reminder") {
+        return { ...setting, value: waterIntakeReminder };
+      }
+      return setting;
+    }
+  );
+
   return (
     <div className="outer-container">
       <div style={styles.container}>
@@ -361,23 +464,25 @@ export default function Settings() {
 
         <div style={styles.settingsGrid}>
           {/* Profile Settings Container */}
-          <ProfileSection 
+          <ProfileSection
             profile={profile}
-            handleProfileChange={(field, value) => handleProfileChange(field as keyof UserProfile, value)}
+            handleProfileChange={(field, value) =>
+              handleProfileChange(field as keyof UserProfile, value)
+            }
             handleProfilePhotoUpload={handleProfilePhotoUpload}
             handleRemoveProfilePhoto={handleRemoveProfilePhoto}
             styles={styles}
           />
 
           {/* Notification Settings Container */}
-          <NotificationSection 
-            settings={settingsList[1].settings}
+          <NotificationSection
+            settings={notificationSettingsWithState}
             handleToggle={handleToggle}
             styles={styles}
           />
 
           {/* Account Management Container */}
-          <AccountManagementSection 
+          <AccountManagementSection
             onOpenPasswordModal={() => setIsPasswordModalOpen(true)}
             onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
             onSignOut={handleSignOut}
@@ -385,12 +490,10 @@ export default function Settings() {
           />
 
           {/* Personalization Section */}
-          <PersonalizationBanner 
-            userHasPersonalized={userHasPersonalized}
-          />
+          <PersonalizationBanner userHasPersonalized={userHasPersonalized} />
 
           {/* Save Button Section */}
-          <SaveSettingsButton 
+          <SaveSettingsButton
             isSaving={isSaving}
             saveSuccess={saveSuccess}
             onSave={handleSaveSettings}

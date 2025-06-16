@@ -43,12 +43,6 @@ export const initialSettings: SettingSection[] = [
         value: true,
       },
       {
-        name: "Progress Updates",
-        description: "Weekly progress report notifications",
-        type: "toggle",
-        value: true,
-      },
-      {
         name: "Water Intake Reminder",
         description: "Stay hydrated with water intake reminders",
         type: "toggle",

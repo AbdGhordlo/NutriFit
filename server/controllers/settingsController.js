@@ -215,7 +215,8 @@ const updateUserProfile = async (req, res) => {
       await pool.query(
         `UPDATE settings
         SET 
-          profile_picture = $1,
+          
+           = $1,
           updated_at = CURRENT_TIMESTAMP
         WHERE user_id = $2`,
         [photoUrl, userId]
@@ -287,9 +288,147 @@ const updateUserPassword = async (req, res) => {
   }
 };
 
+/**
+ * Toggle meal_reminders setting
+ */
+const toggleMealReminders = async (req, res) => {
+  const { userId } = req.params;
+  const { value } = req.body; // expects { value: true/false }
+  if (req.user.id !== parseInt(userId)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  try {
+    await pool.query(
+      `UPDATE settings SET meal_reminders = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2`,
+      [value, userId]
+    );
+    res.json({ message: 'Meal reminders updated', value });
+  } catch (err) {
+    console.error('Error updating meal reminders:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Toggle exercise_reminders setting
+ */
+const toggleExerciseReminders = async (req, res) => {
+  const { userId } = req.params;
+  const { value } = req.body;
+  if (req.user.id !== parseInt(userId)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  try {
+    await pool.query(
+      `UPDATE settings SET exercise_reminders = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2`,
+      [value, userId]
+    );
+    res.json({ message: 'Exercise reminders updated', value });
+  } catch (err) {
+    console.error('Error updating exercise reminders:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Toggle water_intake_reminder setting
+ */
+const toggleWaterIntakeReminder = async (req, res) => {
+  const { userId } = req.params;
+  const { value } = req.body;
+  if (req.user.id !== parseInt(userId)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  try {
+    await pool.query(
+      `UPDATE settings SET water_intake_reminder = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2`,
+      [value, userId]
+    );
+    res.json({ message: 'Water intake reminder updated', value });
+  } catch (err) {
+    console.error('Error updating water intake reminder:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get meal_reminders state
+ */
+const getMealReminders = async (req, res) => {
+  const { userId } = req.params;
+  if (req.user.id !== parseInt(userId)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  try {
+    const result = await pool.query(
+      `SELECT meal_reminders FROM settings WHERE user_id = $1`,
+      [userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Settings not found' });
+    }
+    res.json({ value: result.rows[0].meal_reminders });
+  } catch (err) {
+    console.error('Error fetching meal reminders:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get exercise_reminders state
+ */
+const getExerciseReminders = async (req, res) => {
+  const { userId } = req.params;
+  if (req.user.id !== parseInt(userId)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  try {
+    const result = await pool.query(
+      `SELECT exercise_reminders FROM settings WHERE user_id = $1`,
+      [userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Settings not found' });
+    }
+    res.json({ value: result.rows[0].exercise_reminders });
+  } catch (err) {
+    console.error('Error fetching exercise reminders:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get water_intake_reminder state
+ */
+const getWaterIntakeReminder = async (req, res) => {
+  const { userId } = req.params;
+  if (req.user.id !== parseInt(userId)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  try {
+    const result = await pool.query(
+      `SELECT water_intake_reminder FROM settings WHERE user_id = $1`,
+      [userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Settings not found' });
+    }
+    res.json({ value: result.rows[0].water_intake_reminder });
+  } catch (err) {
+    console.error('Error fetching water intake reminder:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   getUserSettings,
   updateUserSettings,
   updateUserProfile,
-  updateUserPassword
+  updateUserPassword,
+  toggleMealReminders,
+  toggleExerciseReminders,
+  toggleWaterIntakeReminder,
+  getMealReminders,
+  getExerciseReminders,
+  getWaterIntakeReminder
 };

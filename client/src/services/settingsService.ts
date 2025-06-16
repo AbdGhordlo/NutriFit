@@ -205,3 +205,150 @@ export const deleteUserAccount = async (userId: number, token: string) => {
     throw error;
   }
 };
+
+/**
+ * Toggle meal reminders
+ */
+export const toggleMealReminders = async (userId: number, token: string, value: boolean) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/settings/${userId}/meal-reminders`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ value }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Toggle exercise reminders
+ */
+export const toggleExerciseReminders = async (userId: number, token: string, value: boolean) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/settings/${userId}/exercise-reminders`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ value }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Toggle water intake reminder
+ */
+export const toggleWaterIntakeReminder = async (userId: number, token: string, value: boolean) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/settings/${userId}/water-intake-reminder`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ value }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Fetch meal reminders state
+ */
+export const fetchMealReminders = async (userId: number, token: string) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/settings/${userId}/meal-reminders`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json(); // { value: boolean }
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Fetch exercise reminders state
+ */
+export const fetchExerciseReminders = async (userId: number, token: string) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/settings/${userId}/exercise-reminders`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Fetch water intake reminder state
+ */
+export const fetchWaterIntakeReminder = async (userId: number, token: string) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/settings/${userId}/water-intake-reminder`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};

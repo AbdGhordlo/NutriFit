@@ -15,6 +15,7 @@ import logo from "../assets/imgs/logo-no-padding.png";
 import "./styles/headerStyles.css";
 import { useAuth } from "../utils/useAuth";
 import { fetchUserNotifications, deleteNotification } from "../services/notificationService";
+import { fetchUserSettings } from "../services/settingsService";
 import { notificationTypeMeta } from "../types/notification"; // Import notificationTypeMeta
 import moment from "moment";
 import dingSound from "../assets/audio/ding.wav";
@@ -124,8 +125,37 @@ export default function Header({ toggleSidebar }) {
     );
   }, [notifications.length]);
 
+  // Notification settings state
+  const [mealReminders, setMealReminders] = useState(true);
+  const [exerciseReminders, setExerciseReminders] = useState(true);
+  const [waterIntakeReminder, setWaterIntakeReminder] = useState(true);
+
+  // Fetch notification settings on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userId = getAuthUserId && getAuthUserId();
+    if (!token || !userId) return;
+    fetchUserSettings(userId, token)
+      .then((data) => {
+        setMealReminders(data.notifications.mealReminders);
+        setExerciseReminders(data.notifications.exerciseReminders);
+        setWaterIntakeReminder(data.notifications.waterIntakeReminder);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch notification settings:", err);
+      });
+  }, []);
+
+  // Filter notifications based on settings
+  const filteredNotifications = notifications.filter((n) => {
+    if (n.notification_type === "meal" && !mealReminders) return false;
+    if (n.notification_type === "exercise" && !exerciseReminders) return false;
+    if (n.notification_type === "water" && !waterIntakeReminder) return false;
+    return true;
+  });
+
   // Count unread notifications (after UI fields are set)
-  const unreadCount = notifications.filter((notification) => notification.unread).length;
+  const unreadCount = filteredNotifications.filter((notification) => notification.unread).length;
   
   const currentPath = window.location.pathname;
   const isAuthPage = currentPath === "/login" || currentPath === "/register";
@@ -270,10 +300,10 @@ export default function Header({ toggleSidebar }) {
                     <h3 className="dropdown-title">Notifications</h3>
                   </div>
                   <div className="notifications-container">
-                    {notifications.length === 0 ? (
+                    {filteredNotifications.length === 0 ? (
                       <div className="no-notifications">No notifications</div>
                     ) : (
-                      notifications.map((notification) => {
+                      filteredNotifications.map((notification) => {
                         const isDismissing = dismissingId === notification.id;
                         return (
                           <div
