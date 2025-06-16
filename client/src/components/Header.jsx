@@ -162,7 +162,6 @@ export default function Header({ toggleSidebar }) {
       const userId = getAuthUserId();
       if (userId) {
         const fetchNotifications = () => {
-          console.log("[Notification] Fetching notifications...");
           fetchUserNotifications(userId)
             .then((fetchedNotifications) => {
               setNotifications(fetchedNotifications);
@@ -182,13 +181,23 @@ export default function Header({ toggleSidebar }) {
   }, [isAuthPage, isLoggedIn]);
 
   // Play notification sound on new notification
-  const prevNotificationsLength = useRef(0);
+  const prevNotificationsLength = useRef(null);
+  const isFirstLoad = useRef(true);
   useEffect(() => {
-    if (notifications.length > prevNotificationsLength.current) {
+    const isHomePage = window.location.pathname === "/home";
+    if (isFirstLoad.current) {
+      prevNotificationsLength.current = notifications.length;
+      isFirstLoad.current = false;
+      return;
+    }
+    if (
+      isHomePage &&
+      prevNotificationsLength.current !== null &&
+      notifications.length > prevNotificationsLength.current
+    ) {
       // Find the new notification(s)
       const newNotifications = notifications.slice(prevNotificationsLength.current);
       newNotifications.forEach((n) => {
-        console.log(`[Notification] New notification arrived:`, n);
         if (n.notification_type === "water") {
           new Audio(dropletSound).play();
         } else if (n.notification_type === "meal" || n.notification_type === "exercise") {
@@ -261,45 +270,51 @@ export default function Header({ toggleSidebar }) {
                     <h3 className="dropdown-title">Notifications</h3>
                   </div>
                   <div className="notifications-container">
-                    {notifications.map((notification) => {
-                      const isDismissing = dismissingId === notification.id;
-                      return (
-                        <div
-                          key={notification.id}
-                          className={`notification-item${notification.unread ? ' unread' : ''}${isDismissing ? ' dismissing' : ''}`}
-                          style={{ display: 'flex', alignItems: 'center', transition: 'transform 0.5s, opacity 0.5s', transform: isDismissing ? 'translateX(100%)' : 'none', opacity: isDismissing ? 0 : 1 }}
-                        >
-                          <input
-                            type="checkbox"
-                            className="notification-done-checkbox cursor-pointer"
-                            title="Mark as done"
-                            checked={isDismissing}
-                            onChange={() => handleNotificationDone(notification.id)}
-                            style={{ marginRight: 8 }}
-                          />
-                          <notification.icon className="notification-item-icon" />
-                          <div className="notification-content">
-                            <h4 className="notification-title">
-                              {notification.title}
-                            </h4>
-                            <p className="notification-message">
-                              {notification.message}
-                            </p>
-                            <span className="notification-time">
-                              {notification.notification_type === "water"
-                                ? (notification.created_at ? moment(notification.created_at).fromNow() : "")
-                                : (notification.notification_time && notification.created_at
-                                    ? moment(
-                                        moment(notification.created_at).format("YYYY-MM-DD") +
-                                          "T" +
-                                          notification.notification_time
-                                      ).fromNow()
-                                    : "")}
-                            </span>
+                    {notifications.length === 0 ? (
+                      <div className="no-notifications">No notifications</div>
+                    ) : (
+                      notifications.map((notification) => {
+                        const isDismissing = dismissingId === notification.id;
+                        return (
+                          <div
+                            key={notification.id}
+                            className={`notification-item${notification.unread ? ' unread' : ''}${isDismissing ? ' dismissing' : ''}`}
+                            style={{ display: 'flex', alignItems: 'center', transition: 'transform 0.5s, opacity 0.5s', transform: isDismissing ? 'translateX(100%)' : 'none', opacity: isDismissing ? 0 : 1 }}
+                          >
+                            <input
+                              type="checkbox"
+                              className="notification-done-checkbox cursor-pointer"
+                              title="Mark as done"
+                              checked={isDismissing}
+                              onChange={() => handleNotificationDone(notification.id)}
+                              style={{ marginRight: 8 }}
+                            />
+                            {notification.icon && (
+                              <notification.icon className="notification-item-icon" />
+                            )}
+                            <div className="notification-content">
+                              <h4 className="notification-title">
+                                {notification.title}
+                              </h4>
+                              <p className="notification-message">
+                                {notification.message}
+                              </p>
+                              <span className="notification-time">
+                                {notification.notification_type === "water"
+                                  ? (notification.created_at ? moment(notification.created_at).fromNow() : "")
+                                  : (notification.notification_time && notification.created_at
+                                      ? moment(
+                                          moment(notification.created_at).format("YYYY-MM-DD") +
+                                            "T" +
+                                            notification.notification_time
+                                        ).fromNow()
+                                      : "")}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               )}

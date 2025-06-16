@@ -396,3 +396,11 @@
 .notification-done-checkbox:checked {
   accent-color: #4d7051;
 }
+
+.no-notifications {
+  padding: 16px 0;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 15px;
+  font-weight: 500;
+}
