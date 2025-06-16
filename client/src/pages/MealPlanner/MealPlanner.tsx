@@ -104,7 +104,7 @@ export default function MealPlanner() {
         });
         return acc;
       }, []);
-      console.log("groupedData: ", groupedData);
+      // console.log("groupedData: ", groupedData);
       setWeeklyPlan(groupedData);
     } catch (error) {
       console.error("Error fetching meal plan:", error);

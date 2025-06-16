@@ -5,9 +5,6 @@ import {
   User,
   Settings,
   LogOut,
-  Droplet,
-  UtensilsCrossed,
-  Dumbbell,
   Menu,
   ChevronDown,
   LogIn,
@@ -16,68 +13,54 @@ import {
 import { Link } from "react-router-dom";
 import logo from "../assets/imgs/logo-no-padding.png";
 import "./styles/headerStyles.css";
+import { useAuth } from "../utils/useAuth";
+import { fetchUserNotifications, deleteNotification } from "../services/notificationService";
+import { notificationTypeMeta } from "../types/notification"; // Import notificationTypeMeta
+import moment from "moment";
+import dingSound from "../assets/audio/ding.wav";
+import dropletSound from "../assets/audio/droplet.wav";
+import transitionSound from "../assets/audio/transition.wav";
 //npm install prop-types
 export default function Header({ toggleSidebar }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+  // Move notifications to state so we can update them
+  const [notifications, setNotifications] = useState([]);
+  // Add state to track dismissing notification
+  const [dismissingId, setDismissingId] = useState(null);
+
   const notificationRef = useRef(null);
   const accountRef = useRef(null);
+  const { getAuthUserId } = useAuth();
+
 
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  const storedEmail = localStorage.getItem("userEmail");
+    const token = localStorage.getItem("token");
+    const storedEmail = localStorage.getItem("userEmail");
 
-  if (token) {
-    setIsLoggedIn(true);
+    if (token) {
+      setIsLoggedIn(true);
 
-    if (storedEmail) {
-      setUserEmail(storedEmail);
-    } else {
-      try {
-        const base64Payload = token.split(".")[1];
-        const decodedPayload = atob(base64Payload);
-        const payload = JSON.parse(decodedPayload);
+      if (storedEmail) {
+        setUserEmail(storedEmail);
+      } else {
+        try {
+          const base64Payload = token.split(".")[1];
+          const decodedPayload = atob(base64Payload);
+          const payload = JSON.parse(decodedPayload);
 
-        setUserEmail(payload.email || "user@example.com");
-      } catch {
-        setUserEmail("user@example.com");
+          setUserEmail(payload.email || "user@example.com");
+        } catch {
+          setUserEmail("user@example.com");
+        }
       }
+    } else {
+      setIsLoggedIn(false);
+      setUserEmail("");
     }
-  } else {
-    setIsLoggedIn(false);
-    setUserEmail("");
-  }
-}, []);
-
-  const notifications = [
-    {
-      id: 1,
-      icon: Droplet,
-      title: "Time to hydrate!",
-      message: "Don't forget to drink water",
-      time: "5 minutes ago",
-      unread: true,
-    },
-    {
-      id: 2,
-      icon: UtensilsCrossed,
-      title: "Lunch time",
-      message: "Your next meal is scheduled for 1:00 PM",
-      time: "10 minutes ago",
-      unread: false,
-    },
-    {
-      id: 3,
-      icon: Dumbbell,
-      title: "Workout reminder",
-      message: "Upper body training in 30 minutes",
-      time: "15 minutes ago",
-      unread: false,
-    },
-  ];
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -121,8 +104,28 @@ export default function Header({ toggleSidebar }) {
     window.location.href = "/register";
   };
 
-  // Count unread notifications
-  const unreadCount = notifications.filter(notification => notification.unread).length;
+  // Enhance notifications with UI fields from notificationTypeMeta
+  useEffect(() => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.map((n) => {
+        const meta = notificationTypeMeta[n.notification_type];
+        let time = n.notification_time || n.created_at;
+        return meta
+          ? {
+              ...n,
+              title: meta.title,
+              message: meta.message,
+              icon: meta.icon,
+              time,
+              unread: n.unread !== undefined ? n.unread : true,
+            }
+          : n;
+      })
+    );
+  }, [notifications.length]);
+
+  // Count unread notifications (after UI fields are set)
+  const unreadCount = notifications.filter((notification) => notification.unread).length;
   
   const currentPath = window.location.pathname;
   const isAuthPage = currentPath === "/login" || currentPath === "/register";
@@ -134,6 +137,67 @@ export default function Header({ toggleSidebar }) {
   // Determine what to show based on authentication and page type
   const shouldShowNotifications = isLoggedIn;
   const shouldShowUserMenu = isLoggedIn || (!isLoggedIn && !isAuthPage);
+
+  // Handler to remove notification and delete from DB
+  const handleNotificationDone = async (id) => {
+    setDismissingId(id);
+    new Audio(transitionSound).play();
+    const token = localStorage.getItem("token");
+    try {
+      await deleteNotification(id, token);
+      setTimeout(() => {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        setDismissingId(null);
+      }, 500); // 500ms matches the CSS transition
+    } catch (error) {
+      setDismissingId(null);
+      console.error("Failed to delete notification:", error);
+    }
+  };
+
+  // Fetch notifications on mount and every 1 minute
+  useEffect(() => {
+    let intervalId;
+    if (!isAuthPage && isLoggedIn) {
+      const userId = getAuthUserId();
+      if (userId) {
+        const fetchNotifications = () => {
+          console.log("[Notification] Fetching notifications...");
+          fetchUserNotifications(userId)
+            .then((fetchedNotifications) => {
+              setNotifications(fetchedNotifications);
+            })
+            .catch((error) => {
+              console.error("Failed to fetch notifications:", error);
+            });
+        };
+        fetchNotifications(); // Initial fetch
+        intervalId = setInterval(fetchNotifications, 60000); // Every 1 min for testing
+
+      }
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isAuthPage, isLoggedIn]);
+
+  // Play notification sound on new notification
+  const prevNotificationsLength = useRef(0);
+  useEffect(() => {
+    if (notifications.length > prevNotificationsLength.current) {
+      // Find the new notification(s)
+      const newNotifications = notifications.slice(prevNotificationsLength.current);
+      newNotifications.forEach((n) => {
+        console.log(`[Notification] New notification arrived:`, n);
+        if (n.notification_type === "water") {
+          new Audio(dropletSound).play();
+        } else if (n.notification_type === "meal" || n.notification_type === "exercise") {
+          new Audio(dingSound).play();
+        }
+      });
+    }
+    prevNotificationsLength.current = notifications.length;
+  }, [notifications]);
 
   return (
     <header className="header">
@@ -197,30 +261,45 @@ export default function Header({ toggleSidebar }) {
                     <h3 className="dropdown-title">Notifications</h3>
                   </div>
                   <div className="notifications-container">
-                    {notifications.map((notification) => (
-                      <div 
-                        key={notification.id} 
-                        className={`notification-item ${notification.unread ? 'unread' : ''}`}
-                      >
-                        <notification.icon className="notification-item-icon" />
-                        <div className="notification-content">
-                          <h4 className="notification-title">
-                            {notification.title}
-                          </h4>
-                          <p className="notification-message">
-                            {notification.message}
-                          </p>
-                          <span className="notification-time">
-                            {notification.time}
-                          </span>
+                    {notifications.map((notification) => {
+                      const isDismissing = dismissingId === notification.id;
+                      return (
+                        <div
+                          key={notification.id}
+                          className={`notification-item${notification.unread ? ' unread' : ''}${isDismissing ? ' dismissing' : ''}`}
+                          style={{ display: 'flex', alignItems: 'center', transition: 'transform 0.5s, opacity 0.5s', transform: isDismissing ? 'translateX(100%)' : 'none', opacity: isDismissing ? 0 : 1 }}
+                        >
+                          <input
+                            type="checkbox"
+                            className="notification-done-checkbox cursor-pointer"
+                            title="Mark as done"
+                            checked={isDismissing}
+                            onChange={() => handleNotificationDone(notification.id)}
+                            style={{ marginRight: 8 }}
+                          />
+                          <notification.icon className="notification-item-icon" />
+                          <div className="notification-content">
+                            <h4 className="notification-title">
+                              {notification.title}
+                            </h4>
+                            <p className="notification-message">
+                              {notification.message}
+                            </p>
+                            <span className="notification-time">
+                              {notification.notification_type === "water"
+                                ? (notification.created_at ? moment(notification.created_at).fromNow() : "")
+                                : (notification.notification_time && notification.created_at
+                                    ? moment(
+                                        moment(notification.created_at).format("YYYY-MM-DD") +
+                                          "T" +
+                                          notification.notification_time
+                                      ).fromNow()
+                                    : "")}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="dropdown-footer">
-                    <button className="view-all-button">
-                      View all notifications
-                    </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
