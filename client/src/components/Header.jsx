@@ -133,7 +133,9 @@ export default function Header({ toggleSidebar }) {
   // Fetch notification settings on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userId = getAuthUserId && getAuthUserId();
+     if (!isAuthPage && isLoggedIn) {
+      const userId = getAuthUserId();
+     
     if (!token || !userId) return;
     fetchUserSettings(userId, token)
       .then((data) => {
@@ -143,7 +145,7 @@ export default function Header({ toggleSidebar }) {
       })
       .catch((err) => {
         console.error("Failed to fetch notification settings:", err);
-      });
+      });}
   }, []);
 
   // Filter notifications based on settings
