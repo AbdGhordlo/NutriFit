@@ -5,6 +5,7 @@ import "../assets/commonStyles.css";
 import "./styles/AuthStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
 import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [emailFocus, setEmailFocus] = useState(false);
@@ -12,6 +13,7 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     setErrorMessage("");
@@ -26,15 +28,18 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-      console.log("userdata: ", data);
       if (response.ok) {
+        if (data.user && data.user.email_verified === false) {
+          navigate("/verify-email", { state: { email: data.user.email } });
+          return;
+        }
         localStorage.setItem("token", data.token); // Store JWT in localStorage
         window.location.href = "/home"; // Redirect to home page
       } else {
         setErrorMessage(data.message || "Login failed");
       }
     } catch (err) {
-      console.error(err);
+      console.error("[Login] Exception:", err);
       setErrorMessage("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);

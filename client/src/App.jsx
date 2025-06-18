@@ -15,6 +15,7 @@ import Ingredients from "./pages/Ingredients";
 import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import VerifyEmail from "./pages/VerifyEmail";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword   from "./pages/ResetPassword";
@@ -35,9 +36,11 @@ function AppContent() {
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1000);
 
   // Define routes where the sidebar, header, and footer should not be displayed
-  const noSidebarRoutes = ["/login", "/register", "/", "/about", "/contact", "/privacy", "/forgot-password", "/reset-password"];
+  const noSidebarRoutes = ["/login", "/register", "/", "/about", "/contact", "/privacy", "/forgot-password", "/reset-password", "/verify-email"];
+  const noHeaderRoutes = noSidebarRoutes;
   const shouldShowSidebar = !noSidebarRoutes.includes(location.pathname);
   const shouldShowFooter = !noSidebarRoutes.includes(location.pathname);
+  const shouldShowHeader = !noHeaderRoutes.includes(location.pathname);
 
   // Effect to handle window resizing
   useEffect(() => {
@@ -53,7 +56,9 @@ function AppContent() {
 
   return (
     <div className={`app-container ${!shouldShowSidebar ? "no-sidebar" : ""}`}>
-      <Header toggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)} />
+      {shouldShowHeader && (
+        <Header toggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)} />
+      )}
       {shouldShowSidebar && (
         <Sidebar
           isVisible={isSidebarVisible}
@@ -72,6 +77,7 @@ function AppContent() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />

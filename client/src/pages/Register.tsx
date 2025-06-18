@@ -4,14 +4,20 @@ import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
 import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     setErrorMessage("");
@@ -28,8 +34,7 @@ export default function Register() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("token", data.token); // Store JWT in localStorage
-        window.location.href = "/home"; // Redirect to home page
+        navigate("/verify-email", { state: { email: formData.email } });
       } else {
         setErrorMessage(data.message ?? "Registration failed");
       }
@@ -45,7 +50,7 @@ export default function Register() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      
+
       const googleResponse = await fetch("http://localhost:5000/auth/google", {
         method: "POST",
         headers: {
@@ -53,9 +58,9 @@ export default function Register() {
         },
         body: JSON.stringify({ credential: response.credential }),
       });
-      
+
       const data = await googleResponse.json();
-      
+
       if (googleResponse.ok) {
         localStorage.setItem("token", data.token);
         window.location.href = "/home";

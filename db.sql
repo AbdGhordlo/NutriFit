@@ -13,7 +13,7 @@
 -- User Table
 CREATE TABLE "user" (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
     google_id VARCHAR(255),
@@ -22,6 +22,11 @@ CREATE TABLE "user" (
     -- password-reset support
     reset_token   VARCHAR(64),
     reset_expires BIGINT,
+
+    -- email verification support
+    email_verified BOOLEAN DEFAULT FALSE,
+    email_verification_token VARCHAR(64),
+    email_verification_expires BIGINT,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
