@@ -52,6 +52,24 @@ export async function upsertExerciseProgress(
   return res.json();
 }
 
+export async function resetDailyMealProgress(token: string) {
+  const res = await fetch(`${BASE}/meal/today`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function resetDailyExerciseProgress(token: string) {
+  const res = await fetch(`${BASE}/exercise/today`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
 export function addExerciseProgress(id: number, today: string, token: string) {
   throw new Error("Function not implemented.");
 }

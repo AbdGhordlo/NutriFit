@@ -35,6 +35,8 @@ export default function Register() {
 
       if (response.ok) {
         navigate("/verify-email", { state: { email: formData.email } });
+        localStorage.setItem("token", data.token); // Store JWT in localStorage
+        window.location.href = "/personalization"; // Redirect to personalization steps
       } else {
         setErrorMessage(data.message ?? "Registration failed");
       }
@@ -63,7 +65,7 @@ export default function Register() {
 
       if (googleResponse.ok) {
         localStorage.setItem("token", data.token);
-        window.location.href = "/home";
+        window.location.href = "/personalization";
       } else {
         setErrorMessage(data.message ?? "Google signup failed");
       }

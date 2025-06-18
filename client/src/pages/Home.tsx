@@ -44,6 +44,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
+  const [wasAllCompletedToday, setWasAllCompletedToday] = useState(false); // NEW
 
   const userId = getUserIdFromToken();
   const { getAuthToken } = useAuth();
@@ -93,6 +94,15 @@ function Home() {
           })
         );
         setExercises(exercisesWithCompletion);
+
+        // Set wasAllCompletedToday based on fetched data
+        const allMealsCompleted =
+          mealsWithCompletion.length > 0 &&
+          mealsWithCompletion.every((m) => m.completed);
+        const allExercisesCompleted =
+          exercisesWithCompletion.length > 0 &&
+          exercisesWithCompletion.every((e) => e.completed);
+        setWasAllCompletedToday(allMealsCompleted && allExercisesCompleted);
       } catch (err: any) {
         setError(err.message || "Failed to fetch today's data");
       } finally {
@@ -115,13 +125,19 @@ function Home() {
       updatedExercises.length > 0 && updatedExercises.every((e) => e.completed);
     const todayDate = new Date(today);
     const isAfterTarget = targetDate && todayDate > targetDate;
-    if (allMealsCompleted && allExercisesCompleted) {
-      // Increment completed_days_count
+    const allCompleted = allMealsCompleted && allExercisesCompleted;
+
+    if (allCompleted && !wasAllCompletedToday) {
+      // Only increment if not already counted today
       await progressService.updateCompletedDaysCount(userId, true, token);
-      // If today is after the original targetDate, decrement penalty days
+      setWasAllCompletedToday(true);
       if (isAfterTarget) {
         await decrementPenaltyDay();
       }
+    } else if (!allCompleted && wasAllCompletedToday) {
+      // Only decrement if previously counted today
+      await progressService.updateCompletedDaysCount(userId, false, token);
+      setWasAllCompletedToday(false);
     }
   };
 

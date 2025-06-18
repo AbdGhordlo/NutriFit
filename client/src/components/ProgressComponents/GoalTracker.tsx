@@ -9,7 +9,7 @@ import {
 
 interface GoalTrackerProps {
   startWeight: number;
-  currentWeight: number ;
+  currentWeight: number;
   targetWeight: number;
   startDate: Date;
   targetDate: Date;
@@ -86,9 +86,10 @@ const GoalTracker: React.FC<GoalTrackerProps> = ({
 
           <p className="text-sm text-gray-600">
             {progressPercentage < 100
-              ? `You're ${progressPercentage.toFixed(
-                  1
-                )}% of the way to your goal!`
+              ? `You're ${Math.max(
+                  0,
+                  Math.min(100, progressPercentage)
+                ).toFixed(0)}% of the way to your goal!`
               : "Congratulations! You've reached your weight loss goal!"}
           </p>
         </motion.div>

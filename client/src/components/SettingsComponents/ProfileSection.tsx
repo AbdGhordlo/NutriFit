@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { User, Camera, Upload, Trash2 } from "lucide-react";
+import Button from "../Button";
 
 interface ProfileSectionProps {
   profile: {
@@ -56,7 +57,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         <div style={styles.profilePhotoSection}>
           <div style={{ position: "relative" }}>
             {/* Photo Container */}
-            <div 
+            <div
               onClick={handlePhotoClick}
               style={Object.assign({}, styles.profilePicture, {
                 cursor: "pointer",
@@ -72,29 +73,30 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                       width: "100%",
                       height: "100%",
                       objectFit: "cover",
-                      borderRadius: "50%"
+                      borderRadius: "50%",
                     }}
                     onError={(e) => {
                       // If image fails to load, show default user icon
-                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.style.display = "none";
                       if (handleRemoveProfilePhoto) {
                         // Optionally clear the invalid URL
                         handleRemoveProfilePhoto();
                       }
                     }}
                   />
-                  <div style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundColor: "rgba(0, 0, 0, 0.4)",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: 0,
-                    transition: "opacity 0.3s"
-                  }}
-                  className="hover-overlay"
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backgroundColor: "rgba(0, 0, 0, 0.4)",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0,
+                      transition: "opacity 0.3s",
+                    }}
+                    className="hover-overlay"
                   >
                     <Camera size={24} color="white" />
                   </div>
@@ -103,19 +105,22 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 <User size={40} color="#6b7280" />
               )}
             </div>
-            
+
             {/* Photo Menu */}
             {isPhotoMenuOpen && (
-              <div style={{
-                position: "absolute",
-                marginTop: "8px",
-                width: "180px",
-                backgroundColor: "white",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
-                padding: "4px",
-                zIndex: 10,
-              }}>
+              <div
+                style={{
+                  position: "absolute",
+                  marginTop: "8px",
+                  width: "180px",
+                  backgroundColor: "white",
+                  borderRadius: "8px",
+                  boxShadow:
+                    "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
+                  padding: "4px",
+                  zIndex: 10,
+                }}
+              >
                 <button
                   onClick={handleUploadClick}
                   style={{
@@ -160,7 +165,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 )}
               </div>
             )}
-            
+
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -176,16 +181,22 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               style={{ display: "none" }}
             />
           </div>
-          
-          <label style={styles.changePhotoButton}>
-            Upload Photo
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePhotoUpload}
-              style={{ display: "none" }}
-            />
-          </label>
+
+          <div>
+            <label>
+              <Button
+                variant="primary"
+              >
+                Upload Photo
+              </Button>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoUpload}
+                style={{ display: "none" }}
+              />
+            </label>
+          </div>
         </div>
 
         {/* Profile Inputs */}
@@ -195,9 +206,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
             <input
               type="text"
               value={profile.fullName}
-              onChange={(e) =>
-                handleProfileChange("fullName", e.target.value)
-              }
+              onChange={(e) => handleProfileChange("fullName", e.target.value)}
               style={styles.wideInput}
               placeholder="John Doe"
             />
@@ -207,16 +216,20 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
             <input
               type="email"
               value={profile.email}
-              onChange={(e) =>
-                handleProfileChange("email", e.target.value)
-              }
-              style={styles.wideInput}
+              readOnly
+              style={{
+                ...styles.wideInput,
+                backgroundColor: "#f3f4f6", // light gray
+                color: "#6b7280", // gray text
+                cursor: "not-allowed",
+                opacity: 1,
+              }}
               placeholder="john@example.com"
             />
           </div>
         </div>
       </div>
-      
+
       {/* Add a small bit of CSS for hover effects */}
       <style>
         {`

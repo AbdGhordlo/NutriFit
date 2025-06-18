@@ -36,6 +36,7 @@ import SavedPlansPopup from "./SavedPlansPopup";
 import GeneratedPlanPopup from "./GeneratedPlanPopup";
 import { EditExercisePopup } from "./EditExercisePlanPopup";
 import FavoriteExercisesPopup from "./FavoriteExercisesPopup";
+import { resetDailyExerciseProgress } from "../../services/homeService";
 
 export default function ExercisePlanner() {
   const [currentDay, setCurrentDay] = useState(0);
@@ -117,8 +118,8 @@ export default function ExercisePlanner() {
       setShowSavedPlansPopup(true);
     } catch (error) {
       console.error("Error fetching saved plans:", error);
-        setSavedPlans([]);
-        setShowSavedPlansPopup(true);
+      setSavedPlans([]);
+      setShowSavedPlansPopup(true);
     }
   };
 
@@ -133,6 +134,7 @@ export default function ExercisePlanner() {
       const userId = Number(getUserIdFromToken()); // Ensure userId is a number
       if (isNaN(userId)) throw new Error("Invalid user ID");
 
+      await resetDailyExerciseProgress(token); // Reset today's exercise progress
       await adoptExercisePlan(userId, exercisePlanId, token);
       alert("Exercise plan adopted successfully!");
       window.location.reload(); // Reload to reflect the new adopted plan
@@ -263,6 +265,7 @@ export default function ExercisePlanner() {
       const userId = Number(getUserIdFromToken()); // Ensure userId is a number
       if (isNaN(userId)) throw new Error("Invalid user ID");
 
+      await resetDailyExerciseProgress(token); // Reset today's exercise progress
       await saveAndAdoptExercisePlan(userId, generatedPlan, token);
       alert("Exercise plan saved and adopted successfully!");
       window.location.reload(); // Reload the page to reflect the changes
@@ -440,78 +443,84 @@ export default function ExercisePlanner() {
 
         {weeklyPlan.length > 0 ? (
           <>
-        <div className={`day-container ${isToday(currentDay) ? "today" : ""}`}>
-          <div className="day-header">
-            <h2 className="day-name">
-              Day {weeklyPlan[currentDay].day_number}
-            </h2>
-          </div>
-
-          <div className="items-list">
-            {weeklyPlan[currentDay].exercises.map((exercise) => (
-              <div
-                key={exercise.exercise_plan_exercise_id}
-                className="list-item"
-              >
-                <div className="item-info">
-                  <h3 className="item-name">{exercise.name}</h3>
-                  <div className="item-time-info">
-                    <span className="item-time">{exercise.time}</span>
-                    <span className="dot">•</span>
-                    <span className="item-time">
-                      {exercise.calories_burned} kcal
-                    </span>
-                  </div>
-                </div>
-
-                <div className="details-container">
-                  {exercise.has_reps_sets && (
-                    <div className="detail-item">
-                      <span className="detail-label">Reps:</span>
-                      <span className="detail-value">{exercise.reps}</span>
-                    </div>
-                  )}
-                  {exercise.has_reps_sets && (
-                    <div className="detail-item">
-                      <span className="detail-label">Sets:</span>
-                      <span className="detail-value">{exercise.sets}</span>
-                    </div>
-                  )}
-                  {exercise.has_duration && (
-                    <div className="detail-item">
-                      <span className="detail-label">Duration:</span>
-                      <span className="detail-value">{exercise.duration}</span>
-                    </div>
-                  )}
-                </div>
+            <div
+              className={`day-container ${isToday(currentDay) ? "today" : ""}`}
+            >
+              <div className="day-header">
+                <h2 className="day-name">
+                  Day {weeklyPlan[currentDay].day_number}
+                </h2>
               </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="navigation-container">
-          <button
-            onClick={handlePrevDay}
-            disabled={currentDay === 0}
-            className={`nav-button ${currentDay === 0 ? "disabled" : ""}`}
-          >
-            <ChevronLeft className="nav-icon" />
-          </button>
+              <div className="items-list">
+                {weeklyPlan[currentDay].exercises.map((exercise) => (
+                  <div
+                    key={exercise.exercise_plan_exercise_id}
+                    className="list-item"
+                  >
+                    <div className="item-info">
+                      <h3 className="item-name">{exercise.name}</h3>
+                      <div className="item-time-info">
+                        <span className="item-time">{exercise.time}</span>
+                        <span className="dot">•</span>
+                        <span className="item-time">
+                          {exercise.calories_burned} kcal
+                        </span>
+                      </div>
+                    </div>
 
-          <button
-            onClick={handleNextDay}
-            disabled={currentDay === 6}
-            className={`nav-button ${currentDay === 6 ? "disabled" : ""}`}
-          >
-            <ChevronRight className="nav-icon" />
-          </button>
-        </div>
-        </>
+                    <div className="details-container">
+                      {exercise.has_reps_sets && (
+                        <div className="detail-item">
+                          <span className="detail-label">Reps:</span>
+                          <span className="detail-value">{exercise.reps}</span>
+                        </div>
+                      )}
+                      {exercise.has_reps_sets && (
+                        <div className="detail-item">
+                          <span className="detail-label">Sets:</span>
+                          <span className="detail-value">{exercise.sets}</span>
+                        </div>
+                      )}
+                      {exercise.has_duration && (
+                        <div className="detail-item">
+                          <span className="detail-label">Duration:</span>
+                          <span className="detail-value">
+                            {exercise.duration}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="navigation-container">
+              <button
+                onClick={handlePrevDay}
+                disabled={currentDay === 0}
+                className={`nav-button ${currentDay === 0 ? "disabled" : ""}`}
+              >
+                <ChevronLeft className="nav-icon" />
+              </button>
+
+              <button
+                onClick={handleNextDay}
+                disabled={currentDay === 6}
+                className={`nav-button ${currentDay === 6 ? "disabled" : ""}`}
+              >
+                <ChevronRight className="nav-icon" />
+              </button>
+            </div>
+          </>
         ) : (
-        <div className="no-plan-error-container">
-        <ErrorMessage message={"No exercise plan data found. Generate a new plan!"} />
-      </div>
-      )}
+          <div className="no-plan-error-container">
+            <ErrorMessage
+              message={"No exercise plan data found. Generate a new plan!"}
+            />
+          </div>
+        )}
       </div>
 
       <div className="buttons-container">

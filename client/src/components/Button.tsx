@@ -9,13 +9,13 @@ export type ButtonProps = React.HTMLAttributes<HTMLDivElement> & {
 
 const Button: React.FC<ButtonProps> = React.memo(
   ({ variant = "primary", disabled = false, children, className, ...args }) => {
-    let classNames = "min-w-24 px-6 py-2 rounded-lg flex items-center justify-center ";
+    let classNames = "min-w-24 px-6 py-2 rounded-lg flex items-center justify-center cursor-pointer ";
 
     if (variant === "primary") {
       classNames += "bg-primary-green text-white hover:bg-primary-hover";
     } else if (variant === "secondary") {
       classNames +=
-        "border border-gray-300 text-quaternary-text hover:bg-gray-50";
+        "border border-gray-300 text-quaternary-text hover:bg-gray-100";
     } else if (variant === "danger") {
       classNames += "bg-red-400 text-white hover:bg-red-200";
     } else if (variant === "warning") {

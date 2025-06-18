@@ -12,6 +12,7 @@
     "framer-motion": "^12.12.1",
     "google-auth-library": "^9.15.1",
     "groq-sdk": "^0.15.0",
+    "html2canvas": "^1.4.1",
     "i": "^0.3.7",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
