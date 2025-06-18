@@ -9,7 +9,11 @@ export default function Register() {
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +33,7 @@ export default function Register() {
 
       if (response.ok) {
         localStorage.setItem("token", data.token); // Store JWT in localStorage
-        window.location.href = "/home"; // Redirect to home page
+        window.location.href = "/personalization"; // Redirect to personalization steps
       } else {
         setErrorMessage(data.message ?? "Registration failed");
       }
@@ -45,7 +49,7 @@ export default function Register() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      
+
       const googleResponse = await fetch("http://localhost:5000/auth/google", {
         method: "POST",
         headers: {
@@ -53,12 +57,12 @@ export default function Register() {
         },
         body: JSON.stringify({ credential: response.credential }),
       });
-      
+
       const data = await googleResponse.json();
-      
+
       if (googleResponse.ok) {
         localStorage.setItem("token", data.token);
-        window.location.href = "/home";
+        window.location.href = "/personalization";
       } else {
         setErrorMessage(data.message ?? "Google signup failed");
       }

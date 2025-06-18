@@ -1,4 +1,5 @@
 import React from "react";
+import Button from "../Button";
 
 interface SaveSettingsButtonProps {
   isSaving: boolean;
@@ -16,17 +17,18 @@ const SaveSettingsButton: React.FC<SaveSettingsButtonProps> = ({
   return (
     <div style={styles.saveButtonContainer}>
       {saveSuccess && (
-        <div style={styles.successMessage}>
-          Settings saved successfully!
-        </div>
+        <div style={styles.successMessage}>Settings saved successfully!</div>
       )}
-      <button
-        style={styles.saveButton}
+      <Button
+        variant="primary"
         onClick={onSave}
         disabled={isSaving}
+        style={{
+          width: "200px",
+        }}
       >
         {isSaving ? "Saving..." : "Save Settings"}
-      </button>
+      </Button>
     </div>
   );
 };

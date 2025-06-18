@@ -29,15 +29,18 @@ import "./AppStyles.css";
 
 function AppContent() {
   const location = useLocation(); // Get the current route location
+  const fromPersonalization = location.pathname === "/ingredients" && location.state && location.state.fromPersonalization;
   const [isSidebarVisible, setIsSidebarVisible] = useState(
     window.innerWidth >= 1000
   );
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1000);
 
   // Define routes where the sidebar, header, and footer should not be displayed
-  const noSidebarRoutes = ["/login", "/register", "/", "/about", "/contact", "/privacy", "/forgot-password", "/reset-password"];
-  const shouldShowSidebar = !noSidebarRoutes.includes(location.pathname);
-  const shouldShowFooter = !noSidebarRoutes.includes(location.pathname);
+  const noSidebarRoutes = [
+    "/login", "/register", "/", "/about", "/contact", "/privacy", "/forgot-password", "/reset-password", "/personalization"
+  ];
+  const shouldShowSidebar = !noSidebarRoutes.includes(location.pathname) && !fromPersonalization;
+  const shouldShowFooter = !noSidebarRoutes.includes(location.pathname) && !fromPersonalization;
 
   // Effect to handle window resizing
   useEffect(() => {

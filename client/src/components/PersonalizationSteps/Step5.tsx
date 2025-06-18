@@ -23,7 +23,9 @@ export const Step5 = ({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-dark-green mb-6">Budget & Kitchen</h2>
+      <h2 className="text-2xl font-bold text-dark-green mb-6">
+        Budget & Kitchen
+      </h2>
 
       <div className="space-y-6">
         <div>
@@ -32,9 +34,24 @@ export const Step5 = ({
             Monthly Food Budget
           </h3>
           <div className="grid gap-4">
-            {renderBudgetOption("basic", "$100 - $200 per month", budget, setBudget)}
-            {renderBudgetOption("standard", "$200 - $400 per month", budget, setBudget)}
-            {renderBudgetOption("premium", "$400 - $600 per month", budget, setBudget)}
+            {renderBudgetOption(
+              "basic",
+              "$100 - $200 per month",
+              budget,
+              setBudget
+            )}
+            {renderBudgetOption(
+              "standard",
+              "$200 - $400 per month",
+              budget,
+              setBudget
+            )}
+            {renderBudgetOption(
+              "premium",
+              "$400 - $600 per month",
+              budget,
+              setBudget
+            )}
             {renderBudgetOption("luxury", "$600+ per month", budget, setBudget)}
           </div>
         </div>
@@ -46,10 +63,13 @@ export const Step5 = ({
           </h3>
           <button
             onClick={() => {
-              // If you still want to track the "hasKitchenInventory" state,
-              // you can call setHasKitchenInventory(true) here first, then:
               setHasKitchenInventory(true);
-              navigate("/ingredients");
+              console.log(
+                "[DEBUG] Navigating to /ingredients from Step5 with state"
+              );
+              navigate("/ingredients", {
+                state: { fromPersonalization: true },
+              });
             }}
             className={`w-full p-6 rounded-lg border-2 text-left transition-all ${
               hasKitchenInventory
@@ -61,7 +81,8 @@ export const Step5 = ({
               Add Your Kitchen Inventory
             </h4>
             <p className="text-sm text-secondary-text">
-              Let us know what ingredients you already have to get better meal recommendations.
+              Let us know what ingredients you already have to get better meal
+              recommendations.
             </p>
           </button>
         </div>

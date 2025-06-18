@@ -23,6 +23,8 @@ import { getUserIdFromToken } from "../utils/auth";
 import SelectIngredients from "./SelectIngredients";
 import { mappedCategories } from "../utils/mapCategory";
 import SpicesIcon from "../components/icons/SpicesIcon";
+import { useLocation, useNavigate } from "react-router-dom";
+import Button from "../components/Button";
 
 const categories: {
   [key: string]: {
@@ -73,6 +75,8 @@ interface NewIngredient {
 }
 
 export default function Ingredients() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const userId = getUserIdFromToken();
   const token = localStorage.getItem("token");
 
@@ -475,6 +479,10 @@ export default function Ingredients() {
 
   const allCategories = mappedCategories;
 
+  // Check if navigated from personalization
+  const fromPersonalization =
+    location.state && location.state.fromPersonalization;
+
   if (loading) {
     return (
       <div
@@ -491,7 +499,21 @@ export default function Ingredients() {
   }
 
   return (
-    <div style={styles.container}>
+    <div>
+      {fromPersonalization && (
+        <div style={{ padding: "16px 0 0 0", textAlign: "left" }}>
+          <Button
+            variant="secondary"
+            style={{
+              marginLeft: "16px",
+              marginRight: "16px",
+            }}
+            onClick={() => navigate("/personalization")}
+          >
+             Back to Personalization
+          </Button>
+        </div>
+      )}
       <div style={styles.container}>
         <h1 style={styles.title}>My Ingredients</h1>
 
