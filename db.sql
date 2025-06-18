@@ -92,13 +92,6 @@ CREATE TABLE ingredient (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
--- Notification Table
-CREATE TABLE notification (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 -- Meal Plan Meal Table
 CREATE TABLE meal_plan_meal (
@@ -143,16 +136,15 @@ CREATE TABLE user_ingredients (
 --     UNIQUE (user_ingredients_id, ingredient_id)
 -- );
 
--- User Notification Table
-CREATE TABLE user_notification (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
-    notification_id INT REFERENCES notification(id) ON DELETE CASCADE,
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, notification_id)
-);
+-- CREATE TABLE user_notification (
+--     id SERIAL PRIMARY KEY,
+--     user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+--     notification_id INT REFERENCES notification(id) ON DELETE CASCADE,
+--     is_read BOOLEAN DEFAULT FALSE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     UNIQUE (user_id, notification_id)
+-- );
 
 -- Settings Table
 CREATE TABLE settings (
@@ -247,6 +239,16 @@ CREATE TABLE body_measurements (
   unit VARCHAR(20),                      -- e.g. 'kg', 'cm', 'm²'
   measured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notification (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    meal_plan_meal_id INT REFERENCES meal_plan_meal(id) ON DELETE CASCADE,
+    exercise_plan_exercise_id INT REFERENCES exercise_plan_exercise(id) ON DELETE CASCADE,
+    notification_type VARCHAR(20) NOT NULL CHECK (notification_type IN ('water', 'meal', 'exercise')),
+    notification_time TIME NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- -- Data
@@ -525,3 +527,4 @@ VALUES
  -- Body Fat Mass measurements
   (7, 'fat_mass', 13.5, 'kg', '2025-03-01', CURRENT_TIMESTAMP),
   (7, 'fat_mass', 12.9, 'kg', '2025-06-01', CURRENT_TIMESTAMP);
+

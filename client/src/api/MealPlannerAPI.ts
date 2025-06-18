@@ -19,7 +19,7 @@ export const getAdoptedMealPlan = async (userId: number, token: string) => {
     }
 
     const data = await response.json();
-    console.log("data: ",data);
+    // console.log("data: ",data);
     return data;
   } catch (error) {
     throw error;
