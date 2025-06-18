@@ -37,8 +37,9 @@ export default function ForgotPassword() {
       <div style={styles.container}>
         <div style={styles.formContainer}>
           <h2 style={styles.title}>Check Your Email</h2>
-          <p>
-            If that email exists, you’ll receive a reset code shortly.
+          <p className="mb-3">
+            You have been sent a reset code to{" "}
+            <strong>{email}</strong>.
           </p>
           <button
             style={styles.submitButton}

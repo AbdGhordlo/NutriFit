@@ -26,6 +26,8 @@ export default function Header({ toggleSidebar }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   // Move notifications to state so we can update them
   const [notifications, setNotifications] = useState([]);
@@ -40,6 +42,9 @@ export default function Header({ toggleSidebar }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedEmail = localStorage.getItem("userEmail");
+    const storedUsername = localStorage.getItem("username");
+    const storedPhoto = localStorage.getItem("profilePhoto");
+    let userId = null;
 
     if (token) {
       setIsLoggedIn(true);
@@ -53,15 +58,55 @@ export default function Header({ toggleSidebar }) {
           const payload = JSON.parse(decodedPayload);
 
           setUserEmail(payload.email || "user@example.com");
+          userId = payload.id;
         } catch {
           setUserEmail("user@example.com");
         }
       }
+
+      // Try to get userId from token if not already set
+      if (!userId) {
+        try {
+          const base64Payload = token.split(".")[1];
+          const decodedPayload = atob(base64Payload);
+          const payload = JSON.parse(decodedPayload);
+          userId = payload.id;
+        } catch {}
+      }
+
+      if (storedUsername) {
+        setUsername(storedUsername);
+      }
+      if (storedPhoto) {
+        setProfilePhoto(storedPhoto);
+      }
+      if ((!storedUsername || !storedPhoto) && userId) {
+        // Fetch username and photo from API if not in localStorage
+        fetch(`http://localhost:5000/settings/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.profile) {
+              if (data.profile.fullName) {
+                setUsername(data.profile.fullName);
+                localStorage.setItem("username", data.profile.fullName);
+              }
+              if (data.profile.photoUrl) {
+                setProfilePhoto(data.profile.photoUrl);
+                localStorage.setItem("profilePhoto", data.profile.photoUrl);
+              }
+            }
+          });
+      }
     } else {
       setIsLoggedIn(false);
       setUserEmail("");
+      setUsername("");
+      setProfilePhoto("");
     }
   }, []);
+
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -94,6 +139,8 @@ export default function Header({ toggleSidebar }) {
     localStorage.removeItem("userEmail"); // Remove stored email
     setIsLoggedIn(false);
     setUserEmail("");
+    setUsername("");
+    setProfilePhoto("");
     window.location.href = "/";
   };
 
@@ -361,10 +408,24 @@ export default function Header({ toggleSidebar }) {
                 onClick={toggleAccount}
               >
                 <div className="account-avatar">
-                  <User className="account-icon" />
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt="Profile"
+                      className="account-profile-img"
+                      style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.currentTarget.src = "";
+                        setProfilePhoto("");
+                        localStorage.removeItem("profilePhoto");
+                      }}
+                    />
+                  ) : (
+                    <User className="account-icon" />
+                  )}
                 </div>
                 <span className="account-text">
-                  {isLoggedIn ? "Account" : "Sign In"}
+                  {isLoggedIn ? (username || "Account") : "Sign In"}
                 </span>
                 <ChevronDown className="dropdown-arrow" />
               </button>
