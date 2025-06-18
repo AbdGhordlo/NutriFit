@@ -1,8 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
 
 const NutriFitMainPage: React.FC = () => {
+  const images = ["/TAGZ.png", "/TAGZ2.png"];
+  const [currentImage, setCurrentImage] = useState("");
+
+  useEffect(() => {
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    setCurrentImage(randomImage);
+  }, []);
   const handleRippleEffect = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
 
@@ -93,7 +100,7 @@ const NutriFitMainPage: React.FC = () => {
       </div>
       <div className="flex justify-center items-center">
         <img
-          src="/TAGZ.png"
+          src={currentImage}
           alt="NutriFit mockup"
           className="max-w-full h-auto object-contain animate-fade-in-right drop-shadow-xl"
         />

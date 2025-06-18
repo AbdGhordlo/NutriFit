@@ -109,7 +109,7 @@ const login = async (req, res) => {
   try {
     // Check if user exists
     const result = await pool.query(
-      'SELECT id, username, email, password_hash FROM "user" WHERE email =  $1',
+      'SELECT id, username, email, password_hash, email_verified FROM "user" WHERE email =  $1',
       [email]
     );
     if (result.rows.length === 0) {
@@ -138,6 +138,7 @@ const login = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        email_verified: user.email_verified, 
       },
     });
   } catch (err) {
@@ -320,6 +321,63 @@ async function resetPassword(req, res) {
   res.json({ message: "Password has been reset" });
 }
 
+/**
+ * Send a verification code to user’s email
+ */
+async function sendVerificationCode(req, res) {
+  const { email } = req.body;
+  // 1) Check existence
+  const userQ = await pool.query(
+    `SELECT id, email_verified FROM "user" WHERE email = $1`,
+    [email]
+  );
+  if (userQ.rows.length === 0) {
+    return res.status(404).json({ message: "Email not registered" });
+  }
+  const { id: userId, email_verified } = userQ.rows[0];
+  if (email_verified) {
+    return res.status(400).json({ message: "Email already verified" });
+  }
+  // 2) Generate code & email
+  const code = crypto.randomBytes(3).toString("hex").toUpperCase();
+  const expires = Date.now() + 1000 * 60 * 15; // 15 min
+  await pool.query(
+    `UPDATE "user" SET email_verification_code=$1, email_verification_expires=$2 WHERE id=$3`,
+    [code, expires, userId]
+  );
+  try {
+    await sendResetEmail(email, code); // You may want a separate sendVerificationEmail
+    console.log("✅ verification email sent to", email);
+  } catch (mailErr) {
+    console.error("❌ sendVerificationEmail error:", mailErr);
+  }
+  res.json({ message: "Verification code sent if email is valid." });
+}
+
+/**
+ * Verify email with code
+ */
+async function verifyEmail(req, res) {
+  const { email, code } = req.body;
+  const userQ = await pool.query(
+    `SELECT id, email_verification_code, email_verification_expires FROM "user" WHERE email=$1`,
+    [email]
+  );
+  const user = userQ.rows[0];
+  if (
+    !user ||
+    user.email_verification_code !== code ||
+    user.email_verification_expires < Date.now()
+  ) {
+    return res.status(400).json({ message: "Invalid or expired code" });
+  }
+  await pool.query(
+    `UPDATE "user" SET email_verified=TRUE, email_verification_code=NULL, email_verification_expires=NULL WHERE id=$1`,
+    [user.id]
+  );
+  res.json({ message: "Email has been verified" });
+}
+
 module.exports = {
   signup,
   login,
@@ -327,4 +385,6 @@ module.exports = {
   googleAuth,
   forgotPassword,
   resetPassword,
+  sendVerificationCode,
+  verifyEmail,
 };

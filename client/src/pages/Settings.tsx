@@ -9,7 +9,7 @@ import NotificationSection from "../components/SettingsComponents/NotificationSe
 import AccountManagementSection from "../components/SettingsComponents/AccountManagementSection";
 import PasswordChangeModal from "../components/SettingsComponents/PasswordChangeModal";
 import DeleteAccountModal from "../components/SettingsComponents/DeleteAccountModal";
-import PersonalizationBanner from "../components/SettingsComponents/PersonalizationBanner";
+import PersonalizationSection from "../components/SettingsComponents/PersonalizationSection";
 import SaveSettingsButton from "../components/SettingsComponents/SaveSettingsButton";
 
 // Services & Hooks
@@ -490,7 +490,10 @@ export default function Settings() {
           />
 
           {/* Personalization Section */}
-          <PersonalizationBanner userHasPersonalized={userHasPersonalized} />
+          <PersonalizationSection 
+            userHasPersonalized={userHasPersonalized}
+            styles={styles}
+          />
 
           {/* Save Button Section */}
           <SaveSettingsButton
