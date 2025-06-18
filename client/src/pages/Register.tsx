@@ -4,6 +4,7 @@ import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
 import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [emailFocus, setEmailFocus] = useState(false);
@@ -16,6 +17,7 @@ export default function Register() {
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     setErrorMessage("");
@@ -32,6 +34,7 @@ export default function Register() {
       const data = await response.json();
 
       if (response.ok) {
+        navigate("/verify-email", { state: { email: formData.email } });
         localStorage.setItem("token", data.token); // Store JWT in localStorage
         window.location.href = "/personalization"; // Redirect to personalization steps
       } else {
