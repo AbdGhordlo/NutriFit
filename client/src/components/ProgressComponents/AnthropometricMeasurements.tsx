@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MeasurementInput from "./MeasurementInput";
 import LineChart from "./LineChart";
@@ -9,6 +9,7 @@ import {
   getMergedFatMassHistory,
   getMergedLeanMassHistory,
 } from "../../utils/anthropometricUtils";
+import { v4 as uuidv4 } from "uuid";
 
 interface AnthropometricMeasurementsProps {
   weightHistory: Array<{ value: number; date: string; unit: string }>;
@@ -118,7 +119,7 @@ const AnthropometricMeasurements = ({
 
   const toggleAdvancedMetrics = () => {
     setShowAdvanced(!showAdvanced);
-    setSelectedMeasurement('weight');
+    setSelectedMeasurement("weight");
   };
 
   // Calculate derived measurements
@@ -341,6 +342,33 @@ const AnthropometricMeasurements = ({
     }
   };
 
+  // Map all histories into a unified array for useMeasurementPeriod
+  const allMeasurements = useMemo(() => {
+    function mapHistory(arr, type) {
+      return (arr || []).map((m, idx) => ({
+        type,
+        value: m.value,
+        date: new Date(m.date),
+        id: m.id || `${type}-${m.date}-${idx}`,
+      }));
+    }
+    return [
+      ...mapHistory(weightHistory, "weight"),
+      ...mapHistory(heightHistory, "height"),
+      ...mapHistory(waistHistory, "waist"),
+      ...mapHistory(hipHistory, "hip"),
+      ...mapHistory(fatMassHistory, "bodyFatMass"),
+      ...mapHistory(leanMassHistory, "leanBodyMass"),
+    ];
+  }, [
+    weightHistory,
+    heightHistory,
+    waistHistory,
+    hipHistory,
+    fatMassHistory,
+    leanMassHistory,
+  ]);
+
   return (
     <div className="anthropometric-measurements">
       <div className="flex justify-between items-center mb-4">
@@ -551,6 +579,8 @@ const AnthropometricMeasurements = ({
                   setShowInput(false);
                 }}
                 onCancel={() => setShowInput(false)}
+                measurements={allMeasurements}
+                onSaveMeasurement={onSaveMeasurement}
               />
             </motion.div>
           )}

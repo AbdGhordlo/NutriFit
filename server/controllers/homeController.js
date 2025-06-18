@@ -104,10 +104,49 @@ async function upsertExerciseProgress(req, res) {
   }
 }
 
+/**
+ * DELETE /home/meal/today
+ * Deletes all meal_progress entries for the user for today
+ */
+async function resetDailyMealProgress(req, res) {
+  const userId = req.user.id;
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  try {
+    await pool.query(
+      `DELETE FROM meal_progress WHERE user_id = $1 AND date = $2`,
+      [userId, today]
+    );
+    res.json({ message: "Today's meal progress reset." });
+  } catch (err) {
+    console.error('resetDailyMealProgress error:', err);
+    res.status(500).json({ message: err.message });
+  }
+}
+
+/**
+ * DELETE /home/exercise/today
+ * Deletes all exercise_progress entries for the user for today
+ */
+async function resetDailyExerciseProgress(req, res) {
+  const userId = req.user.id;
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  try {
+    await pool.query(
+      `DELETE FROM exercise_progress WHERE user_id = $1 AND date = $2`,
+      [userId, today]
+    );
+    res.json({ message: "Today's exercise progress reset." });
+  } catch (err) {
+    console.error('resetDailyExerciseProgress error:', err);
+    res.status(500).json({ message: err.message });
+  }
+}
 
 module.exports = {
   getMealProgress,
   upsertMealProgress,
   getExerciseProgress,
-  upsertExerciseProgress
+  upsertExerciseProgress,
+  resetDailyMealProgress,
+  resetDailyExerciseProgress
 };

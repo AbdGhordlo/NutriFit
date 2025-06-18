@@ -1,21 +1,34 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import MeasurementPeriodWarning from './MeasurementPeriodWarning';
-import { useMeasurementPeriod } from './../../hooks/useMeasurementPeriod';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import MeasurementPeriodWarning from "./MeasurementPeriodWarning";
+import {
+  useMeasurementPeriod,
+  Measurement,
+} from "./../../hooks/useMeasurementPeriod";
 
 interface MeasurementInputProps {
   onSave: (type: string, value: number) => void;
   onCancel: () => void;
+  measurements: Measurement[];
+  onSaveMeasurement: (type: string, value: number) => Promise<void>;
 }
 
-const MeasurementInput: React.FC<MeasurementInputProps> = ({ onSave, onCancel }) => {
-  const [selectedType, setSelectedType] = useState('weight');
-  const [value, setValue] = useState('');
-  const [error, setError] = useState('');
+const MeasurementInput: React.FC<MeasurementInputProps> = ({
+  onSave,
+  onCancel,
+  measurements,
+  onSaveMeasurement,
+}) => {
+  const [selectedType, setSelectedType] = useState("weight");
+  const [value, setValue] = useState("");
+  const [error, setError] = useState("");
   const [showWarning, setShowWarning] = useState(false);
-  
-  const { checkMeasurementPeriod, saveMeasurement } = useMeasurementPeriod();
-  
+
+  const { checkMeasurementPeriod, saveMeasurement } = useMeasurementPeriod({
+    measurements,
+    onSaveMeasurement,
+  });
+
   // Store the checked measurement temporarily when warning is shown
   const [pendingMeasurement, setPendingMeasurement] = useState<{
     type: string;
@@ -25,41 +38,42 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({ onSave, onCancel })
 
   // Filter out derived measurements and only keep direct measurements
   const allowedMeasurements = [
-    { id: 'weight', label: 'Weight', icon: '⚖️' },
-    { id: 'height', label: 'Height', icon: '📏' },
-    { id: 'waist', label: 'Waist', icon: '👖' },
-    { id: 'hip', label: 'Hip', icon: '🍑' },
-    { id: 'bodyFatMass', label: 'Body Fat', icon: '🔄' },
-    { id: 'leanBodyMass', label: 'Lean Mass', icon: '💪' }
+    { id: "weight", label: "Weight", icon: "⚖️" },
+    { id: "height", label: "Height", icon: "📏" },
+    { id: "waist", label: "Waist", icon: "👖" },
+    { id: "hip", label: "Hip", icon: "🍑" },
+    { id: "bodyFatMass", label: "Body Fat", icon: "🔄" },
+    { id: "leanBodyMass", label: "Lean Mass", icon: "💪" },
   ];
 
   const handleSave = () => {
     if (!value || isNaN(parseFloat(value))) {
-      setError('Please enter a valid number');
+      setError("Please enter a valid number");
       return;
     }
-    
+
     const numericValue = parseFloat(value);
-    
+
     // Check if there's already a measurement in this two-week period
-    const { isWithinPeriod, existingMeasurement } = checkMeasurementPeriod(selectedType);
-    
+    const { isWithinPeriod, existingMeasurement } =
+      checkMeasurementPeriod(selectedType);
+
     if (isWithinPeriod && existingMeasurement) {
       // Store the pending measurement and show warning
       setPendingMeasurement({
         type: selectedType,
         value: numericValue,
-        existingMeasurement
+        existingMeasurement,
       });
       setShowWarning(true);
     } else {
       // No warning needed, save directly
       saveMeasurement(selectedType, numericValue);
       onSave(selectedType, numericValue);
-      setError('');
+      setError("");
     }
   };
-  
+
   const handleConfirmOverwrite = () => {
     if (pendingMeasurement) {
       saveMeasurement(pendingMeasurement.type, pendingMeasurement.value);
@@ -67,9 +81,9 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({ onSave, onCancel })
     }
     setShowWarning(false);
     setPendingMeasurement(null);
-    setError('');
+    setError("");
   };
-  
+
   const handleCancelOverwrite = () => {
     setShowWarning(false);
     setPendingMeasurement(null);
@@ -77,29 +91,31 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({ onSave, onCancel })
 
   const getUnitForType = (type: string) => {
     switch (type) {
-      case 'weight':
-      case 'bodyFatMass':
-      case 'leanBodyMass':
-        return 'kg';
-      case 'height':
-      case 'waist':
-      case 'hip':
-        return 'cm';
+      case "weight":
+      case "bodyFatMass":
+      case "leanBodyMass":
+        return "kg";
+      case "height":
+      case "waist":
+      case "hip":
+        return "cm";
       default:
-        return '';
+        return "";
     }
   };
 
   return (
     <>
-      <motion.div 
+      <motion.div
         className="measurement-input bg-white p-5 rounded-lg shadow-md border border-gray-200 mb-4"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -20, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
       >
-        <h4 className="text-lg font-medium text-gray-800 mb-4">Add New Measurement</h4>
+        <h4 className="text-lg font-medium text-gray-800 mb-4">
+          Add New Measurement
+        </h4>
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -110,9 +126,9 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({ onSave, onCancel })
               <button
                 key={type.id}
                 className={`p-2 rounded-md text-sm ${
-                  selectedType === type.id 
-                    ? 'bg-[#7EC987] text-white font-medium' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  selectedType === type.id
+                    ? "bg-[#7EC987] text-white font-medium"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
                 onClick={() => setSelectedType(type.id)}
               >
@@ -123,7 +139,10 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({ onSave, onCancel })
         </div>
 
         <div className="mb-4">
-          <label htmlFor="measurement-value" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="measurement-value"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Value ({getUnitForType(selectedType)})
           </label>
           <div className="flex">
@@ -163,13 +182,16 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({ onSave, onCancel })
           </motion.button>
         </div>
       </motion.div>
-      
+
       {pendingMeasurement && (
         <MeasurementPeriodWarning
           isOpen={showWarning}
           onConfirm={handleConfirmOverwrite}
           onCancel={handleCancelOverwrite}
-          measurementType={allowedMeasurements.find(m => m.id === pendingMeasurement.type)?.label || ''}
+          measurementType={
+            allowedMeasurements.find((m) => m.id === pendingMeasurement.type)
+              ?.label || ""
+          }
           existingDate={pendingMeasurement.existingMeasurement.date}
         />
       )}
