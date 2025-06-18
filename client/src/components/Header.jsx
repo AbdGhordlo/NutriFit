@@ -107,6 +107,35 @@ export default function Header({ toggleSidebar }) {
     }
   }, []);
 
+<<<<<<< HEAD
+=======
+  const notifications = [
+    {
+      id: 1,
+      icon: Droplet,
+      title: "Time to hydrate!",
+      message: "Don't forget to drink water",
+      time: "5 minutes ago",
+      unread: true,
+    },
+    {
+      id: 2,
+      icon: UtensilsCrossed,
+      title: "Lunch time",
+      message: "Your next meal is scheduled for 1:00 PM",
+      time: "10 minutes ago",
+      unread: false,
+    },
+    {
+      id: 3,
+      icon: Dumbbell,
+      title: "Workout reminder",
+      message: "Upper body training in 30 minutes",
+      time: "15 minutes ago",
+      unread: false,
+    },
+  ];
+>>>>>>> 29f92e3ce1f675597c2c2f92abeb859d886fb7b8
 
   useEffect(() => {
     function handleClickOutside(event) {
