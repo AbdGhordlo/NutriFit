@@ -78,6 +78,7 @@ export default function Settings() {
           fullName: data.profile.fullName || "John Doe",
           email: data.profile.email || "johndoe@example.com",
           photoUrl: data.profile.photoUrl || "",
+          google_id: data.profile.google_id || null,
         });
 
         // Update notification settings
@@ -487,6 +488,7 @@ export default function Settings() {
             onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
             onSignOut={handleSignOut}
             styles={styles}
+            isGoogleUser={!!profile.google_id}
           />
 
           {/* Personalization Section */}
