@@ -15,6 +15,7 @@ export interface UserProfile {
   fullName: string;
   email: string;
   photoUrl?: string;
+  google_id?: string | null;
 }
 
 // Define password form interface
@@ -38,6 +39,7 @@ export interface SettingsResponse {
     fullName: string;
     email: string;
     photoUrl?: string;
+    google_id?: string | null; 
   };
   notifications: NotificationSettings;
   personalizationCompleted: boolean;
