@@ -26,7 +26,7 @@ const port = process.env.PORT || 5000;
 
 // ✅ CORS Configuration
 app.use(cors({
-  origin: "https://nutri-fit-theta.vercel.app",
+  origin: "https://nutrifit-puce.vercel.app",
   credentials: true
 }));
 
