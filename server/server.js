@@ -24,10 +24,10 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// ✅ CORS Configuration
+
+// Middleware
 app.use(cors({
-  origin: "https://nutrifit-puce.vercel.app",
-  credentials: true
+  origin: 'https://nutrifit-puce.vercel.app', 
 }));
 
 app.use(express.json());
