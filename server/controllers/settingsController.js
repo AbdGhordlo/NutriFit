@@ -21,7 +21,8 @@ const getUserSettings = async (req, res) => {
         id,
         username AS full_name,
         email,
-        profile_picture AS photo_url
+        profile_picture AS photo_url,
+        google_id
       FROM "user"
       WHERE id = $1`,
       [userId]
@@ -93,6 +94,7 @@ const getUserSettings = async (req, res) => {
         fullName: userResult.rows[0].full_name,
         email: userResult.rows[0].email,
         photoUrl: userResult.rows[0].photo_url || '',
+        google_id: userResult.rows[0].google_id || null,
       },
       notifications: {
         mealReminders: notificationSettings.meal_reminders,

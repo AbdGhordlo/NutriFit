@@ -38,6 +38,12 @@ const DailyProgress: React.FC<DailyProgressProps> = ({
   loading,
   error,
 }) => {
+  // Function to truncate text
+  const truncateText = (text: string, maxLength: number = 12) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
   // Merge meals and exercises into milestones, sorted by time
   const milestones: Milestone[] = [
     ...meals.map((meal) => ({
@@ -102,13 +108,15 @@ const DailyProgress: React.FC<DailyProgressProps> = ({
             <div
               key={milestone.type + "-" + milestone.id}
               style={styles.milestone as React.CSSProperties}
+              title={milestone.name} // Show full text on hover
             >
               <div style={styles.milestoneIcon(milestone.completed)}>
                 {milestone.completed && <Check size={16} />}
               </div>
               <span style={styles.milestoneTime}>{milestone.time}</span>
               <span style={styles.milestoneLabel as React.CSSProperties}>
-                {milestone.type === "meal" ? "🍽️" : "💪"} {milestone.name}
+                {milestone.type === "meal" ? "🍽️" : "💪"}{" "}
+                {truncateText(milestone.name)}
               </span>
             </div>
           ))}

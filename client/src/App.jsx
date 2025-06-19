@@ -40,10 +40,10 @@ function AppContent() {
   const noSidebarRoutes = [
     "/login", "/register", "/", "/about", "/contact", "/privacy", "/forgot-password", "/reset-password",  "/verify-email", "/personalization"
   ];
-    const noHeaderRoutes = noSidebarRoutes;
+    // const noHeaderRoutes = noSidebarRoutes;
   const shouldShowSidebar = !noSidebarRoutes.includes(location.pathname) && !fromPersonalization;
   const shouldShowFooter = !noSidebarRoutes.includes(location.pathname) && !fromPersonalization;
-    const shouldShowHeader = !noHeaderRoutes.includes(location.pathname) && !fromPersonalization;
+    const shouldShowHeader = !fromPersonalization;
 
 
   // Effect to handle window resizing

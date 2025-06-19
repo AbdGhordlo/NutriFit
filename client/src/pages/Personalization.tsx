@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ProgressBar } from "../components/ProgressBar";
 import { NavigationButtons } from "../components/NavigationButtons";
 import { ConfirmationModal } from "../components/ConfirmationModal";
+import ErrorPopupModal from "../components/ErrorPopupModal";
 import { Step1 } from "../components/PersonalizationSteps/Step1";
 import { Step2 } from "../components/PersonalizationSteps/Step2";
 import { Step3 } from "../components/PersonalizationSteps/Step3";
@@ -26,6 +27,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import ErrorModal from "../components/ErrorModal";
 import { getUserIdFromToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
+import { addMeasurement } from "../services/progressService";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Personalization() {
@@ -165,6 +167,30 @@ function Personalization() {
     try {
       console.log(`Saving Step ${stepNumber} Data:`, stepData);
 
+      // If saving Step 1, also add weight and height to body measurement table
+      if (stepNumber === 1 && userId) {
+        const { height, weight } = stepData.personalInfo;
+        const now = new Date().toISOString();
+        // Add weight measurement
+        await addMeasurement(
+          Number(userId),
+          "weight",
+          weight,
+          "kg",
+          now,
+          token
+        );
+        // Add height measurement
+        await addMeasurement(
+          Number(userId),
+          "height",
+          height,
+          "cm",
+          now,
+          token
+        );
+      }
+
       const response = await fetch(
         `${API_BASE_URL}/personalization/${userId}/step/${stepNumber}`,
         {
@@ -203,23 +229,26 @@ function Personalization() {
       healthIssues.includes("allergies") &&
       specificAllergies.length === 0
     ) {
-      alert("Please select at least one allergen before proceeding.");
+      setError("Please select at least one allergen before proceeding.");
+      setIsErrorModalOpen(true);
       return;
     }
 
     // ─── Step 4: ensure at least one activity type AND at least one equipment is chosen ───
     if (currentStep === 4) {
       if (activityTypes.length === 0) {
-        alert(
+        setError(
           "Please select at least one physical activity before proceeding."
         );
+        setIsErrorModalOpen(true);
         return;
       }
 
       if (equipmentAccess.length === 0) {
-        alert(
+        setError(
           "Please select at least one equipment/location or choose 'None' before proceeding."
         );
+        setIsErrorModalOpen(true);
         return;
       }
     }
@@ -310,17 +339,6 @@ function Personalization() {
     );
   }
 
-  // ─── Show error modal if something went wrong ────────────────────────
-  if (error) {
-    return (
-      <ErrorModal
-        isOpen={isErrorModalOpen}
-        onClose={() => setIsErrorModalOpen(false)}
-        message={error}
-      />
-    );
-  }
-
   // ─── Render the correct Step component ───────────────────────────────
   return (
     <div className="outer-container">
@@ -403,13 +421,19 @@ function Personalization() {
             </button>
           </div>
         </div>
-
         <ConfirmationModal
           isOpen={isSkipModalOpen}
           onClose={() => setIsSkipModalOpen(false)}
           onConfirm={handleSkipConfirm}
           title="Skip Personalization?"
-          message="If you skip the personalization steps, you’ll receive a standard plan that isn’t tailored to your needs and goals."
+          message="If you skip the personalization steps, you'll receive a standard plan that isn't tailored to your needs and goals."
+        />
+        <ErrorPopupModal
+          isOpen={isErrorModalOpen}
+          onClose={() => setIsErrorModalOpen(false)}
+          message={error || ""}
+          title="Warning!"
+          type="error"
         />
       </div>
     </div>
