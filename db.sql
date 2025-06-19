@@ -18,6 +18,7 @@ CREATE TABLE "user" (
     password_hash VARCHAR(255),
     google_id VARCHAR(255),
     profile_picture TEXT,
+    is_first_login BOOLEAN DEFAULT TRUE,
 
     -- password-reset support
     reset_token   VARCHAR(64),
@@ -25,7 +26,7 @@ CREATE TABLE "user" (
 
     -- email verification support
     email_verified BOOLEAN DEFAULT FALSE,
-    email_verification_token VARCHAR(64),
+    email_verification_code VARCHAR(64),
     email_verification_expires BIGINT,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

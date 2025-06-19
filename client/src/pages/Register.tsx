@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { User, Mail, Lock } from "lucide-react";
 import { styles } from "./styles/AuthStyles";
 import "../assets/commonStyles.css";
@@ -38,7 +38,6 @@ export default function Register() {
       if (response.ok) {
         navigate("/verify-email", { state: { email: formData.email } });
         localStorage.setItem("token", data.token); // Store JWT in localStorage
-        window.location.href = "/personalization"; // Redirect to personalization steps
       } else {
         setErrorMessage(data.message ?? "Registration failed");
       }
@@ -67,7 +66,19 @@ export default function Register() {
 
       if (googleResponse.ok) {
         localStorage.setItem("token", data.token);
-        window.location.href = "/personalization";
+        // ✅ BURASI: token'dan email al ve sakla
+        try {
+          const payload = JSON.parse(atob(data.token.split(".")[1]));
+          localStorage.setItem(
+            "userEmail",
+            payload.email || "user@example.com"
+          );
+        } catch (error) {
+          console.error("Token parse hatası:", error);
+          localStorage.setItem("userEmail", "user@example.com");
+        }
+
+      setTimeout(() => navigate("/personalization"), 2000);
       } else {
         setErrorMessage(data.message ?? "Google signup failed");
       }

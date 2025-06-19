@@ -46,7 +46,7 @@ export default function VerifyEmail() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.message);
       setSuccess(true);
-      setTimeout(() => navigate("/home"), 2000);
+      setTimeout(() => navigate("/personalization"), 2000);
     } catch (err) {
       setError(err.message || "Verification failed.");
     } finally {
