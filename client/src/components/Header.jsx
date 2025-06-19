@@ -21,6 +21,8 @@ import moment from "moment";
 import dingSound from "../assets/audio/ding.wav";
 import dropletSound from "../assets/audio/droplet.wav";
 import transitionSound from "../assets/audio/transition.wav";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 //npm install prop-types
 export default function Header({ toggleSidebar }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -82,7 +84,7 @@ export default function Header({ toggleSidebar }) {
       }
       if ((!storedUsername || !storedPhoto) && userId) {
         // Fetch username and photo from API if not in localStorage
-        fetch(`http://localhost:5000/settings/${userId}`, {
+        fetch(`${API_BASE_URL}/settings/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
           .then((res) => res.json())

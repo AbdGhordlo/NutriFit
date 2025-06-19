@@ -4,6 +4,8 @@ import { Lock, Mail } from "lucide-react";
 import { styles } from "./styles/AuthStyles";
 import ErrorMessage from "../components/ErrorMessage";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function ResetPassword() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ export default function ResetPassword() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/auth/reset-password", {
+      const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code, newPassword: password }),

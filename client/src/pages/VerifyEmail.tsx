@@ -4,6 +4,8 @@ import { styles } from "./styles/AuthStyles";
 import ErrorMessage from "../components/ErrorMessage";
 import { useLocation, useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function VerifyEmail() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -17,14 +19,11 @@ export default function VerifyEmail() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:5000/auth/send-verification-code",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/auth/send-verification-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       const body = await res.json();
       if (!res.ok) throw new Error(body.message);
     } catch (err) {
@@ -39,7 +38,7 @@ export default function VerifyEmail() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/auth/verify-email", {
+      const res = await fetch(`${API_BASE_URL}/auth/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
@@ -87,17 +86,17 @@ export default function VerifyEmail() {
                 required
               />
             </div>
-             <button
-            style={{
+            <button
+              style={{
                 padding: 0,
-                paddingLeft: '4px',
+                paddingLeft: "4px",
                 textAlign: "start",
-            }}
-            onClick={handleSendCode}
-            disabled={loading || !email}
-          >
-            {loading ? "Sending..." : "Resend Code"}
-          </button>
+              }}
+              onClick={handleSendCode}
+              disabled={loading || !email}
+            >
+              {loading ? "Sending..." : "Resend Code"}
+            </button>
           </div>
           {error && <ErrorMessage message={error} />}
           {success && (
