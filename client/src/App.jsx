@@ -25,6 +25,7 @@ import NutriFitMainPage from "./pages/NutriFitMainPage";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
+import { UserProvider } from "./utils/UserContext";
 
 import "./AppStyles.css";
 
@@ -106,7 +107,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
     </Router>
   );
 }
