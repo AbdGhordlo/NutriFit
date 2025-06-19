@@ -71,7 +71,7 @@ CREATE TABLE exercise (
 
 CREATE TABLE ingredient (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
     category VARCHAR(50),
     calories INT,
     protein NUMERIC,
@@ -79,8 +79,11 @@ CREATE TABLE ingredient (
     fats NUMERIC,
     serving_size TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ingredient_unique_nutrition 
+      UNIQUE (name, category, calories, protein, carbs, fats, serving_size)
 );
+
 
 -- Meal Plan Meal Table
 CREATE TABLE meal_plan_meal (
@@ -220,26 +223,6 @@ CREATE TABLE notification (
     notification_time TIME NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;
-UPDATE user_ingredients
-SET ingredient_id = 2
-WHERE id = 2;
-
-ALTER TABLE user_ingredients
-ADD CONSTRAINT fk_ingredient
-FOREIGN KEY (ingredient_id)
-REFERENCES ingredient(id)
-ON DELETE CASCADE;
-
-ALTER TABLE user_ingredient_ingredient RENAME TO _user_ingredient_ingredient_backup;
-
-ALTER TABLE ingredient DROP CONSTRAINT unique_ingredient_name;
-ALTER TABLE ingredient DROP CONSTRAINT ingredient_name_key;
-
--- Add the new composite unique constraint
-ALTER TABLE ingredient ADD CONSTRAINT ingredient_unique_nutrition 
-UNIQUE (name, category, calories, protein, carbs, fats, serving_size);
 
 -- Insert dummy measurements for user_id = 7
 INSERT INTO body_measurements (user_id, measurement_type, value, unit, measured_at, created_at)
