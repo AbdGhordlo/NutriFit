@@ -81,7 +81,7 @@ CREATE TABLE ingredient (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT ingredient_unique_nutrition 
-    UNIQUE (name, category, calories, protein, carbs, fats, serving_size)
+      UNIQUE (name, category, calories, protein, carbs, fats, serving_size)
 );
 
 
