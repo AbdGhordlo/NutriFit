@@ -6,6 +6,7 @@ interface AccountManagementSectionProps {
   onOpenDeleteModal: () => void;
   onSignOut: () => void;
   styles: any; // You might want to type this properly
+  isGoogleUser: boolean;
 }
 
 const AccountManagementSection: React.FC<AccountManagementSectionProps> = ({
@@ -13,6 +14,7 @@ const AccountManagementSection: React.FC<AccountManagementSectionProps> = ({
   onOpenDeleteModal,
   onSignOut,
   styles,
+  isGoogleUser,
 }) => {
   return (
     <div style={styles.section}>
@@ -23,21 +25,23 @@ const AccountManagementSection: React.FC<AccountManagementSectionProps> = ({
 
       <div style={styles.accountManagementList}>
         {/* Change Password Option */}
-        <div
-          onClick={onOpenPasswordModal}
-          style={styles.accountOption}
-        >
-          <div style={styles.optionIconContainer}>
-            <UserCog size={20} color="#6b7280" />
-            <div>
-              <p style={styles.optionText}>Change Password</p>
-              <p style={styles.optionDescription}>
-                Update your account password
-              </p>
+        {!isGoogleUser && (
+          <div
+            onClick={onOpenPasswordModal}
+            style={styles.accountOption}
+          >
+            <div style={styles.optionIconContainer}>
+              <UserCog size={20} color="#6b7280" />
+              <div>
+                <p style={styles.optionText}>Change Password</p>
+                <p style={styles.optionDescription}>
+                  Update your account password
+                </p>
+              </div>
             </div>
+            <Lock size={20} color="#6b7280" />
           </div>
-          <Lock size={20} color="#6b7280" />
-        </div>
+        )}
 
         {/* Delete Account Option */}
         <div
