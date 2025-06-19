@@ -3,46 +3,49 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 
-//Import Middleware
-const verifyToken = require("./middleware/auth"); // Import middleware
+// Import Middleware
+const verifyToken = require("./middleware/auth");
 
-//Import Routes
-const authRoutes = require("./routes/authRoutes"); // Import auth routes
-const homeRoutes = require("./routes/homeRoutes"); // Import home routes
+// Import Routes
+const authRoutes = require("./routes/authRoutes");
+const homeRoutes = require("./routes/homeRoutes");
 const mealPlannerRoutes = require("./routes/mealPlannerRoutes");
 const exercisePlannerRoutes = require("./routes/exercisePlannerRoutes");
 const ingredientsRoutes = require("./routes/ingredientsRoutes");
 const personalizationRoutes = require("./routes/personalizationRoutes");
-const settingsRoutes = require("./routes/settingsRoutes"); // Import settings routes
-const uploadRoutes = require("./routes/uploadRoutes"); // Import upload routes
-const progressRoutes = require("./routes/progressRoutes"); // Import progress routes
-const notificationsRoutes = require("./routes/notificationsRoutes"); // Import notifications routes
+const settingsRoutes = require("./routes/settingsRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
+const progressRoutes = require("./routes/progressRoutes");
+const notificationsRoutes = require("./routes/notificationsRoutes");
 
-require("./utils/notificationScheduler"); // Import notification scheduler
-dotenv.config(); // Loads environment variables from a .env file into process.env
+require("./utils/notificationScheduler");
+dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 5000;
+
 
 // Middleware
 app.use(cors({
   origin: 'https://nutrifit-puce.vercel.app', 
 }));
+
 app.use(express.json());
 
 // Serve uploaded files statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
-app.use("/auth", authRoutes); // This mounts the authRoutes router under the /auth path.
-app.use("/home", homeRoutes); // This mounts the homeRoutes router under the root path.
+app.use("/auth", authRoutes);
+app.use("/home", homeRoutes);
 app.use("/meal-planner", verifyToken, mealPlannerRoutes);
 app.use("/exercise-planner", verifyToken, exercisePlannerRoutes);
 app.use("/ingredients", verifyToken, ingredientsRoutes);
 app.use("/personalization", verifyToken, personalizationRoutes);
-app.use("/settings", verifyToken, settingsRoutes); // Register settings routes
-app.use("/upload", verifyToken, uploadRoutes); // Register upload routes
-app.use("/progress", verifyToken, progressRoutes); // Register progress routes
-app.use("/api/notifications", notificationsRoutes); // Register notifications routes
+app.use("/settings", verifyToken, settingsRoutes);
+app.use("/upload", verifyToken, uploadRoutes);
+app.use("/progress", verifyToken, progressRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 // Test route
 app.get("/", (req, res) => {
