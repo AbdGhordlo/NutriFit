@@ -1,8 +1,9 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import { DayPlan, Meal } from "../types/mealPlannerTypes";
 
 export const getAdoptedMealPlan = async (userId: number, token: string) => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/adopted/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/adopted/${userId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -19,7 +20,7 @@ export const getAdoptedMealPlan = async (userId: number, token: string) => {
     }
 
     const data = await response.json();
-    console.log("data: ",data);
+    // console.log("data: ",data);
     return data;
   } catch (error) {
     throw error;
@@ -28,7 +29,7 @@ export const getAdoptedMealPlan = async (userId: number, token: string) => {
 
 export const getTodaysMealsByUser = async (userId: number, token: string): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/users/${userId}/meals/today`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/users/${userId}/meals/today`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -50,7 +51,7 @@ export const getTodaysMealsByUser = async (userId: number, token: string): Promi
 
 export const generateMealPlan = async (userId: number, token: string): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/generate-meal-plan`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/generate-meal-plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -72,7 +73,7 @@ export const generateMealPlan = async (userId: number, token: string): Promise<a
 
 export const saveMealPlan = async (userId: number, plan: any, token: string) => {
   try {
-    const response = await fetch("http://localhost:5000/meal-planner/save-meal-plan", {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/save-meal-plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +96,7 @@ export const saveMealPlan = async (userId: number, plan: any, token: string) => 
 
 export const removeSavedPlan = async (userId: number, planId: number, token: string) => {
   try {
-    const response = await fetch("http://localhost:5000/meal-planner/remove-meal-plan", {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/remove-meal-plan`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -118,7 +119,7 @@ export const removeSavedPlan = async (userId: number, planId: number, token: str
 
 export const saveAndAdoptMealPlan = async (userId: number, plan: any, token: string) => {
   try {
-    const response = await fetch("http://localhost:5000/meal-planner/save-and-adopt-meal-plan", {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/save-and-adopt-meal-plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -141,7 +142,7 @@ export const saveAndAdoptMealPlan = async (userId: number, plan: any, token: str
 
 export const adoptMealPlan = async (userId: number, mealPlanId: number, token: string) => {
   try {
-    const response = await fetch("http://localhost:5000/meal-planner/adopt-meal-plan", {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/adopt-meal-plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -164,7 +165,7 @@ export const adoptMealPlan = async (userId: number, mealPlanId: number, token: s
 
 export const getAllMealPlansByUser = async (userId: number, token: string) => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/all/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/all/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -189,7 +190,7 @@ export const getAllMealPlansByUser = async (userId: number, token: string) => {
 // Favorite Meals Functions
 export const getFavoriteMeals = async (userId: number, token: string): Promise<Meal[]> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/favorites/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/favorites/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -211,7 +212,7 @@ export const getFavoriteMeals = async (userId: number, token: string): Promise<M
 
 export const addFavoriteMeal = async (userId: number, mealId: number, token: string): Promise<void> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/favorites`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -231,7 +232,7 @@ export const addFavoriteMeal = async (userId: number, mealId: number, token: str
 
 export const removeFavoriteMeal = async (userId: number, mealId: number, token: string): Promise<void> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/favorites`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/favorites`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -253,7 +254,7 @@ console.log("meal id to remove: ", mealId);
 // Meal Plan Editing Functions
 export const regenerateDay = async (userId: number, dayNumber: number, token: string): Promise<DayPlan> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/regenerate-day`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/regenerate-day`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -276,7 +277,7 @@ export const regenerateDay = async (userId: number, dayNumber: number, token: st
 
 export const regenerateMeal = async (userId: number, mealPlanMealId: number, token: string): Promise<Meal> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/regenerate-meal`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/regenerate-meal`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -304,7 +305,7 @@ export const replaceMealWithFavorite = async (
   token: string
 ): Promise<Meal> => {
   try {
-    const response = await fetch(`http://localhost:5000/meal-planner/replace-with-favorite`, {
+    const response = await fetch(`${API_BASE_URL}/meal-planner/replace-with-favorite`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

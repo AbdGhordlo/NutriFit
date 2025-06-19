@@ -1,4 +1,5 @@
-const BASE = "http://localhost:5000/progress";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE = `${API_BASE_URL}/progress`;
 
 export const uploadProgressPhoto = async (userId: number, token: string, file: File) => {
   try {

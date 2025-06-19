@@ -1,4 +1,5 @@
-const BASE = "http://localhost:5000/home";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE = `${API_BASE_URL}/home`;
 
 export async function fetchMealProgress(date: string, token: string) {
   const res = await fetch(`${BASE}/meal?date=${date}`, {
@@ -47,6 +48,24 @@ export async function upsertExerciseProgress(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ exerciseId, date, completed }),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function resetDailyMealProgress(token: string) {
+  const res = await fetch(`${BASE}/meal/today`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function resetDailyExerciseProgress(token: string) {
+  const res = await fetch(`${BASE}/exercise/today`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw await res.json();
   return res.json();

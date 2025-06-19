@@ -5,6 +5,9 @@ import "../assets/commonStyles.css";
 import "./styles/AuthStyles.css";
 import ErrorMessage from "../components/ErrorMessage";
 import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function Login() {
   const [emailFocus, setEmailFocus] = useState(false);
@@ -12,13 +15,14 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     setErrorMessage("");
     e.preventDefault(); // Prevent page reload
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:5000/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,15 +30,18 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-      console.log("userdata: ", data);
       if (response.ok) {
+        if (data.user && data.user.email_verified === false) {
+          navigate("/verify-email", { state: { email: data.user.email } });
+          return;
+        }
         localStorage.setItem("token", data.token); // Store JWT in localStorage
         window.location.href = "/home"; // Redirect to home page
       } else {
         setErrorMessage(data.message || "Login failed");
       }
     } catch (err) {
-      console.error(err);
+      console.error("[Login] Exception:", err);
       setErrorMessage("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -46,7 +53,7 @@ export default function Login() {
       setIsLoading(true);
       setErrorMessage("");
 
-      const googleResponse = await fetch("http://localhost:5000/auth/google", {
+      const googleResponse = await fetch(`${API_BASE_URL}/auth/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -23,6 +23,10 @@ import { getUserIdFromToken } from "../utils/auth";
 import SelectIngredients from "./SelectIngredients";
 import { mappedCategories } from "../utils/mapCategory";
 import SpicesIcon from "../components/icons/SpicesIcon";
+import { useLocation, useNavigate } from "react-router-dom";
+import Button from "../components/Button";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const categories: {
   [key: string]: {
@@ -73,6 +77,8 @@ interface NewIngredient {
 }
 
 export default function Ingredients() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const userId = getUserIdFromToken();
   const token = localStorage.getItem("token");
 
@@ -180,15 +186,12 @@ export default function Ingredients() {
 
     try {
       setLoading(true);
-      const response = await fetch(
-        `http://localhost:5000/ingredients/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/ingredients/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.status === 401) {
         console.error("Unauthorized, removing token and redirecting...");
@@ -244,7 +247,7 @@ export default function Ingredients() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/ingredients/${userIngredientId}/toggle-stock`,
+        `${API_BASE_URL}/ingredients/${userIngredientId}/toggle-stock`,
         {
           method: "PATCH",
           headers: {
@@ -288,7 +291,7 @@ export default function Ingredients() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/ingredients/${deleteIngredientId}`,
+        `${API_BASE_URL}/ingredients/${deleteIngredientId}`,
         {
           method: "DELETE",
           headers: {
@@ -374,7 +377,7 @@ export default function Ingredients() {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/ingredients", {
+      const response = await fetch(`${API_BASE_URL}/ingredients`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -446,7 +449,7 @@ export default function Ingredients() {
         fats: getValue(1004),
       };
 
-      const response = await fetch("http://localhost:5000/ingredients", {
+      const response = await fetch(`${API_BASE_URL}/ingredients`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -475,6 +478,10 @@ export default function Ingredients() {
 
   const allCategories = mappedCategories;
 
+  // Check if navigated from personalization
+  const fromPersonalization =
+    location.state && location.state.fromPersonalization;
+
   if (loading) {
     return (
       <div
@@ -491,7 +498,21 @@ export default function Ingredients() {
   }
 
   return (
-    <div style={styles.container}>
+    <div>
+      {fromPersonalization && (
+        <div style={{ padding: "16px 0 0 0", textAlign: "left" }}>
+          <Button
+            variant="secondary"
+            style={{
+              marginLeft: "16px",
+              marginRight: "16px",
+            }}
+            onClick={() => navigate("/personalization")}
+          >
+            Back to Personalization
+          </Button>
+        </div>
+      )}
       <div style={styles.container}>
         <h1 style={styles.title}>My Ingredients</h1>
 

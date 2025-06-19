@@ -16,7 +16,9 @@ const personalizationRoutes = require("./routes/personalizationRoutes");
 const settingsRoutes = require("./routes/settingsRoutes"); // Import settings routes
 const uploadRoutes = require("./routes/uploadRoutes"); // Import upload routes
 const progressRoutes = require("./routes/progressRoutes"); // Import progress routes
+const notificationsRoutes = require("./routes/notificationsRoutes"); // Import notifications routes
 
+require("./utils/notificationScheduler"); // Import notification scheduler
 dotenv.config(); // Loads environment variables from a .env file into process.env
 const app = express();
 const port = process.env.PORT || 5000;
@@ -38,6 +40,7 @@ app.use("/personalization", verifyToken, personalizationRoutes);
 app.use("/settings", verifyToken, settingsRoutes); // Register settings routes
 app.use("/upload", verifyToken, uploadRoutes); // Register upload routes
 app.use("/progress", verifyToken, progressRoutes); // Register progress routes
+app.use("/api/notifications", notificationsRoutes); // Register notifications routes
 
 // Test route
 app.get("/", (req, res) => {

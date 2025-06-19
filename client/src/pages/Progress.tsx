@@ -5,6 +5,7 @@ import StreakTracker from "../components/ProgressComponents/StreakTracker";
 import AnthropometricMeasurements from "../components/ProgressComponents/AnthropometricMeasurements";
 import GoalTracker from "../components/ProgressComponents/GoalTracker";
 import ProgressPhotos from "../components/ProgressComponents/ProgressPhotos";
+import CongratulationsModal from "../components/ProgressComponents/CongratulationsModal";
 import { getUserIdFromToken } from "../utils/auth";
 import { useAuth } from "../utils/useAuth";
 import { useAnthropometricData } from "../hooks/progress/useAnthropometricData";
@@ -17,6 +18,8 @@ import { useProgressPhotos } from "../hooks/progress/useProgressPhotos";
 const Progress = () => {
   const [quote, setQuote] = useState({ quote: "", author: "" });
   const [goalData, setGoalData] = useState<any>(null);
+  const [showCongratsModal, setShowCongratsModal] = useState(false);
+
   const userId = getUserIdFromToken();
   const { getAuthToken } = useAuth();
   const token = getAuthToken() || "";
@@ -137,6 +140,19 @@ const Progress = () => {
     fetchGoalData();
   }, [userId, token]);
 
+  // Show congrats modal if user reaches their weight goal
+  useEffect(() => {
+    if (!goalData || !currentWeight) return;
+    const target = goalData.targetWeight;
+    const type = goalData.type;
+    if (
+      (type === "lose_weight" && currentWeight.value <= target) ||
+      (type === "gain_weight" && currentWeight.value >= target)
+    ) {
+      setShowCongratsModal(true);
+    }
+  }, [goalData, currentWeight]);
+
   // Helper: should show goal tracker
   const shouldShowGoalTracker =
     goalData &&
@@ -149,6 +165,20 @@ const Progress = () => {
       initial="hidden"
       animate="visible"
     >
+      {/* Congrats Modal */}
+      {showCongratsModal && (
+        <CongratulationsModal
+          isOpen={showCongratsModal}
+          onClose={() => setShowCongratsModal(false)}
+          goalType={goalData?.type}
+          targetWeight={goalData?.targetWeight}
+          currentWeight={currentWeight?.value}
+          onSetNewGoal={() => {
+            setShowCongratsModal(false);
+            window.location.href = "/personalization";
+          }}
+        />
+      )}
       <div className="max-w-7xl mx-auto">
         <motion.div variants={itemVariants} className="mb-6">
           <MotivationalQuote quote={quote.quote} author={quote.author} />

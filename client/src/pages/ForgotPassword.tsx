@@ -4,6 +4,7 @@ import { Mail } from "lucide-react";
 import { styles } from "./styles/AuthStyles";
 import ErrorMessage from "../components/ErrorMessage";
 import { Link, useNavigate } from "react-router-dom";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/auth/forgot-password", {
+      const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -37,8 +38,9 @@ export default function ForgotPassword() {
       <div style={styles.container}>
         <div style={styles.formContainer}>
           <h2 style={styles.title}>Check Your Email</h2>
-          <p>
-            If that email exists, you’ll receive a reset code shortly.
+          <p className="mb-3">
+            You have been sent a reset code to{" "}
+            <strong>{email}</strong>.
           </p>
           <button
             style={styles.submitButton}
