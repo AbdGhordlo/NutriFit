@@ -20,6 +20,7 @@ import {
   toggleExerciseReminders,
   toggleWaterIntakeReminder,
 } from "../services/settingsService";
+import { useUser } from "../utils/UserContext";
 
 // Types
 import { initialSettings } from "../utils/settingsData";
@@ -27,6 +28,7 @@ import { SettingSection, UserProfile, PasswordForm } from "../types/settings";
 
 export default function Settings() {
   const { getAuthToken, getAuthUserId, logout } = useAuth(); // Auth hook
+  const userContext = useUser();
 
   // State
   const [settingsList, setSettingsList] =
@@ -308,6 +310,8 @@ export default function Settings() {
           ...prev,
           photoUrl: result.url || "",
         }));
+        userContext.setProfilePhoto(result.url || "");
+        localStorage.setItem("profilePhoto", result.url || "");
       } catch (error) {
         console.error("API error:", error);
         // Show success in development anyway
@@ -336,6 +340,8 @@ export default function Settings() {
         ...prev,
         photoUrl: "",
       }));
+      userContext?.setProfilePhoto("");
+      localStorage.removeItem("profilePhoto");
 
       // Try to call specific delete API (this will likely fail with 404 in development)
       try {
