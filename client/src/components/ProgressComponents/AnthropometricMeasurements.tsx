@@ -126,8 +126,15 @@ const AnthropometricMeasurements = ({
   const calculateDerivedMeasurements = (data) => {
     // Calculate waist-to-hip ratio
     if (data.waist && data.hip) {
+      const waist = data.waist.current;
+      const hip = data.hip.current;
+      let ratio = 0;
+      if (hip && hip !== 0) {
+        ratio = parseFloat((waist / hip).toFixed(2));
+        if (!isFinite(ratio) || isNaN(ratio)) ratio = 0;
+      }
       data.waistToHipRatio = {
-        current: parseFloat((data.waist.current / data.hip.current).toFixed(2)),
+        current: ratio,
         unit: "ratio",
       };
     }
@@ -135,10 +142,15 @@ const AnthropometricMeasurements = ({
     // Calculate BMI (kg/m²)
     if (data.weight && data.height) {
       const heightInMeters = data.height.current / 100;
-      data.bmi = {
-        current: parseFloat(
+      let bmi = 0;
+      if (heightInMeters && heightInMeters !== 0) {
+        bmi = parseFloat(
           (data.weight.current / (heightInMeters * heightInMeters)).toFixed(1)
-        ),
+        );
+        if (!isFinite(bmi) || isNaN(bmi)) bmi = 0;
+      }
+      data.bmi = {
+        current: bmi,
         unit: "kg/m²",
       };
     }
@@ -291,19 +303,25 @@ const AnthropometricMeasurements = ({
 
   const getMeasurementValue = (id) => {
     if (id === "waistToHipRatio") {
-      return (
+      let value =
         derivedMeasurements.waistToHipRatio?.current ||
-        (measurements.waist.current / measurements.hip.current).toFixed(2)
-      );
+        (measurements.waist.current && measurements.hip.current
+          ? (measurements.waist.current / measurements.hip.current).toFixed(2)
+          : 0);
+      if (!isFinite(value) || isNaN(value)) value = 0;
+      return value;
     } else if (id === "bmi") {
       const heightInMeters = measurements.height.current / 100;
-      return (
+      let value =
         derivedMeasurements.bmi?.current ||
-        (
-          measurements.weight.current /
-          (heightInMeters * heightInMeters)
-        ).toFixed(1)
-      );
+        (heightInMeters && heightInMeters !== 0
+          ? (
+              measurements.weight.current /
+              (heightInMeters * heightInMeters)
+            ).toFixed(1)
+          : 0);
+      if (!isFinite(value) || isNaN(value)) value = 0;
+      return value;
     } else {
       return measurements[id].current;
     }

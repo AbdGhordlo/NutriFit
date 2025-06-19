@@ -26,6 +26,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import ErrorModal from "../components/ErrorModal";
 import { getUserIdFromToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
+import { addMeasurement } from "../services/progressService";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Personalization() {
@@ -164,6 +165,30 @@ function Personalization() {
     setIsLoading(true);
     try {
       console.log(`Saving Step ${stepNumber} Data:`, stepData);
+
+      // If saving Step 1, also add weight and height to body measurement table
+      if (stepNumber === 1 && userId) {
+        const { height, weight } = stepData.personalInfo;
+        const now = new Date().toISOString();
+        // Add weight measurement
+        await addMeasurement(
+          Number(userId),
+          "weight",
+          weight,
+          "kg",
+          now,
+          token
+        );
+        // Add height measurement
+        await addMeasurement(
+          Number(userId),
+          "height",
+          height,
+          "cm",
+          now,
+          token
+        );
+      }
 
       const response = await fetch(
         `${API_BASE_URL}/personalization/${userId}/step/${stepNumber}`,
