@@ -30,7 +30,7 @@ export default function Privacy() {
         </p>
         <h2 className="text-lg font-semibold text-green-700 mt-6 mb-2">Your Rights</h2>
         <p className="text-gray-700 mb-4">
-          You have the right to access, correct, or delete your personal information. To exercise these rights, please contact us at <a href="mailto:privacy@nutrifit.com" className="text-green-600 hover:underline">privacy@nutrifit.com</a>.
+          You have the right to access, correct, or delete your personal information. To exercise these rights, please contact us at <a href="https://mail.google.com/mail/?view=cm&fs=1&to=the.nutrifit.app@gmail.com" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">the.nutrifit.app@gmail.com</a>.
         </p>
         <h2 className="text-lg font-semibold text-green-700 mt-6 mb-2">Changes to This Privacy Policy</h2>
         <p className="text-gray-700 mb-4">
@@ -38,7 +38,7 @@ export default function Privacy() {
         </p>
         <h2 className="text-lg font-semibold text-green-700 mt-6 mb-2">Contact Us</h2>
         <p className="text-gray-700">
-          If you have any questions about this Privacy Policy, please contact us at <a href="mailto:privacy@nutrifit.com" className="text-green-600 hover:underline">privacy@nutrifit.com</a>.
+          If you have any questions about this Privacy Policy, please contact us at <a href="https://mail.google.com/mail/?view=cm&fs=1&to=the.nutrifit.app@gmail.com" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">the.nutrifit.app@gmail.com</a>.
         </p>
       </div>
     </div>
