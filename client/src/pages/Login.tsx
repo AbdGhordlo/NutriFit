@@ -7,6 +7,8 @@ import ErrorMessage from "../components/ErrorMessage";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function Login() {
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
@@ -20,7 +22,7 @@ export default function Login() {
     e.preventDefault(); // Prevent page reload
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:5000/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +53,7 @@ export default function Login() {
       setIsLoading(true);
       setErrorMessage("");
 
-      const googleResponse = await fetch("http://localhost:5000/auth/google", {
+      const googleResponse = await fetch(`${API_BASE_URL}/auth/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

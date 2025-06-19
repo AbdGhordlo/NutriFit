@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { mapCategory } from "../utils/mapCategory"; // Keep the existing import
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import { mappedCategories } from "../utils/mapCategory";
 interface FoodItem {
   fdcId: number;
@@ -152,7 +152,7 @@ const SelectIngredients: React.FC<Props> = ({ onClose, onAdd, categories }) => {
         fats: getValue(1004),
       };
 
-      const response = await fetch("http://localhost:5000/ingredients", {
+      const response = await fetch(`${API_BASE_URL}/ingredients`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

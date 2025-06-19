@@ -26,7 +26,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import ErrorModal from "../components/ErrorModal";
 import { getUserIdFromToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
-import { addMeasurement } from "../services/progressService";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Personalization() {
   const navigate = useNavigate();
@@ -60,7 +60,8 @@ function Personalization() {
   const [mealsPerDay, setMealsPerDay] = useState(2);
 
   // ─── Step 4 State ─────────────────────────────────────────────────────
-  const [activityLevel, setActivityLevel] = useState<ActivityLevel>("very_light");
+  const [activityLevel, setActivityLevel] =
+    useState<ActivityLevel>("very_light");
   const [activityTypes, setActivityTypes] = useState<ActivityType[]>([]);
   const [equipmentAccess, setEquipmentAccess] = useState<Equipment[]>([]);
 
@@ -91,7 +92,7 @@ function Personalization() {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:5000/personalization/${userId}`,
+          `${API_BASE_URL}/personalization/${userId}`,
           {
             method: "GET",
             headers: {
@@ -114,17 +115,11 @@ function Personalization() {
           const { steps_data } = data;
 
           // Step 1
-          setPersonalInfo(
-            steps_data.step_1?.personalInfo || personalInfo
-          );
+          setPersonalInfo(steps_data.step_1?.personalInfo || personalInfo);
 
           // Step 2
-          setFitnessGoal(
-            steps_data.step_2?.fitnessGoal || fitnessGoal
-          );
-          setWeightGoal(
-            steps_data.step_2?.weightGoal || weightGoal
-          );
+          setFitnessGoal(steps_data.step_2?.fitnessGoal || fitnessGoal);
+          setWeightGoal(steps_data.step_2?.weightGoal || weightGoal);
 
           // Step 3
           setCuisinePreferences(
@@ -133,31 +128,17 @@ function Personalization() {
           setDietPreference(
             steps_data.step_3?.dietPreference || dietPreference
           );
-          setHealthIssues(
-            steps_data.step_3?.healthIssues || healthIssues
-          );
-          setSpecificAllergies(
-            steps_data.step_3?.specificAllergies || []
-          );
-          setMealsPerDay(
-            steps_data.step_3?.mealsPerDay || mealsPerDay
-          );
+          setHealthIssues(steps_data.step_3?.healthIssues || healthIssues);
+          setSpecificAllergies(steps_data.step_3?.specificAllergies || []);
+          setMealsPerDay(steps_data.step_3?.mealsPerDay || mealsPerDay);
 
           // Step 4
-          setActivityLevel(
-            steps_data.step_4?.activityLevel || activityLevel
-          );
-          setActivityTypes(
-            steps_data.step_4?.activityTypes || []
-          );
-          setEquipmentAccess(
-            steps_data.step_4?.equipmentAccess || []
-          );
+          setActivityLevel(steps_data.step_4?.activityLevel || activityLevel);
+          setActivityTypes(steps_data.step_4?.activityTypes || []);
+          setEquipmentAccess(steps_data.step_4?.equipmentAccess || []);
 
           // Step 5
-          setBudget(
-            steps_data.step_5?.budget || budget
-          );
+          setBudget(steps_data.step_5?.budget || budget);
           setHasKitchenInventory(
             steps_data.step_5?.hasKitchenInventory || hasKitchenInventory
           );
@@ -185,7 +166,7 @@ function Personalization() {
       console.log(`Saving Step ${stepNumber} Data:`, stepData);
 
       const response = await fetch(
-        `http://localhost:5000/personalization/${userId}/step/${stepNumber}`,
+        `${API_BASE_URL}/personalization/${userId}/step/${stepNumber}`,
         {
           method: "PUT",
           headers: {
@@ -229,7 +210,9 @@ function Personalization() {
     // ─── Step 4: ensure at least one activity type AND at least one equipment is chosen ───
     if (currentStep === 4) {
       if (activityTypes.length === 0) {
-        alert("Please select at least one physical activity before proceeding.");
+        alert(
+          "Please select at least one physical activity before proceeding."
+        );
         return;
       }
 
@@ -240,7 +223,6 @@ function Personalization() {
         return;
       }
     }
-
 
     // Gather step‐data up to the current step:
     const stepData = {
@@ -260,7 +242,6 @@ function Personalization() {
       },
       step_5: { budget, hasKitchenInventory },
     };
-
 
     if (currentStep < 5) {
       await saveStepData(currentStep, stepData[`step_${currentStep}`]);

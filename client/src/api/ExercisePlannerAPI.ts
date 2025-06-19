@@ -1,9 +1,10 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 import { Exercise } from "../types/exercisePlannerTypes";
 
 export const getAdoptedExercisePlan = async (userId: number, token: string) => {
   try {
-    const response = await fetch(`http://localhost:5000/exercise-planner/adopted/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/adopted/${userId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -30,7 +31,7 @@ export const getAdoptedExercisePlan = async (userId: number, token: string) => {
 export const getTodaysExercisesByUser = async (userId: number, token: string): Promise<any> => {
   try {
     const response = await fetch(
-      `http://localhost:5000/exercise-planner/users/${userId}/exercises/today`,
+      `${API_BASE_URL}/exercise-planner/users/${userId}/exercises/today`,
       {
         method: "GET",
         headers: {
@@ -55,7 +56,7 @@ export const getTodaysExercisesByUser = async (userId: number, token: string): P
 export const generateExercisePlan = async (userId: number, token: string): Promise<any> => {
   try {
     const response = await fetch(
-      `http://localhost:5000/exercise-planner/generate-exercise-plan`,
+      `${API_BASE_URL}/exercise-planner/generate-exercise-plan`,
       {
         method: "POST",
         headers: {
@@ -85,7 +86,7 @@ export const saveExercisePlan = async (
 ) => {
   try {
     const response = await fetch(
-      "http://localhost:5000/exercise-planner/save-exercise-plan",
+      `${API_BASE_URL}/exercise-planner/save-exercise-plan`,
       {
         method: "POST",
         headers: {
@@ -115,7 +116,7 @@ export const saveAndAdoptExercisePlan = async (
 ) => {
   try {
     const response = await fetch(
-      "http://localhost:5000/exercise-planner/save-and-adopt-exercise-plan",
+      `${API_BASE_URL}/exercise-planner/save-and-adopt-exercise-plan`,
       {
         method: "POST",
         headers: {
@@ -145,7 +146,7 @@ export const adoptExercisePlan = async (
 ) => {
   try {
     const response = await fetch(
-      "http://localhost:5000/exercise-planner/adopt-exercise-plan",
+      `${API_BASE_URL}/exercise-planner/adopt-exercise-plan`,
       {
         method: "POST",
         headers: {
@@ -174,7 +175,7 @@ export const getAllExercisePlansByUser = async (
 ) => {
   try {
     const response = await fetch(
-      `http://localhost:5000/exercise-planner/all/${userId}`,
+      `${API_BASE_URL}/exercise-planner/all/${userId}`,
       {
         method: "GET",
         headers: {
@@ -198,7 +199,7 @@ export const getAllExercisePlansByUser = async (
 
 export const removeSavedPlan = async (userId: number, planId: number, token: string) => {
   try {
-    const response = await fetch("http://localhost:5000/exercise-planner/remove-exercise-plan", {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/remove-exercise-plan`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -223,7 +224,7 @@ export const removeSavedPlan = async (userId: number, planId: number, token: str
 
 export const getFavoriteExercises = async (userId: number, token: string): Promise<Exercise[]> => {
   try {
-    const response = await fetch(`http://localhost:5000/exercise-planner/favorites/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/favorites/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -251,7 +252,7 @@ export const addFavoriteExercise = async (
   duration?: string,
 ): Promise<Exercise> => {
   try {
-    const response = await fetch(`http://localhost:5000/exercise-planner/favorites`, {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -279,7 +280,7 @@ export const addFavoriteExercise = async (
 
 export const regenerateExerciseDay = async (userId: number, dayNumber: number, token: string): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:5000/exercise-planner/regenerate-day`, {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/regenerate-day`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -301,7 +302,7 @@ export const regenerateExerciseDay = async (userId: number, dayNumber: number, t
 
 export const regenerateSingleExercise = async (userId: number, exercisePlanExerciseId: number, token: string): Promise<Exercise> => {
   try {
-    const response = await fetch(`http://localhost:5000/exercise-planner/regenerate-exercise`, {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/regenerate-exercise`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -335,7 +336,7 @@ export const replaceWithFavoriteExercise = async (
   };
 }> => {
   try {
-    const response = await fetch(`http://localhost:5000/exercise-planner/replace-with-favorite`, {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/replace-with-favorite`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -358,7 +359,7 @@ export const replaceWithFavoriteExercise = async (
 
 export const removeFavoriteExercise = async (userId: number, exerciseId: number, token: string): Promise<void> => {
   try {
-    const response = await fetch(`http://localhost:5000/exercise-planner/favorites`, {
+    const response = await fetch(`${API_BASE_URL}/exercise-planner/favorites`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

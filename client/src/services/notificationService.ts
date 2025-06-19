@@ -1,4 +1,5 @@
-const BASE = "http://localhost:5000/api/notifications";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE = `${API_BASE_URL}/api/notifications`;
 
 export const fetchUserNotifications = async (userId: number, token: string) => {
   try {

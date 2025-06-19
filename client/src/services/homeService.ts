@@ -1,4 +1,5 @@
-const BASE = "http://localhost:5000/home";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE = `${API_BASE_URL}/home`;
 
 export async function fetchMealProgress(date: string, token: string) {
   const res = await fetch(`${BASE}/meal?date=${date}`, {
