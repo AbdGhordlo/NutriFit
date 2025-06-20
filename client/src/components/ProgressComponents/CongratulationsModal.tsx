@@ -268,9 +268,7 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
                       `My hard work and perseverance paid off!\n` +
                       `Join me on NutriFit and start your journey! #NutriFit #Success #Achievement\n${nutriFitLink}`;
                     try {
-                      const response = await fetch(
-                        "/src/assets/imgs/goal-reached.png"
-                      );
+                      const response = await fetch("/goal-reached.png");
                       const blob = await response.blob();
                       const file = new File([blob], "goal-reached.png", {
                         type: blob.type,
@@ -287,10 +285,7 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
                         });
                       } else {
                         // fallback: open image in new tab
-                        window.open(
-                          "/src/assets/imgs/goal-reached.png",
-                          "_blank"
-                        );
+                        window.open("/goal-reached.png", "_blank");
                       }
                     } catch (err) {
                       alert(

@@ -95,19 +95,19 @@ const StreakTracker = ({
     // Set up timers for each loader to hide after 3 seconds
     const timers = [
       setTimeout(() => {
-        setLoadingStates(prev => ({ ...prev, daily: false }));
+        setLoadingStates((prev) => ({ ...prev, daily: false }));
       }, 3000),
       setTimeout(() => {
-        setLoadingStates(prev => ({ ...prev, weekly: false }));
+        setLoadingStates((prev) => ({ ...prev, weekly: false }));
       }, 3000),
       setTimeout(() => {
-        setLoadingStates(prev => ({ ...prev, monthly: false }));
+        setLoadingStates((prev) => ({ ...prev, monthly: false }));
       }, 3000),
     ];
 
     // Cleanup timers on component unmount
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
+      timers.forEach((timer) => clearTimeout(timer));
     };
   }, []);
 
@@ -183,7 +183,9 @@ const StreakTracker = ({
                     <div
                       className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
                       style={{
-                        width: `${(dailyCompletedMeals / dailyMaxMeals) * 100}%`,
+                        width: `${
+                          (dailyCompletedMeals / dailyMaxMeals) * 100
+                        }%`,
                       }}
                     />
                   </div>
@@ -254,7 +256,8 @@ const StreakTracker = ({
                 <p className="text-sm text-gray-500 mb-3">Weekly Trophies</p>
                 <div className="flex justify-center space-x-4">
                   {Array.from({ length: weekTrophiesThisPage }, (_, i) => {
-                    const trophyIndex = currentWeekPage * weekTrophiesPerPage + i;
+                    const trophyIndex =
+                      currentWeekPage * weekTrophiesPerPage + i;
                     return (
                       <Trophy
                         key={`week-${trophyIndex + 1}`}
@@ -354,12 +357,16 @@ const StreakTracker = ({
                           // Fetch the logo image as a blob
                           try {
                             const response = await fetch(
-                              "/src/assets/imgs/monthly-streak-achievement.png"
+                              "/monthly-streak-achievement.png"
                             );
                             const blob = await response.blob();
-                            const file = new File([blob], "nutrifit-trophy.png", {
-                              type: blob.type,
-                            });
+                            const file = new File(
+                              [blob],
+                              "nutrifit-trophy.png",
+                              {
+                                type: blob.type,
+                              }
+                            );
                             await navigator.share({
                               title: "My NutriFit Achievement",
                               text: shareText,
@@ -394,7 +401,8 @@ const StreakTracker = ({
                       label={`${monthlyCurrent}/${monthlyMax}`}
                     />
                     <p className="mt-4 text-gray-600 text-center">
-                      {monthlyCurrent} consecutive months of meeting weekly goals
+                      {monthlyCurrent} consecutive months of meeting weekly
+                      goals
                     </p>
 
                     {/* Gold trophies for monthly progress */}
@@ -403,18 +411,21 @@ const StreakTracker = ({
                         Monthly Trophies
                       </p>
                       <div className="flex justify-center space-x-4">
-                        {Array.from({ length: monthTrophiesThisPage }, (_, i) => {
-                          const trophyIndex =
-                            currentMonthPage * monthTrophiesPerPage + i;
-                          return (
-                            <Trophy
-                              key={`month-${trophyIndex + 1}`}
-                              level="gold"
-                              size={32}
-                              opacity={trophyIndex < monthlyCurrent ? 1 : 0.3}
-                            />
-                          );
-                        })}
+                        {Array.from(
+                          { length: monthTrophiesThisPage },
+                          (_, i) => {
+                            const trophyIndex =
+                              currentMonthPage * monthTrophiesPerPage + i;
+                            return (
+                              <Trophy
+                                key={`month-${trophyIndex + 1}`}
+                                level="gold"
+                                size={32}
+                                opacity={trophyIndex < monthlyCurrent ? 1 : 0.3}
+                              />
+                            );
+                          }
+                        )}
                       </div>
                       {totalMonthPages > 1 && (
                         <div className="flex justify-center mt-2 space-x-2">
@@ -496,7 +507,7 @@ const StreakTracker = ({
                         monthlyMax - monthlyCurrent
                       } more months to reach yearly goal`}
                 </p>
-                </div>
+              </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-4">
