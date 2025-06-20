@@ -21,6 +21,8 @@ import moment from "moment";
 import dingSound from "../assets/audio/ding.wav";
 import dropletSound from "../assets/audio/droplet.wav";
 import transitionSound from "../assets/audio/transition.wav";
+import { useUser } from "../utils/UserContext";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 //npm install prop-types
@@ -28,8 +30,6 @@ export default function Header({ toggleSidebar }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [profilePhoto, setProfilePhoto] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   // Move notifications to state so we can update them
   const [notifications, setNotifications] = useState([]);
@@ -39,13 +39,12 @@ export default function Header({ toggleSidebar }) {
   const notificationRef = useRef(null);
   const accountRef = useRef(null);
   const { getAuthUserId } = useAuth();
+  const { profilePhoto, username, setProfilePhoto, setUsername } = useUser();
 
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedEmail = localStorage.getItem("userEmail");
-    const storedUsername = localStorage.getItem("username");
-    const storedPhoto = localStorage.getItem("profilePhoto");
     let userId = null;
 
     if (token) {
@@ -76,14 +75,8 @@ export default function Header({ toggleSidebar }) {
         } catch {}
       }
 
-      if (storedUsername) {
-        setUsername(storedUsername);
-      }
-      if (storedPhoto) {
-        setProfilePhoto(storedPhoto);
-      }
-      if ((!storedUsername || !storedPhoto) && userId) {
-        // Fetch username and photo from API if not in localStorage
+      // Fetch username and photo from API if not in localStorage
+      if (!username || !profilePhoto) {
         fetch(`${API_BASE_URL}/settings/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
