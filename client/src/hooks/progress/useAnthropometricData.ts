@@ -26,6 +26,49 @@ export interface UseAnthropometricDataResult {
   saveMeasurement: (type: string, value: number) => Promise<void>;
 }
 
+// Helper to filter duplicates: same value, same day, same unit
+function filterDuplicateMeasurements(measurements: MeasurementHistoryItem[]): MeasurementHistoryItem[] {
+  const seen = new Set<string>();
+  return measurements.filter((m) => {
+    // Only keep one per value+unit+date (day)
+    const day = m.date.slice(0, 10); // YYYY-MM-DD
+    const key = `${m.value}_${m.unit}_${day}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// Helper to filter fat/lean mass: only latest per week
+function filterLatestPerWeek(measurements: MeasurementHistoryItem[]): MeasurementHistoryItem[] {
+  // Sort by date ascending
+  const sorted = [...measurements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const weekMap = new Map<string, MeasurementHistoryItem>();
+  sorted.forEach((m) => {
+    const d = new Date(m.date);
+    // Get ISO week string: year-week
+    const week = `${d.getFullYear()}-${getISOWeek(d)}`;
+    // Always overwrite so the latest in the week remains
+    weekMap.set(week, m);
+  });
+  // Return in chronological order
+  return Array.from(weekMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+// Helper to get ISO week number
+function getISOWeek(date: Date): number {
+  const tmp = new Date(date.getTime());
+  tmp.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year
+  tmp.setDate(tmp.getDate() + 3 - ((tmp.getDay() + 6) % 7));
+  const week1 = new Date(tmp.getFullYear(), 0, 4);
+  return (
+    1 + Math.round(
+      ((tmp.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7
+    )
+  );
+}
+
 export function useAnthropometricData(userId: number, token: string): UseAnthropometricDataResult {
   const [weightHistory, setWeightHistory] = useState<MeasurementHistoryItem[]>([]);
   const [heightHistory, setHeightHistory] = useState<MeasurementHistoryItem[]>([]);
@@ -80,12 +123,12 @@ export function useAnthropometricData(userId: number, token: string): UseAnthrop
         progressService.getMeasurementsByType(userId, "fat_mass", token),
         progressService.getMeasurementsByType(userId, "lean_mass", token),
       ]);
-      setWeightHistory(weightData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })));
-      setHeightHistory(heightData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })));
-      setWaistHistory(waistData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })));
-      setHipHistory(hipData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })));
-      setFatMassHistory(fatMassData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })));
-      setLeanMassHistory(leanMassData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })));
+      setWeightHistory(filterDuplicateMeasurements(weightData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit }))));
+      setHeightHistory(filterDuplicateMeasurements(heightData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit }))));
+      setWaistHistory(filterDuplicateMeasurements(waistData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit }))));
+      setHipHistory(filterDuplicateMeasurements(hipData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit }))));
+      setFatMassHistory(filterLatestPerWeek(filterDuplicateMeasurements(fatMassData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })))));
+      setLeanMassHistory(filterLatestPerWeek(filterDuplicateMeasurements(leanMassData.map((m: any) => ({ value: m.value, date: m.measured_at, unit: m.unit })))));
       if (weightData.length > 0) {
         const lastWeight = weightData.reduce((a: any, b: any) => new Date(a.measured_at) > new Date(b.measured_at) ? a : b);
         setCurrentWeight({ value: lastWeight.value, unit: lastWeight.unit });
