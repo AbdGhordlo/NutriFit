@@ -1,7 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import RadialProgressBar from "./RadialProgressBar";
 import { FaTrophy, FaFire } from "react-icons/fa";
+
+// Simple RadialProgressBar component since it's not imported
+const RadialProgressBar = ({ percentage, color, size, thickness, label }) => {
+  const radius = (size - thickness) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center">
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#e5e7eb"
+          strokeWidth={thickness}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={thickness}
+          fill="none"
+          strokeDasharray={strokeDasharray}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute text-lg font-semibold text-gray-800">
+        {label}
+      </div>
+    </div>
+  );
+};
+
+// Loader component
+const Loader = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+  </div>
+);
 
 // Trophy component to display achievement levels
 const Trophy = ({ level, size = 40, opacity = 1 }) => {
@@ -30,28 +74,43 @@ const Fire = ({ active, size = 24 }) => {
 };
 
 const StreakTracker = ({
-  dailyCompletedMeals,
-  dailyMaxMeals,
-  dailyCompletedExercises,
-  dailyMaxExercises,
-  dailyCompletedDays,
-  weeklyCurrent,
-  weeklyMax,
-  monthlyCurrent,
-  monthlyMax,
-  totalTimeframeWeeks,
-}: {
-  dailyCompletedMeals: number;
-  dailyMaxMeals: number;
-  dailyCompletedExercises: number;
-  dailyMaxExercises: number;
-  dailyCompletedDays: number;
-  weeklyCurrent: number;
-  weeklyMax: number;
-  monthlyCurrent: number;
-  monthlyMax: number;
-  totalTimeframeWeeks: number;
+  dailyCompletedMeals = 2,
+  dailyMaxMeals = 3,
+  dailyCompletedExercises = 1,
+  dailyMaxExercises = 2,
+  dailyCompletedDays = 5,
+  weeklyCurrent = 3,
+  weeklyMax = 8,
+  monthlyCurrent = 1,
+  monthlyMax = 2,
+  totalTimeframeWeeks = 8,
 }) => {
+  const [loadingStates, setLoadingStates] = useState({
+    daily: true,
+    weekly: true,
+    monthly: true,
+  });
+
+  useEffect(() => {
+    // Set up timers for each loader to hide after 3 seconds
+    const timers = [
+      setTimeout(() => {
+        setLoadingStates(prev => ({ ...prev, daily: false }));
+      }, 3000),
+      setTimeout(() => {
+        setLoadingStates(prev => ({ ...prev, weekly: false }));
+      }, 3000),
+      setTimeout(() => {
+        setLoadingStates(prev => ({ ...prev, monthly: false }));
+      }, 3000),
+    ];
+
+    // Cleanup timers on component unmount
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
   // Calculate trophy levels based on streaks
   const getTrophyLevel = () => {
     if (weeklyCurrent === 4) return "gold";
@@ -67,7 +126,6 @@ const StreakTracker = ({
 
   // Days of the week for display
   const daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
-
 
   // Calculate total week trophy pages
   const weekTrophiesPerPage = 4;
@@ -107,57 +165,63 @@ const StreakTracker = ({
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Daily Progress
           </h3>
-          <div className="flex flex-col space-y-4 pt-3 justify-between h-[86%]">
-            <div className="flex flex-col justify-between h-full py-4">
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Meals</span>
-                  <span className="font-medium text-gray-800">
-                    {dailyCompletedMeals}/{dailyMaxMeals} meals
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(dailyCompletedMeals / dailyMaxMeals) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Exercise</span>
-                  <span className="font-medium text-gray-800">
-                    {dailyCompletedExercises}/{dailyMaxExercises} workouts
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${
-                        (dailyCompletedExercises / dailyMaxExercises) * 100
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
+          {loadingStates.daily ? (
+            <div className="h-[200px]">
+              <Loader />
             </div>
-
-            {/* Days of the week with fire icons */}
-            <div className="pt-2 border-t border-gray-100">
-              <div className="text-sm text-gray-500 mb-3">Daily Streaks</div>
-              <div className="flex justify-between">
-                {daysOfWeek.map((day, index) => (
-                  <div key={day} className="flex flex-col items-center">
-                    <Fire active={dailyCompletedDays > index} />
+          ) : (
+            <div className="flex flex-col space-y-4 pt-3 justify-between h-[86%]">
+              <div className="flex flex-col justify-between h-full py-4">
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Meals</span>
+                    <span className="font-medium text-gray-800">
+                      {dailyCompletedMeals}/{dailyMaxMeals} meals
+                    </span>
                   </div>
-                ))}
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div
+                      className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${(dailyCompletedMeals / dailyMaxMeals) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Exercise</span>
+                    <span className="font-medium text-gray-800">
+                      {dailyCompletedExercises}/{dailyMaxExercises} workouts
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div
+                      className="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${
+                          (dailyCompletedExercises / dailyMaxExercises) * 100
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Days of the week with fire icons */}
+              <div className="pt-2 border-t border-gray-100">
+                <div className="text-sm text-gray-500 mb-3">Daily Streaks</div>
+                <div className="flex justify-between">
+                  {daysOfWeek.map((day, index) => (
+                    <div key={day} className="flex flex-col items-center">
+                      <Fire active={dailyCompletedDays > index} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </motion.div>
 
         {/* Weekly Progress */}
@@ -168,36 +232,42 @@ const StreakTracker = ({
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Weekly Progress
           </h3>
-          <div className="flex flex-col items-center">
-            <RadialProgressBar
-              percentage={(weeklyCurrent / weeklyMax) * 100}
-              color="#b87333" // Bronze color
-              size={120}
-              thickness={12}
-              label={`${weeklyCurrent}/${weeklyMax}`}
-            />
-            <p className="mt-4 text-gray-600 text-center">
-              {weeklyCurrent} consecutive weeks of meeting daily goals
-            </p>
+          {loadingStates.weekly ? (
+            <div className="h-[200px]">
+              <Loader />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <RadialProgressBar
+                percentage={(weeklyCurrent / weeklyMax) * 100}
+                color="#b87333" // Bronze color
+                size={120}
+                thickness={12}
+                label={`${weeklyCurrent}/${weeklyMax}`}
+              />
+              <p className="mt-4 text-gray-600 text-center">
+                {weeklyCurrent} consecutive weeks of meeting daily goals
+              </p>
 
-            {/* Bronze trophies for weekly progress */}
-            <div className="mt-6 pt-4 border-t border-gray-100 w-full">
-              <p className="text-sm text-gray-500 mb-3">Weekly Trophies</p>
-              <div className="flex justify-center space-x-4">
-                {Array.from({ length: weekTrophiesThisPage }, (_, i) => {
-                  const trophyIndex = currentWeekPage * weekTrophiesPerPage + i;
-                  return (
-                    <Trophy
-                      key={`week-${trophyIndex + 1}`}
-                      level="bronze"
-                      size={32}
-                      opacity={trophyIndex < weeklyCurrent ? 1 : 0.3}
-                    />
-                  );
-                })}
+              {/* Bronze trophies for weekly progress */}
+              <div className="mt-6 pt-4 border-t border-gray-100 w-full">
+                <p className="text-sm text-gray-500 mb-3">Weekly Trophies</p>
+                <div className="flex justify-center space-x-4">
+                  {Array.from({ length: weekTrophiesThisPage }, (_, i) => {
+                    const trophyIndex = currentWeekPage * weekTrophiesPerPage + i;
+                    return (
+                      <Trophy
+                        key={`week-${trophyIndex + 1}`}
+                        level="bronze"
+                        size={32}
+                        opacity={trophyIndex < weeklyCurrent ? 1 : 0.3}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </motion.div>
 
         {/* Monthly Progress */}
@@ -236,132 +306,138 @@ const StreakTracker = ({
                 </svg>
               </span>
             </div>
-            <div className="flex flex-col items-center min-h-[180px] justify-center">
-              {Number(monthlyMax) > 0 &&
-              Number(monthlyCurrent) >= Number(monthlyMax) ? (
-                <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-lg p-6 shadow-inner">
-                  <span className="text-5xl mb-3 animate-bounce">🏆</span>
-                  <span className="text-xl font-bold text-yellow-700 text-center mb-2">
-                    Outstanding! You’ve earned every monthly trophy for your
-                    goal!
-                  </span>
-                  <span className="text-base text-gray-600 text-center mb-4">
-                    Share your dedication!
-                  </span>
-                  <button
-                    className="mt-2 px-5 py-2 bg-yellow-400 text-white rounded-lg font-semibold shadow hover:bg-yellow-500 transition"
-                    onClick={async () => {
-                      const today = new Date();
-                      const dateStr = today.toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      });
-                      const nutriFitLink = "http://localhost:5173/";
-                      const shareText =
-                        `🏆 Outstanding! I've earned every monthly trophy for my goal on NutriFit!\n\n` +
-                        `• Months streak: ${monthlyMax}\n` +
-                        `• Weeks streak: ${weeklyMax}\n` +
-                        `• Achieved on: ${dateStr}\n\n` +
-                        `Join me on NutriFit and start your journey! #NutriFit #Consistency #Achievement\n${nutriFitLink}`;
-
-                      // Try to share an image if supported
-                      const canShareFiles =
-                        navigator.canShare &&
-                        navigator.canShare({
-                          files: [
-                            new File([new Blob()], "logo.png", {
-                              type: "image/png",
-                            }),
-                          ],
+            {loadingStates.monthly ? (
+              <div className="h-[200px]">
+                <Loader />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center min-h-[180px] justify-center">
+                {Number(monthlyMax) > 0 &&
+                Number(monthlyCurrent) >= Number(monthlyMax) ? (
+                  <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-lg p-6 shadow-inner">
+                    <span className="text-5xl mb-3 animate-bounce">🏆</span>
+                    <span className="text-xl font-bold text-yellow-700 text-center mb-2">
+                      Outstanding! You've earned every monthly trophy for your
+                      goal!
+                    </span>
+                    <span className="text-base text-gray-600 text-center mb-4">
+                      Share your dedication!
+                    </span>
+                    <button
+                      className="mt-2 px-5 py-2 bg-yellow-400 text-white rounded-lg font-semibold shadow hover:bg-yellow-500 transition"
+                      onClick={async () => {
+                        const today = new Date();
+                        const dateStr = today.toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
                         });
-                      if (navigator.share && canShareFiles) {
-                        // Fetch the logo image as a blob
-                        try {
-                          const response = await fetch(
-                            "/src/assets/imgs/monthly-streak-achievement.png"
-                          );
-                          const blob = await response.blob();
-                          const file = new File([blob], "nutrifit-trophy.png", {
-                            type: blob.type,
+                        const nutriFitLink = "http://localhost:5173/";
+                        const shareText =
+                          `🏆 Outstanding! I've earned every monthly trophy for my goal on NutriFit!\n\n` +
+                          `• Months streak: ${monthlyMax}\n` +
+                          `• Weeks streak: ${weeklyMax}\n` +
+                          `• Achieved on: ${dateStr}\n\n` +
+                          `Join me on NutriFit and start your journey! #NutriFit #Consistency #Achievement\n${nutriFitLink}`;
+
+                        // Try to share an image if supported
+                        const canShareFiles =
+                          navigator.canShare &&
+                          navigator.canShare({
+                            files: [
+                              new File([new Blob()], "logo.png", {
+                                type: "image/png",
+                              }),
+                            ],
                           });
-                          await navigator.share({
+                        if (navigator.share && canShareFiles) {
+                          // Fetch the logo image as a blob
+                          try {
+                            const response = await fetch(
+                              "/src/assets/imgs/monthly-streak-achievement.png"
+                            );
+                            const blob = await response.blob();
+                            const file = new File([blob], "nutrifit-trophy.png", {
+                              type: blob.type,
+                            });
+                            await navigator.share({
+                              title: "My NutriFit Achievement",
+                              text: shareText,
+                              files: [file],
+                            });
+                            return;
+                          } catch (e) {
+                            // If image fetch fails, fall back to text share
+                          }
+                        }
+                        if (navigator.share) {
+                          navigator.share({
                             title: "My NutriFit Achievement",
                             text: shareText,
-                            files: [file],
                           });
-                          return;
-                        } catch (e) {
-                          // If image fetch fails, fall back to text share
+                        } else {
+                          navigator.clipboard.writeText(shareText);
+                          alert("Achievement copied to clipboard!");
                         }
-                      }
-                      if (navigator.share) {
-                        navigator.share({
-                          title: "My NutriFit Achievement",
-                          text: shareText,
-                        });
-                      } else {
-                        navigator.clipboard.writeText(shareText);
-                        alert("Achievement copied to clipboard!");
-                      }
-                    }}
-                  >
-                    Share Achievement
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <RadialProgressBar
-                    percentage={(monthlyCurrent / monthlyMax) * 100}
-                    color="#FFD700" // Gold color
-                    size={120}
-                    thickness={12}
-                    label={`${monthlyCurrent}/${monthlyMax}`}
-                  />
-                  <p className="mt-4 text-gray-600 text-center">
-                    {monthlyCurrent} consecutive months of meeting weekly goals
-                  </p>
-
-                  {/* Gold trophies for monthly progress */}
-                  <div className="mt-6 pt-4 border-t border-gray-100 w-full">
-                    <p className="text-sm text-gray-500 mb-3">
-                      Monthly Trophies
-                    </p>
-                    <div className="flex justify-center space-x-4">
-                      {Array.from({ length: monthTrophiesThisPage }, (_, i) => {
-                        const trophyIndex =
-                          currentMonthPage * monthTrophiesPerPage + i;
-                        return (
-                          <Trophy
-                            key={`month-${trophyIndex + 1}`}
-                            level="gold"
-                            size={32}
-                            opacity={trophyIndex < monthlyCurrent ? 1 : 0.3}
-                          />
-                        );
-                      })}
-                    </div>
-                    {totalMonthPages > 1 && (
-                      <div className="flex justify-center mt-2 space-x-2">
-                        {Array.from({ length: totalMonthPages }, (_, i) => (
-                          <button
-                            key={i}
-                            className={`w-2 h-2 rounded-full ${
-                              i === currentMonthPage
-                                ? "bg-yellow-400"
-                                : "bg-gray-300"
-                            }`}
-                            style={{ outline: "none", border: "none" }}
-                            aria-label={`Go to month trophy page ${i + 1}`}
-                            tabIndex={0}
-                          />
-                        ))}
-                      </div>
-                    )}
+                      }}
+                    >
+                      Share Achievement
+                    </button>
                   </div>
-                </>
-              )}
-            </div>
+                ) : (
+                  <>
+                    <RadialProgressBar
+                      percentage={(monthlyCurrent / monthlyMax) * 100}
+                      color="#FFD700" // Gold color
+                      size={120}
+                      thickness={12}
+                      label={`${monthlyCurrent}/${monthlyMax}`}
+                    />
+                    <p className="mt-4 text-gray-600 text-center">
+                      {monthlyCurrent} consecutive months of meeting weekly goals
+                    </p>
+
+                    {/* Gold trophies for monthly progress */}
+                    <div className="mt-6 pt-4 border-t border-gray-100 w-full">
+                      <p className="text-sm text-gray-500 mb-3">
+                        Monthly Trophies
+                      </p>
+                      <div className="flex justify-center space-x-4">
+                        {Array.from({ length: monthTrophiesThisPage }, (_, i) => {
+                          const trophyIndex =
+                            currentMonthPage * monthTrophiesPerPage + i;
+                          return (
+                            <Trophy
+                              key={`month-${trophyIndex + 1}`}
+                              level="gold"
+                              size={32}
+                              opacity={trophyIndex < monthlyCurrent ? 1 : 0.3}
+                            />
+                          );
+                        })}
+                      </div>
+                      {totalMonthPages > 1 && (
+                        <div className="flex justify-center mt-2 space-x-2">
+                          {Array.from({ length: totalMonthPages }, (_, i) => (
+                            <button
+                              key={i}
+                              className={`w-2 h-2 rounded-full ${
+                                i === currentMonthPage
+                                  ? "bg-yellow-400"
+                                  : "bg-gray-300"
+                              }`}
+                              style={{ outline: "none", border: "none" }}
+                              aria-label={`Go to month trophy page ${i + 1}`}
+                              tabIndex={0}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </div>
@@ -420,7 +496,7 @@ const StreakTracker = ({
                         monthlyMax - monthlyCurrent
                       } more months to reach yearly goal`}
                 </p>
-              </div>
+                </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-4">
