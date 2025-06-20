@@ -15,7 +15,7 @@ async function sendResetEmail(to, token) {
     from: `"NutriFit Support" <${process.env.SMTP_USER}>`,
     to,
     subject: "Your NutriFit password reset code",
-    text: `Your code is ${token}. It expires in 15 minutes.`,
+    text: `Your code is ${token}. It expires in 2 minutes.`,
   });
 }
 
