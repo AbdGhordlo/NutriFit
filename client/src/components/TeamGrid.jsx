@@ -13,7 +13,7 @@ export const creators = [
     description: "Senior Computer Engineering Student at TED University, with a secondary field in Applied Data Analytics. Pationate about Web Development and Machine Learning.",
     status: "Student at TED University",
     location: "Ankara, Turkey",
-    linkedin: "www.linkedin.com/in/abdallah-ghordlo",
+    linkedin: "https://www.linkedin.com/in/abdallah-ghordlo",
     github: "https://github.com/AbdGhordlo",
   },
   {
