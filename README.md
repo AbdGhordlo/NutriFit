@@ -2,6 +2,8 @@
 
 A comprehensive fitness and nutrition tracking application designed to help users achieve their health and wellness goals through personalized plans, meal tracking, and workout management.
 
+Try NutriFit ([link](https://nutrifit-puce.vercel.app/))
+
 ![image alt](https://github.com/AbdGhordlo/NutriFit/blob/11a1f7db98c9555b2c70a58b2f93fe7f6b5ec51c/NutriFit.png)
 
 ## Features
@@ -167,7 +169,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [PostgreSQL](https://www.postgresql.org/)
 - [Lucide Icons](https://lucide.dev/)
 
-
-
-  -------------------------------------------------------------------------------------------------------------------------
-Developer's Handbook: [Link](https://docs.google.com/document/d/14qFg33aHujP1xLAjaE9RkSGSIPYOWQJO5TyUi8mA1Vg/edit?usp=sharing)
