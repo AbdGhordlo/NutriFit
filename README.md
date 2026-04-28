@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="client/src/assets/imgs/logo-no-padding.png" width="500"/>
+  <img src="client/src/assets/imgs/logo-no-padding.png" width="300"/>
 </p>
 
 <h1 align="center">NutriFit</h1>
