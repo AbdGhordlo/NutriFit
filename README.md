@@ -1,4 +1,8 @@
-# NutriFit
+<p align="center">
+  <img src="client/src/assets/imgs/NutriFit-Logo-Full.png" width="200"/>
+</p>
+
+<h1 align="center">NutriFit</h1>
 
 A comprehensive fitness and nutrition tracking application designed to help users achieve their health and wellness goals through personalized plans, meal tracking, and workout management.
 
